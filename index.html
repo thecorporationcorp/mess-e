@@ -2522,10 +2522,10 @@ function initVoice() {
 
   function resetSilence() {
     clearTimeout(silenceTimer);
-    if (orbState !== 'listening') return;
+    if (orbState !== 'listening' && micState !== 'listening') return;
     showCountdown(2);
     silenceTimer = setTimeout(() => {
-      if (orbState !== 'listening') return;
+      if (orbState !== 'listening' && micState !== 'listening') return;
       clearCountdown();
       const said = (finalTranscript + ' ' + currentInterim).trim();
       finalTranscript = ''; currentInterim = '';
@@ -2583,6 +2583,7 @@ function initVoice() {
 
     rec.onend = () => {
       if (micState === 'stopping') { micState = 'idle'; return; }
+      if (micState === 'starting') return; // new start in progress — ignore stale onend from aborted rec
       if (continuousMode && (orbState === 'listening' || micState === 'listening')) {
         if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
           setTimeout(() => _restartRec(), 200); return;
