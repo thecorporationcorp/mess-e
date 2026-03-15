@@ -163,9 +163,9 @@ html, body {
 #user-text {
   margin-top: 12px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(129, 140, 248, 0.7);
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  color: rgba(129, 140, 248, 0.8);
+  letter-spacing: 0.06em;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -1224,18 +1224,17 @@ html, body {
 /* ─── COUNTDOWN DISPLAY ─── */
 #silence-countdown {
   position: fixed;
-  bottom: 170px;
+  bottom: 320px;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--amber);
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.35);
   letter-spacing: 0.3em;
   z-index: 30;
   opacity: 0;
   transition: opacity 0.2s ease;
-  text-shadow: 0 0 20px rgba(251,191,36,0.8);
   pointer-events: none;
 }
 #silence-countdown.visible { opacity: 1; }
@@ -1243,22 +1242,24 @@ html, body {
 /* ─── WEATHER PILL ─── */
 #weather-pill {
   position: fixed;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 16px;
+  top: 52px;
+  right: 20px;
+  padding: 5px 12px;
   border-radius: 20px;
-  border: 1px solid rgba(34,211,238,0.25);
+  border: 1px solid rgba(34,211,238,0.2);
   background: rgba(6,182,212,0.06);
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(6,182,212,0.65);
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  color: rgba(6,182,212,0.55);
+  letter-spacing: 0.1em;
   z-index: 25;
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
   white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #weather-pill.visible { opacity: 1; }
 
@@ -2433,9 +2434,9 @@ async function fetchWeather(loc) {
     currentWeather = { temp, desc, wind, emoji, code, ts: Date.now() };
 
     const pill = document.getElementById('weather-pill');
-    pill.textContent = `${emoji} ${temp}°F · ${desc}`;
+    pill.textContent = `${emoji} ${temp}°F`;
     pill.classList.add('visible');
-    setTimeout(() => pill.classList.remove('visible'), 8000);
+    // Keep visible — no auto-hide, it's in the corner out of the way
   } catch(e) { console.warn('Weather fetch failed:', e); }
 }
 
@@ -2519,26 +2520,27 @@ function initVoice() {
     countdownEl.classList.remove('visible');
     countdownEl.textContent = '';
   }
+    clearInterval(countdownTimer);
+    countdownEl.classList.remove('visible');
+    countdownEl.textContent = '';
+  }
 
   function resetSilence() {
     clearTimeout(silenceTimer);
-    if (orbState !== 'listening' && micState !== 'listening') return;
-    showCountdown(2);
+    showCountdown(5);
     silenceTimer = setTimeout(() => {
-      if (orbState !== 'listening' && micState !== 'listening') return;
       clearCountdown();
       const said = (finalTranscript + ' ' + currentInterim).trim();
       finalTranscript = ''; currentInterim = '';
       if (said) {
-        _stopRec(false);
+        if (micState !== 'stopping') _stopRec(false);
         handleUserInput(said);
       } else if (!continuousMode) {
         _stopRec(false);
       } else {
-        // continuous: just restart quietly
         _restartRec();
       }
-    }, 2000);
+    }, 5000);
   }
 
   function attachHandlers(rec) {
@@ -2583,7 +2585,9 @@ function initVoice() {
 
     rec.onend = () => {
       if (micState === 'stopping') { micState = 'idle'; return; }
-      if (micState === 'starting') return; // new start in progress — ignore stale onend from aborted rec
+      if (micState === 'starting') return; // new start in progress — ignore stale onend
+      // If we have a pending transcript, leave orbState alone — silence timer will handle it
+      if ((finalTranscript + currentInterim).trim()) return;
       if (continuousMode && (orbState === 'listening' || micState === 'listening')) {
         if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
           setTimeout(() => _restartRec(), 200); return;
