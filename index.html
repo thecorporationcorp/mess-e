@@ -3840,8 +3840,8 @@ function startTaskNagLoop() {
 async function fireWarmupNudge(task, minsUntil, tone) {
   const weatherNote = currentWeather ? ` (It's ${currentWeather.temp}°F and ${currentWeather.desc.toLowerCase()} out.)` : '';
   const toneDesc = tone === 'final'
-    ? 'This is the final nudge before it's due. A little more urgent — "heads up, almost time." Still warm.'
-    : 'This is an early warm heads-up. Friendly, zero pressure. Mention the weather or something personal if it fits naturally.';
+    ? "This is the final nudge before it is due. A little more urgent — heads up, almost time. Still warm."
+    : "This is an early warm heads-up. Friendly, zero pressure. Mention the weather or something personal if it fits naturally.";
   const prompt = `MESS-E, "${task.text}" is due in ${minsUntil} minutes.${weatherNote} ${toneDesc} One sentence. British.
 CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
@@ -4430,6 +4430,7 @@ function setTimer(raw) {
     activeTimers.push(alarm);
   } else {
     scheduledAlarms.push(alarm);
+    armAlarm(alarm); // Dual engine — long timers need it too
   }
 }
 
@@ -4712,12 +4713,12 @@ const TOUR_STEPS = [
   },
   {
     title: 'TYPE IF YOU PREFER',
-    body: 'Tap [ TYPE ] to switch to keyboard mode. Works great for quiet environments or when voice isn't practical.',
+    body: "Tap [ TYPE ] to switch to keyboard mode. Works great for quiet environments or when voice isn't practical.",
     highlight: () => { const el = document.getElementById('type-toggle'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '8px' }; }
   },
   {
     title: 'JOURNAL — YOUR PRIVATE SPACE',
-    body: 'Tap JOURNAL anytime to write or speak your thoughts. MESS-E reads every entry and uses it to understand you better. You're ready.',
+    body: "Tap JOURNAL anytime to write or speak your thoughts. MESS-E reads every entry and uses it to understand you better. You're ready.",
     highlight: () => { const el = document.getElementById('pill-journal'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '24px' }; }
   }
 ];
