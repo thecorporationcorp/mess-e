@@ -2823,13 +2823,18 @@ async function _drainSpeakQueue() {
     if (role === 'astra' && orbState !== 'celebrate') { setOrbState('speaking'); }
 
     speechSynthRunning = true;
+
+    // ─── THREE-ENGINE VOICE ROUTING ───
+    // Priority: ElevenLabs (if key+voiceId set) → Gemini TTS (if apiKey set) → Browser
     if (config.elevenlabs && config.voiceId && config.voiceId.trim().length > 0) {
-      await speakElevenLabs(text);
+      await speakElevenLabs(text, role);
+    } else if (config.apiKey || apiKey) {
+      await speakGemini(text);
     } else {
       await speakBrowser(text);
     }
-    speechSynthRunning = false;
 
+    speechSynthRunning = false;
     resolve();
   }
 
@@ -2848,7 +2853,6 @@ async function speakBrowser(text) {
     utter.rate = 0.92;
     utter.pitch = 0.9;
     utter.volume = 1;
-
     const voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
     const preferred = voices.find(v =>
       v.name.includes('Samantha') ||
@@ -2858,29 +2862,31 @@ async function speakBrowser(text) {
       (v.lang === 'en-US' && v.localService)
     );
     if (preferred) utter.voice = preferred;
-
     utter.onend = resolve;
     utter.onerror = resolve;
     window.speechSynthesis.speak(utter);
   });
 }
 
-async function speakElevenLabs(text) {
+async function speakElevenLabs(text, role) {
   try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${config.voiceId}/stream`, {
+    // Use demo voice during tour if configured
+    const voiceId = (config.demoVoiceId && (tourActive || role === 'system'))
+      ? config.demoVoiceId
+      : config.voiceId;
+
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
       method: 'POST',
       headers: { 'xi-api-key': config.elevenlabs, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_turbo_v2',
+        model_id: 'eleven_turbo_v2_5',
         voice_settings: { stability: 0.5, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
       })
     });
     if (!res.ok) {
-      const errText = await res.text();
-      console.warn("ElevenLabs API Error:", res.status, errText);
-      showToast('ElevenLabs Error ' + res.status + ': Check API Key & Voice ID.', 5000);
-      await speakBrowser(text);
+      showToast('ElevenLabs error ' + res.status + ' — falling back to Gemini TTS.', 4000);
+      await speakGemini(text);
       return;
     }
     const blob = await res.blob();
@@ -2888,14 +2894,70 @@ async function speakElevenLabs(text) {
     const audio = new Audio(url);
     audio.volume = 1.0;
     window._currentAudio = audio;
-    await new Promise(r => {
-      audio.onended = r;
-      audio.onerror = r;
-      audio.play().catch(r);
-    });
+    await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
     URL.revokeObjectURL(url);
     window._currentAudio = null;
   } catch(e) {
+    await speakGemini(text);
+  }
+}
+
+// ─── GEMINI TTS ENGINE (free — uses your existing Gemini API key) ───
+function _writeString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+}
+
+function _pcmBase64ToWavUrl(base64, sampleRate) {
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const buf = new ArrayBuffer(44 + bytes.length);
+  const view = new DataView(buf);
+  _writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + bytes.length, true);
+  _writeString(view, 8, 'WAVE');
+  _writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  _writeString(view, 36, 'data');
+  view.setUint32(40, bytes.length, true);
+  new Uint8Array(buf, 44).set(bytes);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+async function speakGemini(text) {
+  try {
+    const key = config.apiKey ? config.apiKey : apiKey;
+    if (!key) { await speakBrowser(text); return; }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
+        }
+      })
+    });
+    if (!res.ok) throw new Error('TTS ' + res.status);
+    const data = await res.json();
+    const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!inlineData) throw new Error('No audio data');
+    const wavUrl = _pcmBase64ToWavUrl(inlineData.data, 24000);
+    const audio = new Audio(wavUrl);
+    window._currentAudio = audio;
+    await new Promise((res, rej) => { audio.onended = res; audio.onerror = rej; audio.play().catch(rej); });
+    window._currentAudio = null;
+    URL.revokeObjectURL(wavUrl);
+  } catch(e) {
+    console.warn('Gemini TTS failed, using browser:', e.message);
     await speakBrowser(text);
   }
 }
@@ -2911,7 +2973,8 @@ let activeModel = 'gemini-1.5-flash';
 async function callGemini(messages, system, attempt, useSearch) {
   attempt = attempt || 0;
   if (!activeModel) activeModel = GEMINI_MODELS[0];
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${config.apiKey}`;
+  const actualApiKey = config.apiKey ? config.apiKey : apiKey;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${actualApiKey}`;
 
   const contents = messages.map(function(m, i) {
     const parts = [{ text: m.content }];
@@ -2924,7 +2987,12 @@ async function callGemini(messages, system, attempt, useSearch) {
   const body = {
     contents: contents,
     systemInstruction: { parts: [{ text: system }] },
-    generationConfig: { temperature: 0.85, topP: 0.95, maxOutputTokens: 2048 }
+    generationConfig: { 
+      temperature: 0.85, 
+      topP: 0.95, 
+      maxOutputTokens: 2048,
+      responseMimeType: "application/json"
+    }
   };
 
   // Only attach google_search for parking/location lookups — avoids empty response bug
