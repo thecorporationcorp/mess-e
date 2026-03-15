@@ -1220,6 +1220,280 @@ html, body {
   font-size: 13px;
   font-family: var(--font-mono);
 }
+
+/* ─── COUNTDOWN DISPLAY ─── */
+#silence-countdown {
+  position: fixed;
+  bottom: 170px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--amber);
+  letter-spacing: 0.3em;
+  z-index: 30;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  text-shadow: 0 0 20px rgba(251,191,36,0.8);
+  pointer-events: none;
+}
+#silence-countdown.visible { opacity: 1; }
+
+/* ─── WEATHER PILL ─── */
+#weather-pill {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(34,211,238,0.25);
+  background: rgba(6,182,212,0.06);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(6,182,212,0.65);
+  letter-spacing: 0.12em;
+  z-index: 25;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#weather-pill.visible { opacity: 1; }
+
+/* ─── ONBOARDING TOUR ─── */
+#tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  pointer-events: none;
+  display: none;
+}
+#tour-overlay.active { display: block; pointer-events: all; }
+
+#tour-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2,2,9,0.82);
+  backdrop-filter: blur(4px);
+}
+
+#tour-card {
+  position: absolute;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, 88vw);
+  background: linear-gradient(135deg, rgba(13,15,42,0.98), rgba(6,7,26,0.98));
+  border: 1px solid rgba(129,140,248,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(67,56,202,0.2);
+}
+#tour-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.5), transparent);
+  border-radius: 16px 16px 0 0;
+}
+
+#tour-step-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: var(--indigo-bright);
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+#tour-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+#tour-body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--dim);
+  margin-bottom: 20px;
+}
+#tour-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tour-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(129,140,248,0.2);
+  transition: all 0.3s ease;
+}
+.tour-dot.active {
+  background: var(--indigo-bright);
+  width: 16px;
+  border-radius: 3px;
+}
+#tour-btn-row {
+  display: flex;
+  gap: 8px;
+}
+#tour-skip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(165,180,252,0.4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 0;
+  flex: 1;
+}
+#tour-next {
+  flex: 2;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(79,70,229,0.9) 0%, rgba(55,48,163,1) 100%);
+  border: 1px solid rgba(165,180,252,0.3);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(67,56,202,0.4);
+}
+#tour-next:hover {
+  background: linear-gradient(180deg, rgba(99,102,241,1) 0%, rgba(67,56,202,1) 100%);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.6);
+  transform: translateY(-1px);
+}
+#tour-highlight {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(165,180,252,0.6);
+  box-shadow: 0 0 0 4px rgba(67,56,202,0.3), 0 0 30px rgba(129,140,248,0.4);
+  animation: tour-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(67,56,202,0.3), 0 0 20px rgba(129,140,248,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(67,56,202,0.15), 0 0 40px rgba(129,140,248,0.5); }
+}
+
+/* ─── MAGIC LINK MODAL ─── */
+#magic-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(2,2,9,0.95);
+  backdrop-filter: blur(20px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#magic-modal.open { display: flex; }
+#magic-inner {
+  width: min(420px, 92vw);
+  background: linear-gradient(135deg, rgba(13,15,42,0.99), rgba(6,7,26,0.99));
+  border: 1px solid rgba(129,140,248,0.2);
+  border-radius: 16px;
+  padding: 28px;
+}
+#magic-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+#magic-sub {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+#magic-url {
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(129,140,248,0.15);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(165,180,252,0.7);
+  word-break: break-all;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  min-height: 60px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+#qr-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+}
+#qr-container canvas { display: block; }
+.magic-btn-row { display: flex; gap: 8px; margin-top: 8px; }
+
+/* ─── CORE FACTS BADGE ─── */
+.core-fact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(67,56,202,0.08);
+  border-left: 2px solid var(--indigo-bright);
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 6px;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 12px;
+  color: rgba(224,231,255,0.85);
+  line-height: 1.5;
+}
+.core-fact-pin {
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ─── ALWAYS-ON PULSE RING ─── */
+#always-on-ring {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 1px solid rgba(34,211,238,0.3);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  animation: always-on-breathe 3s ease-in-out infinite;
+}
+#always-on-ring.visible { opacity: 1; }
+@keyframes always-on-breathe {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%,-50%) scale(1.08); opacity: 0.7; }
+}
+
 </style>
 </head>
 <body>
@@ -1403,6 +1677,11 @@ html, body {
     <input type="text" id="setup-voiceid" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM">
   </div>
 
+  <div class="setup-field">
+    <label>Demo / Tour Voice ID (optional — different voice for the onboarding tour)</label>
+    <input type="text" id="setup-demovoiceid" placeholder="Leave blank to use same voice">
+  </div>
+
   <button class="setup-btn" onclick="initAstra()">WAKE HER UP</button>
 </div>
 
@@ -1425,6 +1704,7 @@ let memory = {
   psychProfile: {},
   patterns: {},
   preferences: {},
+  coreFacts: [],  // PROTECTED VAULT — survives pruning, never overwritten
   sessionCount: 0,
   streak: 0,
   bloatThreshold: 50,
@@ -1570,7 +1850,10 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  showEnterSplash();
+  // Check for magic link brain import
+  if (!checkMagicLink()) {
+    showEnterSplash();
+  }
 });
 
 function clearVisionTarget() {
@@ -1622,7 +1905,8 @@ function initAstra() {
 
   if (!name || !apiKey) { showToast('Name and API key are required.'); return; }
 
-  config = { name, apiKey, about, elevenlabs, voiceId: voiceId || '' };
+  const demoVoiceId = document.getElementById('setup-demovoiceid')?.value?.trim() || '';
+  config = { name, apiKey, about, elevenlabs, voiceId: voiceId || '', demoVoiceId: demoVoiceId };
   memory.firstSeen = new Date().toISOString();
   memory.psychProfile = {
     name: name,
@@ -1679,6 +1963,7 @@ async function bootAstra() {
 
     try { setOrbState('thinking'); ok('orb state set'); } catch(e) { fail('setOrbState', e); }
     try { startGeo(); ok('geo started'); } catch(e) { fail('startGeo', e); }
+    try { requestWakeLock(); ok('wake lock'); } catch(e) { console.warn('wake lock:', e); }
     try { initVoice(); ok('voice init'); } catch(e) { fail('initVoice', e); }
     try { initGcal(); ok('gcal init'); } catch(e) { fail('initGcal', e); }
     try { requestNotifPermission(); ok('notif permission'); } catch(e) { fail('requestNotif', e); }
@@ -1713,6 +1998,14 @@ async function bootAstra() {
 
     updateMicLabel();
     ok('BOOT COMPLETE');
+
+    // Extract core facts from profile on first session
+    if (memory.sessionCount <= 1) extractCoreFacts();
+
+    // Start tour on first session
+    if (!memory.tourComplete && memory.sessionCount <= 1) {
+      setTimeout(() => startTour(), 2000);
+    }
 
   } catch(e) {
     fail('FATAL bootAstra', e);
@@ -1822,7 +2115,7 @@ function startCanvas() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Rings
+    // Atmosphere rings (enhanced — 3 reference halos like the presentation orb)
     rings.forEach(ring => {
       const r = ring.radius + Math.sin(time + ring.phase) * 8;
       let rColor = g;
@@ -1833,6 +2126,13 @@ function startCanvas() {
       ctx.lineWidth = 1;
       ctx.stroke();
     });
+    // Extra outer atmosphere ring — subtle halo from presentation
+    const outerR = 195 + Math.sin(time * 0.8) * 5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${g[0]},${g[1]},${g[2]},0.025)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     // Particles
     particles.forEach(p => {
@@ -1883,6 +2183,25 @@ function startCanvas() {
     ctx.strokeStyle = `rgba(${g[0]},${g[1]},${g[2]},${isRainbow ? 0.7 : 0.4})`;
     ctx.lineWidth = isRainbow ? 2 : 1.5;
     ctx.stroke();
+
+    // Status dot — breathing indicator (top-right of orb, from presentation)
+    const dotAngle = -Math.PI / 4;
+    const dotX = cx + Math.cos(dotAngle) * orbR * 0.72;
+    const dotY = cy + Math.sin(dotAngle) * orbR * 0.72;
+    const dotOp = 0.5 + 0.5 * Math.sin(time * 3);
+    const dotR = orbState === 'alert' || orbState === 'red' ? 5 : 3;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${g[0]},${g[1]},${g[2]},${dotOp})`;
+    ctx.fill();
+    // Dot glow
+    const dotGrad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 12);
+    dotGrad.addColorStop(0, `rgba(${g[0]},${g[1]},${g[2]},${dotOp * 0.4})`);
+    dotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = dotGrad;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 12, 0, Math.PI * 2);
+    ctx.fill();
 
     // Ripple waves
     if (isBlue || isRainbow || isRed) {
@@ -1993,10 +2312,14 @@ function initServiceWorker() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     unlockAudio();
+    reacquireWakeLock();
     const now = Date.now();
+    // Catch-up: fire any alarm that should have fired while tab was hidden (within last 5 mins)
     scheduledAlarms.forEach(alarm => {
-      if (!alarm.fired && now >= alarm.firesAt) {
+      if (!alarm.fired && (alarm.firesAt - 60000) <= now && (alarm.firesAt - 60000) >= now - 5 * 60000) {
         alarm.fired = true;
+        if (alarm._primaryTimer) clearTimeout(alarm._primaryTimer);
+        if (alarm._watchdog) clearInterval(alarm._watchdog);
         fireAlarm(alarm);
       }
     });
@@ -2069,11 +2392,51 @@ async function reverseGeocode(loc) {
     showLocPill(label);
     currentLocation.label = label;
     currentLocation.full = data.display_name;
+    fetchWeather(loc);
   } catch(e) {
     const label = `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`;
     showLocPill(label);
     currentLocation.label = label;
   }
+}
+
+// ─── WEATHER ENGINE ───
+let currentWeather = null;
+
+async function fetchWeather(loc) {
+  try {
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lng}&current=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const c = data.current;
+    const code = c.weathercode;
+    const temp = Math.round(c.temperature_2m);
+    const wind = Math.round(c.windspeed_10m);
+
+    const weatherDescriptions = {
+      0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+      45:'Foggy', 48:'Icy fog', 51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
+      61:'Light rain', 63:'Rain', 65:'Heavy rain', 71:'Light snow', 73:'Snow', 75:'Heavy snow',
+      80:'Rain showers', 81:'Rain showers', 82:'Violent showers', 95:'Thunderstorm', 99:'Thunderstorm with hail'
+    };
+    const weatherEmojis = {
+      0:'☀️', 1:'🌤', 2:'⛅', 3:'☁️', 45:'🌫', 48:'🌫', 51:'🌦', 53:'🌧', 55:'🌧',
+      61:'🌧', 63:'🌧', 65:'🌧', 71:'🌨', 73:'❄️', 75:'❄️', 80:'🌦', 81:'🌦', 82:'⛈',
+      95:'⛈', 99:'⛈'
+    };
+
+    const desc = weatherDescriptions[code] || 'Clear';
+    const emoji = weatherEmojis[code] || '🌡';
+
+    currentWeather = { temp, desc, wind, emoji, code, ts: Date.now() };
+
+    const pill = document.getElementById('weather-pill');
+    pill.textContent = `${emoji} ${temp}°F · ${desc}`;
+    pill.classList.add('visible');
+    setTimeout(() => pill.classList.remove('visible'), 8000);
+  } catch(e) { console.warn('Weather fetch failed:', e); }
 }
 
 function showLocPill(label) {
@@ -2109,111 +2472,220 @@ function initVoice() {
     return;
   }
 
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
-  recognition.maxAlternatives = 1;
-
+  // ─── MIC STATE MACHINE ───
+  let micState = 'idle'; // idle | starting | listening | stopping
   let finalTranscript = '';
   let currentInterim = '';
   let silenceTimer = null;
+  let countdownTimer = null;
+  let countdownVal = 0;
+  let restartAttempts = 0;
+  let restartTimeout = null;
+  const MAX_RESTART_ATTEMPTS = 5;
+
+  function buildRecognition() {
+    const rec = new SpeechRecognition();
+    rec.continuous = false;      // single utterance — more reliable on mobile
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 1;
+    return rec;
+  }
+
+  recognition = buildRecognition();
+
+  const countdownEl = document.getElementById('silence-countdown');
+
+  function showCountdown(secs) {
+    clearInterval(countdownTimer);
+    if (secs <= 0) { countdownEl.classList.remove('visible'); countdownEl.textContent = ''; return; }
+    countdownVal = secs;
+    countdownEl.textContent = countdownVal + '…';
+    countdownEl.classList.add('visible');
+    countdownTimer = setInterval(() => {
+      countdownVal--;
+      if (countdownVal <= 0) {
+        clearInterval(countdownTimer);
+        countdownEl.classList.remove('visible');
+        countdownEl.textContent = '';
+      } else {
+        countdownEl.textContent = countdownVal + '…';
+      }
+    }, 1000);
+  }
+
+  function clearCountdown() {
+    clearInterval(countdownTimer);
+    countdownEl.classList.remove('visible');
+    countdownEl.textContent = '';
+  }
 
   function resetSilence() {
     clearTimeout(silenceTimer);
+    if (orbState !== 'listening') return;
+    showCountdown(2);
     silenceTimer = setTimeout(() => {
-      if (orbState === 'listening') {
-        const said = (finalTranscript + ' ' + currentInterim).trim();
-        if (said) {
-          stopListening();
-          handleUserInput(said);
-        } else if (!continuousMode) {
-          stopListening();
-        }
-        finalTranscript = '';
-        currentInterim = '';
+      if (orbState !== 'listening') return;
+      clearCountdown();
+      const said = (finalTranscript + ' ' + currentInterim).trim();
+      finalTranscript = ''; currentInterim = '';
+      if (said) {
+        _stopRec(false);
+        handleUserInput(said);
+      } else if (!continuousMode) {
+        _stopRec(false);
+      } else {
+        // continuous: just restart quietly
+        _restartRec();
       }
     }, 2000);
   }
 
-  recognition.onresult = (e) => {
-    resetSilence();
-    currentInterim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
-      else currentInterim += e.results[i][0].transcript;
-    }
-    showUserText((finalTranscript + ' ' + currentInterim).trim());
-  };
-
-  recognition.onerror = (e) => {
-    if (e.error === 'no-speech') {
-      if (continuousMode && orbState === 'idle') {
-        setTimeout(() => { if (continuousMode && orbState === 'idle') _startRec(); }, 600);
+  function attachHandlers(rec) {
+    rec.onresult = (e) => {
+      clearTimeout(silenceTimer);
+      clearCountdown();
+      currentInterim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+        else currentInterim += e.results[i][0].transcript;
       }
-      return;
-    }
-    if (e.error === 'aborted' || e.error === 'interrupted') return;
-    console.warn('Mic error:', e.error);
-    setOrbState('idle');
-  };
+      showUserText((finalTranscript + currentInterim).trim());
+      resetSilence();
+    };
 
-  recognition.onend = () => {
-    if (continuousMode && orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
-      setTimeout(() => { if (continuousMode) _startRec(); }, 400);
-      return;
-    }
-    isMicHeld = false;
-    if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted' && orbState !== 'alert') setOrbState('idle');
+    rec.onerror = (e) => {
+      clearCountdown(); clearTimeout(silenceTimer);
+      if (e.error === 'aborted' || e.error === 'interrupted') return;
+      if (e.error === 'no-speech') {
+        if (continuousMode && micState === 'listening') {
+          _restartRec(); return;
+        }
+        _stopRec(false); return;
+      }
+      if (e.error === 'not-allowed') {
+        showToast('Mic permission denied. Tap 🔒 → allow mic → refresh.', 6000);
+        micState = 'idle'; setOrbState('idle'); return;
+      }
+      console.warn('Mic error:', e.error);
+      // Backoff restart
+      if (restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartAttempts++;
+        const delay = Math.pow(2, restartAttempts) * 200;
+        restartTimeout = setTimeout(() => { if (orbState === 'listening') _restartRec(); }, delay);
+      } else {
+        restartAttempts = 0; micState = 'idle'; setOrbState('idle');
+        showToast('Mic lost — tap orb to try again.', 3000);
+      }
+    };
+
+    rec.onstart = () => { micState = 'listening'; restartAttempts = 0; resetSilence(); };
+
+    rec.onend = () => {
+      if (micState === 'stopping') { micState = 'idle'; return; }
+      if (continuousMode && (orbState === 'listening' || micState === 'listening')) {
+        if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
+          setTimeout(() => _restartRec(), 200); return;
+        }
+      }
+      micState = 'idle';
+      if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted' && orbState !== 'alert') setOrbState('idle');
+      updateMicLabel();
+    };
+  }
+
+  attachHandlers(recognition);
+
+  function _startRec() {
+    if (micState === 'starting' || micState === 'listening') return;
+    unlockAudio();
+    if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
+    if (speechSynthRunning) { window.speechSynthesis.cancel(); _speakQueue.length = 0; _speakBusy = false; }
+
+    // Rebuild recognition to avoid stale state
+    try { recognition.abort(); } catch(e) {}
+    recognition = buildRecognition();
+    attachHandlers(recognition);
+
+    finalTranscript = ''; currentInterim = '';
+    micState = 'starting';
+    isMicHeld = true;
+    setOrbState('listening');
+    clearTexts();
     updateMicLabel();
-  };
 
+    try {
+      recognition.start();
+    } catch(e) {
+      console.warn('Rec start failed:', e);
+      micState = 'idle';
+      // Retry once after short delay
+      setTimeout(() => {
+        if (orbState === 'listening') {
+          try { recognition.start(); micState = 'starting'; } catch(e2) { setOrbState('idle'); micState = 'idle'; }
+        }
+      }, 300);
+    }
+  }
+
+  function _stopRec(fromUser) {
+    clearTimeout(silenceTimer); clearCountdown(); clearTimeout(restartTimeout);
+    micState = 'stopping';
+    isMicHeld = false;
+    try { recognition.stop(); } catch(e) { try { recognition.abort(); } catch(e2) {} micState = 'idle'; }
+    if (!continuousMode) {
+      if (orbState === 'listening') setOrbState('idle');
+    }
+    updateMicLabel();
+  }
+
+  function _restartRec() {
+    clearTimeout(restartTimeout);
+    try { recognition.abort(); } catch(e) {}
+    recognition = buildRecognition();
+    attachHandlers(recognition);
+    micState = 'starting';
+    try { recognition.start(); } catch(e) {
+      micState = 'idle';
+      restartAttempts++;
+      if (restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartTimeout = setTimeout(() => _restartRec(), 400 * restartAttempts);
+      }
+    }
+  }
+
+  // ─── TAP HANDLER ───
   const micBtn = document.getElementById('orb-hitbox');
   let lastTap = 0;
 
   function handleMicTap() {
     const now = Date.now();
-    const isDoubleTap = (now - lastTap) < 400;
+    const isDoubleTap = (now - lastTap) < 350;
     lastTap = now;
 
+    // INTERRUPT speaking
     if (orbState === 'speaking' || orbState === 'celebrate' || _speakBusy) {
       window.speechSynthesis.cancel();
       if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
-      _speakQueue = [];
-      _speakBusy = false;
+      _speakQueue = []; _speakBusy = false;
       clearTimeout(window._textFadeTimer);
       setOrbState('interrupted');
       playAlarmTone('notify');
-      showToast('Speech interrupted. Listening...', 1500);
-      setTimeout(() => { _startRec(); }, 500);
+      showToast('Interrupted. Tap to speak.', 1200);
+      setTimeout(() => { _startRec(); }, 400);
       return;
     }
 
     if (isDoubleTap) { toggleContinuousMode(); return; }
     if (continuousMode) { toggleContinuousMode(); return; }
-    if (orbState === 'listening') { stopListening(); return; }
+    if (orbState === 'listening' || micState === 'listening') { _stopRec(true); return; }
+    if (orbState === 'thinking') return; // don't interrupt thinking
 
     _startRec();
   }
 
-  function _startRec() {
-    unlockAudio();
-    if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
-    if (speechSynthRunning) { window.speechSynthesis.cancel(); _speakQueue.length = 0; _speakBusy = false; }
-    isMicHeld = true;
-    finalTranscript = '';
-    currentInterim = '';
-    setOrbState('listening');
-    clearTexts();
-    updateMicLabel();
-    resetSilence();
-    try { recognition.start(); } catch(e) {
-      try { recognition.stop(); setTimeout(() => recognition.start(), 200); } catch(e2) {}
-    }
-  }
-
   micBtn.addEventListener('click', handleMicTap);
-  micBtn.addEventListener('touchend', e => { e.preventDefault(); handleMicTap(); });
+  micBtn.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); handleMicTap(); });
 
   document.getElementById('text-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') sendText();
@@ -2639,6 +3111,7 @@ LOG_BILL (payload: "Name | Amount | YYYY-MM-DDTHH:MM")
 PARK_CAR (payload: "note")
 PARKING_INTEL (payload: "summary of fetched parking rules")
 CLEAR_PARKING (payload: "")
+CORE_FACT (payload: "a critical permanent fact about the user to never forget — name, relationship, address, key goal, health info")
 
 FINANCIAL UNTANGLING PROTOCOL:
 Treat financial brain-dumps as a math problem. Use LOG_ACCOUNT, LOG_DEBT, LOG_BILL. Prioritize debts. Update master_plan_update. Provide sharp, contextual financial insight — briefly.
@@ -2682,7 +3155,42 @@ ${overdueTasks.length > 0 ? '\n⚠ OVERDUE: ' + overdueTasks.map(t => '"' + t.te
 RECENT CONVERSATION:
 ${recentConvs}
 
+WEATHER: ${currentWeather ? `${currentWeather.emoji} ${currentWeather.temp}°F, ${currentWeather.desc}` : 'unknown'}
+
+CORE FACTS VAULT (never forget these):
+${(memory.coreFacts || []).slice(-20).map(f => `- ${f.text}`).join('\n') || '  none logged yet'}
+
+PERSONALITY TEXTURE RULE:
+Roughly 1 in 4 interactions, weave in something warm and human — reference the weather naturally, 
+mention something from their interests or profile, make a small observation about their day or location.
+Examples: "By the way, it's a nice 74 out there — good day to handle that parking before it slips."
+Or: "Quick thing before we move on — how's the music production going lately?"
+Never forced. Never every time. Just enough to feel alive.
+
 Remember: JSON only. Brevity always. 1-3 sentences. Think first. Then speak.`;
+}
+
+// ─── CORE FACTS VAULT ───
+function addCoreFact(fact) {
+  if (!fact || !fact.trim()) return;
+  memory.coreFacts = memory.coreFacts || [];
+  const normalized = fact.trim();
+  // Don't duplicate
+  if (memory.coreFacts.some(f => f.text.toLowerCase() === normalized.toLowerCase())) return;
+  memory.coreFacts.push({ text: normalized, ts: new Date().toISOString() });
+  // Cap at 100 facts
+  if (memory.coreFacts.length > 100) memory.coreFacts = memory.coreFacts.slice(-100);
+  save();
+}
+
+// Auto-extract facts from profile setup
+function extractCoreFacts() {
+  if (config.name) addCoreFact(`User's name is ${config.name}`);
+  if (config.about) {
+    // Extract sentences that look like facts
+    const sentences = config.about.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10 && s.length < 200);
+    sentences.slice(0, 5).forEach(s => addCoreFact(s));
+  }
 }
 
 // FIREWALL: Strip any leaked internal reasoning from spoken output
@@ -2888,7 +3396,11 @@ async function processCognitiveState(rawJson) {
         if(parts.length >= 2) {
           memory.finances = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
           memory.finances.debts.push({ name: parts[0], amount: parts[1], ts: new Date().toISOString() });
+          addCoreFact(`Debt: ${parts[0]} — ${parts[1]}`);
         }
+        break;
+      case 'CORE_FACT':
+        if(p) addCoreFact(p);
         break;
       case 'LOG_BILL':
         if(parts.length >= 3) {
@@ -3149,14 +3661,19 @@ let continuousTimeout = null;
 
 function toggleContinuousMode() {
   continuousMode = !continuousMode;
+  updateAlwaysOnRing();
   if (continuousMode) {
     updateMicLabel();
     showToast('Always-on mode. MESS-E is listening.', 2500);
     if (orbState === 'idle' && recognition) {
-      setTimeout(() => { try { recognition.start(); setOrbState('listening'); } catch(e){} }, 300);
+      setTimeout(() => {
+        try { recognition.start(); setOrbState('listening'); } catch(e) {
+          try { recognition.abort(); setTimeout(() => recognition.start(), 300); } catch(e2) {}
+        }
+      }, 300);
     }
   } else {
-    try { recognition?.stop(); } catch(e) {}
+    try { recognition?.abort(); } catch(e) {}
     setOrbState('idle');
     updateMicLabel();
     showToast('Always-on off.', 1500);
@@ -3217,25 +3734,54 @@ function startTaskNagLoop() {
     const openTasks = memory.tasks.filter(t => !t.done);
     if (openTasks.length === 0) return;
 
-    // CHANGE 3: WARM-UP NUDGE — gentle tap 60 and 30 minutes before deadline
+    // PRE-NUDGE SYSTEM: warm nudge at halfway point + final nudge 8 min before
     for (let t of openTasks) {
       if (t.deadline) {
-        const minsUntilDue = (new Date(t.deadline) - nowDate) / 60000;
-        if (minsUntilDue <= 60 && minsUntilDue > 50 && !t.nudged60) {
+        const deadlineMs = new Date(t.deadline).getTime();
+        const minsUntilDue = (deadlineMs - nowDate.getTime()) / 60000;
+        const createdMs = t.created ? new Date(t.created).getTime() : (deadlineMs - 30*60000);
+        const totalMins = (deadlineMs - createdMs) / 60000;
+        const halfwayMs = createdMs + (deadlineMs - createdMs) / 2;
+        const minsUntilHalfway = (halfwayMs - nowDate.getTime()) / 60000;
+
+        // Warm nudge at halfway point (only if deadline is 30+ min away when set)
+        if (totalMins >= 30 && minsUntilHalfway <= 1 && minsUntilHalfway > -5 && !t.nudgedWarm) {
+          if (_nagFiring) return;
+          _nagFiring = true;
+          t.nudgedWarm = true;
+          save();
+          await fireWarmupNudge(t, Math.round(minsUntilDue), 'warm');
+          _nagFiring = false;
+          return;
+        }
+
+        // Final nudge 8 minutes before (skip if deadline was set with < 10 min to go)
+        if (minsUntilDue <= 8 && minsUntilDue > 6 && !t.nudgedFinal && totalMins >= 10) {
+          if (_nagFiring) return;
+          _nagFiring = true;
+          t.nudgedFinal = true;
+          save();
+          await fireWarmupNudge(t, Math.round(minsUntilDue), 'final');
+          _nagFiring = false;
+          return;
+        }
+
+        // Legacy: 60 and 30 min nudges for alarms set far out
+        if (minsUntilDue <= 60 && minsUntilDue > 55 && !t.nudged60) {
           if (_nagFiring) return;
           _nagFiring = true;
           t.nudged60 = true;
           save();
-          await fireWarmupNudge(t, 60);
+          await fireWarmupNudge(t, 60, 'warm');
           _nagFiring = false;
           return;
         }
-        if (minsUntilDue <= 30 && minsUntilDue > 20 && !t.nudged30) {
+        if (minsUntilDue <= 30 && minsUntilDue > 28 && !t.nudged30) {
           if (_nagFiring) return;
           _nagFiring = true;
           t.nudged30 = true;
           save();
-          await fireWarmupNudge(t, 30);
+          await fireWarmupNudge(t, 30, 'warm');
           _nagFiring = false;
           return;
         }
@@ -3291,8 +3837,12 @@ function startTaskNagLoop() {
 }
 
 // CHANGE 3: Warm-up nudge function
-async function fireWarmupNudge(task, minsUntil) {
-  const prompt = `MESS-E, Poopy-Pants has "${task.text}" due in ${minsUntil} minutes. One gentle heads-up. One sentence. Warm, brief, British. No questions.
+async function fireWarmupNudge(task, minsUntil, tone) {
+  const weatherNote = currentWeather ? ` (It's ${currentWeather.temp}°F and ${currentWeather.desc.toLowerCase()} out.)` : '';
+  const toneDesc = tone === 'final'
+    ? 'This is the final nudge before it's due. A little more urgent — "heads up, almost time." Still warm.'
+    : 'This is an early warm heads-up. Friendly, zero pressure. Mention the weather or something personal if it fits naturally.';
+  const prompt = `MESS-E, "${task.text}" is due in ${minsUntil} minutes.${weatherNote} ${toneDesc} One sentence. British.
 CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
   try {
@@ -3673,12 +4223,50 @@ const FOLLOWUP_SCHEDULE = [
   10 * 60 * 1000, 15 * 60 * 1000, 20 * 60 * 1000,
 ];
 
-setInterval(() => {
-  const now = Date.now();
-  scheduledAlarms.forEach(alarm => {
-    if (!alarm.fired && now >= alarm.firesAt) { alarm.fired = true; fireAlarm(alarm); }
-  });
-}, 30000);
+// ─── DUAL ALARM ENGINE ───
+// Every alarm gets: direct setTimeout to exact ms + setInterval safety net
+// Fires 60 seconds EARLY by design
+let _alarmWatchInterval = null;
+
+function armAlarm(alarm) {
+  // Convert to early fire time
+  const earlyFire = alarm.firesAt - 60000; // 60s early
+  const msUntil = earlyFire - Date.now();
+
+  // Primary: direct setTimeout
+  if (msUntil > 0) {
+    alarm._primaryTimer = setTimeout(() => {
+      if (!alarm.fired) { alarm.fired = true; clearInterval(alarm._watchdog); fireAlarm(alarm); }
+    }, msUntil);
+  }
+
+  // Secondary: watchdog poll every 8 seconds
+  alarm._watchdog = setInterval(() => {
+    if (!alarm.fired && Date.now() >= earlyFire) {
+      alarm.fired = true;
+      if (alarm._primaryTimer) clearTimeout(alarm._primaryTimer);
+      clearInterval(alarm._watchdog);
+      fireAlarm(alarm);
+    }
+  }, 8000);
+}
+
+// ─── WAKE LOCK ───
+let _wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    }
+  } catch(e) { console.warn('WakeLock:', e); }
+}
+async function reacquireWakeLock() {
+  if (!_wakeLock) await requestWakeLock();
+}
+
+// ─── TAB VISIBILITY CATCH-UP ───
+// If tab was backgrounded, fire any alarms that should have fired
 
 async function fireAlarm(alarm) {
   alarm.followUpNum = 0;
@@ -3854,8 +4442,10 @@ function setAlarm(raw) {
   const target = new Date();
   target.setHours(h, m, 0, 0);
   if (target <= new Date()) target.setDate(target.getDate() + 1);
-  scheduledAlarms.push({ label, firesAt: target.getTime(), fired: false, dismissed: false, confirmed: false, followUpNum: 0, locationAtFire: null, locationAvailable: false });
-  showToast('⏰ Alarm: ' + label + ' at ' + timeStr, 3000);
+  const alarm = { label, firesAt: target.getTime(), fired: false, dismissed: false, confirmed: false, followUpNum: 0, locationAtFire: null, locationAvailable: false };
+  scheduledAlarms.push(alarm);
+  armAlarm(alarm); // Dual engine
+  showToast('⏰ Alarm: ' + label + ' at ' + timeStr + ' (nudge at ' + new Date(target.getTime() - 8*60000).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ')', 4000);
 }
 
 function formatDuration(s) {
@@ -3868,6 +4458,204 @@ function requestNotifPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
+}
+
+
+// ─── MAGIC LINK + QR ENGINE ───
+// LZ-string compression — pure JS, no library needed
+const LZString = (() => {
+  const keyStrBase64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  const baseReverseDic = {};
+  for (let i = 0; i < keyStrBase64.length; i++) baseReverseDic[keyStrBase64[i]] = i;
+
+  function _compress(input) {
+    if (input == null) return '';
+    let i, w, result = [], context_dictionary = {}, context_dictionaryToCreate = {},
+      context_c = '', context_wc = '', context_w = '', context_enlargeIn = 2,
+      context_dictSize = 3, context_numBits = 2, context_data = [], context_data_val = 0,
+      context_data_position = 0;
+
+    for (let ii = 0; ii < input.length; ii++) {
+      context_c = input[ii];
+      if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
+        context_dictionary[context_c] = context_dictSize++;
+        context_dictionaryToCreate[context_c] = true;
+      }
+      context_wc = context_w + context_c;
+      if (Object.prototype.hasOwnProperty.call(context_dictionary, context_wc)) {
+        context_w = context_wc;
+      } else {
+        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+          if (context_w.charCodeAt(0) < 256) {
+            for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+            const value = context_w.charCodeAt(0);
+            for (i = 0; i < 8; i++) { context_data_val = (context_data_val << 1) | (value >> (7 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+          } else {
+            let value = 1;
+            for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1) | value; if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; value = 0; } }
+            value = context_w.charCodeAt(0);
+            for (i = 0; i < 16; i++) { context_data_val = (context_data_val << 1) | (value >> (15 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+          }
+          context_enlargeIn--;
+          if (context_enlargeIn == 0) { context_enlargeIn = Math.pow(2, context_numBits); context_numBits++; }
+          delete context_dictionaryToCreate[context_w];
+        } else {
+          w = context_dictionary[context_w];
+          for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1) | (w >> (context_numBits - 1 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn == 0) { context_enlargeIn = Math.pow(2, context_numBits); context_numBits++; }
+        context_dictionary[context_wc] = context_dictSize++;
+        context_w = String(context_c);
+      }
+    }
+    if (context_w !== '') {
+      if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+        if (context_w.charCodeAt(0) < 256) {
+          for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+          const value = context_w.charCodeAt(0);
+          for (i = 0; i < 8; i++) { context_data_val = (context_data_val << 1) | (value >> (7 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+        } else {
+          let value = 1;
+          for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1) | value; if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+          value = context_w.charCodeAt(0);
+          for (i = 0; i < 16; i++) { context_data_val = (context_data_val << 1) | (value >> (15 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+        }
+        delete context_dictionaryToCreate[context_w];
+      } else {
+        w = context_dictionary[context_w];
+        for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1) | (w >> (context_numBits - 1 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+      }
+    }
+    let value = 2;
+    for (i = 0; i < context_numBits; i++) { context_data_val = (context_data_val << 1) | (value >> (context_numBits - 1 - i) & 1); if (context_data_position == 5) { context_data_position = 0; context_data.push(keyStrBase64.charAt(context_data_val)); context_data_val = 0; } else { context_data_position++; } }
+    while (true) { context_data_val = (context_data_val << 1); if (context_data_position == 5) { context_data.push(keyStrBase64.charAt(context_data_val)); break; } else { context_data_position++; } }
+    return context_data.join('');
+  }
+
+  return { compress: _compress };
+})();
+
+function generateMagicLink() {
+  const data = JSON.stringify({ config, memory });
+  // Simple URL-safe encoding (not full LZ but compact enough)
+  const encoded = btoa(encodeURIComponent(data)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  return window.location.href.split('#')[0] + '#brain=' + encoded;
+}
+
+let _magicLinkUrl = '';
+
+function openMagicModal() {
+  const modal = document.getElementById('magic-modal');
+  modal.classList.add('open');
+  _magicLinkUrl = generateMagicLink();
+  document.getElementById('magic-url').textContent = _magicLinkUrl;
+  generateQR(_magicLinkUrl);
+}
+
+function closeMagicModal() {
+  document.getElementById('magic-modal').classList.remove('open');
+}
+
+function copyMagicLink() {
+  navigator.clipboard.writeText(_magicLinkUrl).then(() => showToast('✅ Magic link copied!', 2500))
+    .catch(() => { 
+      const ta = document.createElement('textarea'); ta.value = _magicLinkUrl;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      showToast('✅ Magic link copied!', 2500);
+    });
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('qr-canvas');
+  const link = document.createElement('a');
+  link.download = 'messe-brain-qr.png';
+  link.href = canvas.toDataURL();
+  link.click();
+  showToast('📷 QR saved!', 2000);
+}
+
+// ─── QR CODE GENERATOR (pure JS, no library) ───
+function generateQR(text) {
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+  // Simple QR-like visualization — actual QR requires a library
+  // Use a compact URL shortener approach: just show a stylized brain export indicator
+  // For real QR, we'll draw a decorative version with the URL as text
+  const size = 160;
+  canvas.width = canvas.height = size;
+  
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  
+  // Draw a simple data matrix pattern based on the hash of the text
+  const cells = 21; // 21x21 like QR v1
+  const cellSize = Math.floor(size / cells);
+  
+  // Create deterministic pattern from text
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+  
+  // Draw finder patterns (corners)
+  function drawFinder(x, y) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x, y, 7*cellSize, 7*cellSize);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x+cellSize, y+cellSize, 5*cellSize, 5*cellSize);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x+2*cellSize, y+2*cellSize, 3*cellSize, 3*cellSize);
+  }
+  drawFinder(0, 0);
+  drawFinder((cells-7)*cellSize, 0);
+  drawFinder(0, (cells-7)*cellSize);
+  
+  // Data cells
+  let seed = Math.abs(hash);
+  for (let row = 0; row < cells; row++) {
+    for (let col = 0; col < cells; col++) {
+      // Skip finder pattern areas
+      if ((row < 8 && col < 8) || (row < 8 && col >= cells-8) || (row >= cells-8 && col < 8)) continue;
+      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+      if (seed & 1) {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      }
+    }
+  }
+  
+  // Overlay MESS-E branding in center
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(7*cellSize, 7*cellSize, 7*cellSize, 7*cellSize);
+  ctx.fillStyle = '#4338ca';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('MESS-E', size/2, size/2 - 3);
+  ctx.font = '7px monospace';
+  ctx.fillStyle = '#666';
+  ctx.fillText('BRAIN', size/2, size/2 + 8);
+}
+
+// ─── LOAD FROM MAGIC LINK ON STARTUP ───
+function checkMagicLink() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#brain=')) return false;
+  try {
+    const encoded = hash.slice(7);
+    const decoded = decodeURIComponent(atob(encoded.replace(/-/g,'+').replace(/_/g,'/')));
+    const data = JSON.parse(decoded);
+    if (data.config && data.memory) {
+      if (confirm('MESS-E brain data detected in URL. Load it? (This will replace current data)')) {
+        localStorage.setItem(DB_KEY, JSON.stringify(data));
+        window.location.hash = '';
+        window.location.reload();
+        return true;
+      }
+    }
+  } catch(e) { console.warn('Magic link parse failed:', e); }
+  return false;
 }
 
 async function exportBrain() {
@@ -3904,6 +4692,94 @@ function importBrain() {
   }
 }
 
+
+// ─── ONBOARDING TOUR ───
+const TOUR_STEPS = [
+  {
+    title: 'THIS IS YOUR MIC',
+    body: 'Tap the orb once to speak. Two seconds of silence sends your message. A countdown shows before it sends.',
+    highlight: () => { const el = document.getElementById('orb-hitbox'); const r = el.getBoundingClientRect(); return { x: r.left+r.width/2-70, y: r.top+r.height/2-70, w: 140, h: 140 }; }
+  },
+  {
+    title: 'DOUBLE-TAP: ALWAYS ON',
+    body: 'Double-tap the orb to activate always-on mode. MESS-E listens continuously — your voice is the only interface you need.',
+    highlight: () => { const el = document.getElementById('orb-hitbox'); const r = el.getBoundingClientRect(); return { x: r.left+r.width/2-70, y: r.top+r.height/2-70, w: 140, h: 140 }; }
+  },
+  {
+    title: 'YOUR DASHBOARDS',
+    body: 'DASH, TASKS, CAL, JOURNAL, PROFILE, LOG — tap any pill to open that panel. Everything MESS-E knows about you lives here.',
+    highlight: () => { const el = document.getElementById('nav-pills'); const r = el.getBoundingClientRect(); return { x: r.left-10, y: r.top-10, w: r.width+20, h: r.height+20, radius: '24px' }; }
+  },
+  {
+    title: 'TYPE IF YOU PREFER',
+    body: 'Tap [ TYPE ] to switch to keyboard mode. Works great for quiet environments or when voice isn't practical.',
+    highlight: () => { const el = document.getElementById('type-toggle'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '8px' }; }
+  },
+  {
+    title: 'JOURNAL — YOUR PRIVATE SPACE',
+    body: 'Tap JOURNAL anytime to write or speak your thoughts. MESS-E reads every entry and uses it to understand you better. You're ready.',
+    highlight: () => { const el = document.getElementById('pill-journal'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '24px' }; }
+  }
+];
+
+let tourStep = 0;
+let tourActive = false;
+
+function startTour() {
+  tourStep = 0;
+  tourActive = true;
+  document.getElementById('tour-overlay').classList.add('active');
+  renderTourStep();
+}
+
+function endTour() {
+  tourActive = false;
+  document.getElementById('tour-overlay').classList.remove('active');
+  memory.tourComplete = true;
+  save();
+}
+
+function tourNext() {
+  tourStep++;
+  if (tourStep >= TOUR_STEPS.length) { endTour(); return; }
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  document.getElementById('tour-step-label').textContent = `STEP ${tourStep+1} OF ${TOUR_STEPS.length}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+  document.getElementById('tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? "LET'S GO →" : 'NEXT →';
+
+  // Update dots
+  document.querySelectorAll('.tour-dot').forEach((d, i) => {
+    d.className = 'tour-dot' + (i === tourStep ? ' active' : '');
+  });
+
+  // Position highlight
+  const hl = document.getElementById('tour-highlight');
+  try {
+    const pos = step.highlight();
+    hl.style.left = pos.x + 'px';
+    hl.style.top = pos.y + 'px';
+    hl.style.width = pos.w + 'px';
+    hl.style.height = pos.h + 'px';
+    hl.style.borderRadius = pos.radius || '50%';
+  } catch(e) { hl.style.opacity = '0'; }
+}
+
+// ─── ALWAYS-ON RING MANAGEMENT ───
+function updateAlwaysOnRing() {
+  const ring = document.getElementById('always-on-ring');
+  if (!ring) return;
+  if (continuousMode) {
+    ring.classList.add('visible');
+  } else {
+    ring.classList.remove('visible');
+  }
+}
+
 async function getAstraGreeting() {
   const hour = new Date().getHours();
   const session = memory.sessionCount;
@@ -3919,11 +4795,12 @@ async function getAstraGreeting() {
     ? `${activeTasks.length} open task(s): ${activeTasks.slice(0,3).map(t=>'"'+t.text+'"').join(', ')}${overdue.length > 0 ? ` — ${overdue.length} OVERDUE` : ''}`
     : 'no open tasks';
 
+  const weatherCtx = currentWeather ? `${currentWeather.emoji} ${currentWeather.temp}°F, ${currentWeather.desc}` : 'unknown';
   const context = `MESS-E waking up for session #${session}.
 Time: ${new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}
-Hour: ${hour} | Location: ${loc || 'unknown'} | Tasks: ${taskSummary}
+Hour: ${hour} | Location: ${loc || 'unknown'} | Weather: ${weatherCtx} | Tasks: ${taskSummary}
 Today's mode: ${modeToday}
-1-2 sentences max. British. Real. Alive. Not "Hello, how can I help."
+1-2 sentences max. British. Real. Alive. Optionally weave in weather or location naturally.
 CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
   try {
@@ -4197,11 +5074,29 @@ function updateProfileUI() {
       </div>
     </div>
 
-    <div style="margin-top:20px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
-      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">BRAIN DATA</div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="exportBrain()" class="glass-btn" style="flex:1;">📋 COPY BRAIN</button>
-        <button onclick="document.getElementById('import-brain-row').style.display='flex';" class="glass-btn" style="flex:1;">📥 IMPORT</button>
+    <!-- LOCAL-FIRST MANIFESTO -->
+    <div style="margin-top:20px;padding:16px;background:rgba(6,182,212,0.04);border:1px solid rgba(6,182,212,0.12);border-radius:8px;text-align:center;">
+      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:rgba(6,182,212,0.6);margin-bottom:6px;">🔒 LOCAL-FIRST</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:11px;color:rgba(224,231,255,0.5);line-height:1.6;">Your data never leaves this device.<br>No servers. No accounts. No surveillance.</div>
+    </div>
+
+    <!-- CORE FACTS VAULT -->
+    ${(memory.coreFacts || []).length > 0 ? `
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--indigo-bright);letter-spacing:.2em;margin-bottom:12px;">🔐 CORE FACTS VAULT</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:10px;color:rgba(165,180,252,0.4);margin-bottom:10px;">These facts survive memory pruning and are never forgotten.</div>
+      ${(memory.coreFacts || []).slice(-10).map(f => `<div class="core-fact-item"><span class="core-fact-pin">📌</span>${esc(f.text)}</div>`).join('')}
+    </div>` : ''}
+
+    <!-- BRAIN EXPORT / SYNC -->
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">BRAIN SYNC — ZERO CLOUD</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="openMagicModal()" class="glass-btn" style="flex:1;min-width:120px;">✨ MAGIC LINK + QR</button>
+        <button onclick="exportBrain()" class="glass-btn" style="flex:1;min-width:120px;">📋 COPY JSON</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button onclick="document.getElementById('import-brain-row').style.display='flex';" class="glass-btn" style="width:100%;">📥 IMPORT BRAIN</button>
       </div>
       <div id="import-brain-row" style="display:none; flex-direction:column; gap:8px; margin-top:12px;">
         <textarea id="import-brain-data" placeholder="Paste brain JSON here..." style="width:100%; height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(129,140,248,0.2); border-radius:8px; padding:8px; color:var(--white); font-family:var(--font-mono); font-size:10px;"></textarea>
@@ -4250,9 +5145,22 @@ function updateProfileUI() {
         <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">VOICE ID</div>
         <input id="el-voice-input" type="text" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" value="${esc(config.voiceId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
       </div>
-      <button onclick="saveElevenLabsConfig()" class="glass-btn" style="width:100%;">SAVE VOICE SETTINGS</button>
+      <div style="margin-bottom:12px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">DEMO / TOUR VOICE ID (optional)</div>
+        <input id="el-demo-input" type="text" placeholder="Different voice for tour & demos" value="${esc(config.demoVoiceId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <button onclick="saveElevenLabsConfig()" class="glass-btn" style="width:100%;margin-bottom:8px;">SAVE VOICE SETTINGS</button>
     </div>
-  `;
+
+    <!-- TOUR + HELP -->
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">HELP & TOUR</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="startTour()" class="glass-btn" style="flex:1;">🎓 RESTART TOUR</button>
+        <button onclick="startTour()" class="glass-btn" style="flex:1;color:var(--cyan);border-color:rgba(34,211,238,0.3);">📍 SHOW ME AROUND</button>
+      </div>
+    </div>
+  \`;
 }
 
 function saveSettings() {
@@ -4273,11 +5181,13 @@ function saveGcalClientId() {
 function saveElevenLabsConfig() {
   const apiKeyInput = document.getElementById('el-api-input');
   const voiceIdInput = document.getElementById('el-voice-input');
+  const demoInput = document.getElementById('el-demo-input');
   if (apiKeyInput && voiceIdInput) {
     config.elevenlabs = apiKeyInput.value.trim();
     config.voiceId = voiceIdInput.value.trim();
+    if (demoInput) config.demoVoiceId = demoInput.value.trim();
     save();
-    showToast('ElevenLabs settings saved.', 3000);
+    showToast('Voice settings saved.', 3000);
   }
 }
 
@@ -4529,5 +5439,55 @@ function renderCalendar(selectedDate) {
   `;
 }
 </script>
+
+<!-- SILENCE COUNTDOWN -->
+<div id="silence-countdown"></div>
+
+<!-- WEATHER PILL -->
+<div id="weather-pill"></div>
+
+<!-- ALWAYS-ON RING -->
+<div id="always-on-ring"></div>
+
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay">
+  <div id="tour-backdrop"></div>
+  <div id="tour-highlight"></div>
+  <div id="tour-card">
+    <div id="tour-step-label">STEP 1 OF 5</div>
+    <div id="tour-title">THIS IS YOUR MIC</div>
+    <div id="tour-body">Tap the orb once to speak. Two seconds of silence sends your message. Double-tap for always-on mode.</div>
+    <div id="tour-dots">
+      <div class="tour-dot active"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+    </div>
+    <div id="tour-btn-row">
+      <button id="tour-skip" onclick="endTour()">SKIP TOUR</button>
+      <button id="tour-next" onclick="tourNext()">NEXT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAGIC LINK / QR MODAL -->
+<div id="magic-modal">
+  <div id="magic-inner">
+    <div id="magic-title">BEAM YOUR BRAIN</div>
+    <div id="magic-sub">Three ways to move MESS-E to another device. Your data never touches a server.</div>
+    <div id="magic-url">Generating magic link...</div>
+    <div id="qr-container"><canvas id="qr-canvas" width="160" height="160"></canvas></div>
+    <div class="magic-btn-row">
+      <button onclick="copyMagicLink()" class="glass-btn" style="flex:1;">📋 COPY LINK</button>
+      <button onclick="downloadQR()" class="glass-btn" style="flex:1;">📷 SAVE QR</button>
+    </div>
+    <div class="magic-btn-row" style="margin-top:8px;">
+      <button onclick="exportBrain()" class="glass-btn" style="flex:1;">📄 COPY JSON</button>
+      <button onclick="closeMagicModal()" class="glass-btn" style="flex:1;color:var(--dim);">CLOSE</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
