@@ -1,0 +1,4562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#020209">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MESS-E</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@300;400;600;900&family=Share+Tech+Mono&family=Exo+2:wght@200;300;400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --void: #020209;
+  --deep: #06071a;
+  --surface: #0d0f2a;
+  --indigo: #4338ca;
+  --indigo-bright: #a5b4fc;
+  --indigo-pulse: #c7d2fe;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --white: #f0f4ff;
+  --dim: rgba(224,231,255,0.65);
+  --font-display: 'Orbitron', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-body: 'Exo 2', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--void);
+  color: var(--white);
+  font-family: var(--font-body);
+  overflow: hidden;
+  user-select: none;
+}
+
+.panel, .panel * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#orb-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+#orb-hitbox {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  z-index: 5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#ui-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48px 24px 40px;
+  pointer-events: none;
+}
+
+#header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: all;
+}
+
+#astra-wordmark {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.5em;
+  color: var(--indigo-bright);
+  opacity: 0.7;
+}
+
+#status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.15em;
+}
+
+#status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--indigo-bright);
+  box-shadow: 0 0 8px var(--indigo-bright);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+#center-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+#speech-output {
+  position: fixed;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, 88vw);
+  max-height: 40vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  text-align: center;
+  pointer-events: none;
+  z-index: 20;
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+}
+
+#astra-text {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(15px, 3.8vw, 20px);
+  line-height: 1.75;
+  color: rgba(224, 231, 255, 0.95);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 40px rgba(129,140,248,0.6), 0 2px 8px rgba(0,0,0,0.8);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  min-height: 2em;
+  padding: 0 12px;
+}
+
+#astra-text.visible { opacity: 1; }
+
+#user-text {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(129, 140, 248, 0.7);
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#user-text.visible { opacity: 1; }
+
+#voice-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: fixed;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+#voice-wave.active { opacity: 1; }
+
+.wave-bar {
+  width: 3px;
+  background: var(--indigo-bright);
+  border-radius: 2px;
+  animation: wave-anim 0.8s ease-in-out infinite;
+  box-shadow: 0 0 6px var(--indigo-bright);
+}
+.wave-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+.wave-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { height: 32px; animation-delay: 0.15s; }
+.wave-bar:nth-child(5) { height: 20px; animation-delay: 0.25s; }
+.wave-bar:nth-child(6) { height: 14px; animation-delay: 0.05s; }
+
+@keyframes wave-anim {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  pointer-events: all;
+  padding-bottom: 8px;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+#mic-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: rgba(165,180,252,0.6);
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 1;
+  transition: all 0.4s ease;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+#nav-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-pill {
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(165,180,252,0.15);
+  background: linear-gradient(180deg, rgba(30,32,70,0.6) 0%, rgba(13,15,42,0.85) 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: rgba(165,180,252,0.65);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.nav-pill:hover, .nav-pill.active {
+  border-color: rgba(165,180,252,0.4);
+  color: var(--white);
+  background: linear-gradient(180deg, rgba(67,56,202,0.4) 0%, rgba(49,46,129,0.6) 100%);
+  box-shadow: 0 6px 16px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  transform: translateY(-1px);
+}
+.nav-pill:active {
+  transform: translateY(1px) scale(0.95);
+}
+
+.nav-pill.alert-orange {
+  border-color: rgba(249, 115, 22, 0.8) !important;
+  color: #fff !important;
+  background: linear-gradient(180deg, rgba(234, 88, 12, 0.4) 0%, rgba(194, 65, 12, 0.6) 100%) !important;
+  box-shadow: 0 0 16px rgba(234, 88, 12, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: pulse-orange 2s infinite;
+}
+@keyframes pulse-orange {
+  0%, 100% { box-shadow: 0 0 12px rgba(234, 88, 12, 0.5); }
+  50% { box-shadow: 0 0 24px rgba(234, 88, 12, 0.8); }
+}
+
+#type-toggle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: rgba(165,180,252,0.6);
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(165,180,252,0.2);
+  background: linear-gradient(180deg, rgba(30,32,70,0.5) 0%, rgba(13,15,42,0.7) 100%);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+#type-toggle:hover {
+  color: var(--white);
+  border-color: rgba(165,180,252,0.4);
+  background: linear-gradient(180deg, rgba(67,56,202,0.3) 0%, rgba(49,46,129,0.5) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(67,56,202,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+#type-toggle:active {
+  transform: translateY(1px) scale(0.95);
+}
+
+#vision-preview-container {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(34,211,238,0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+#vision-preview-img {
+  width: 40px; height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(34,211,238,0.5);
+}
+#vision-preview-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+}
+#vision-clear {
+  background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 14px;
+}
+
+#input-row {
+  display: none;
+  width: min(480px, 88vw);
+  gap: 8px;
+  align-items: center;
+}
+#input-row.visible { display: flex; }
+
+#text-input {
+  flex: 1;
+  background: linear-gradient(180deg, rgba(13,15,42,0.9) 0%, rgba(8,9,26,0.95) 100%);
+  border: 1px solid rgba(129,140,248,0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(224,231,255,0.9);
+  outline: none;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+#text-input:focus { 
+  border-color: rgba(129,140,248,0.8);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 0 16px rgba(67,56,202,0.3);
+}
+#text-input::placeholder { color: rgba(165,180,252,0.3); }
+
+#send-btn {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(165,180,252,0.3);
+  background: linear-gradient(180deg, rgba(79,70,229,0.8) 0%, rgba(55,48,163,0.9) 100%);
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 12px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+#send-btn:hover { 
+  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
+  border-color: rgba(165,180,252,0.6);
+  box-shadow: 0 6px 16px rgba(67,56,202,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+#send-btn:active {
+  transform: translateY(1px) scale(0.92);
+}
+
+.glass-btn {
+  background: linear-gradient(180deg, rgba(40,42,80,0.6) 0%, rgba(20,22,50,0.8) 100%);
+  border: 1px solid rgba(165,180,252,0.25);
+  color: var(--indigo-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  text-transform: uppercase;
+}
+.glass-btn:hover {
+  background: linear-gradient(180deg, rgba(67,56,202,0.4) 0%, rgba(49,46,129,0.6) 100%);
+  border-color: rgba(165,180,252,0.5);
+  color: var(--white);
+  box-shadow: 0 6px 16px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  transform: translateY(-1px);
+}
+.glass-btn:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.primary-btn {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
+  border: 1px solid rgba(165,180,252,0.4);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-transform: uppercase;
+}
+.primary-btn:hover {
+  background: linear-gradient(180deg, rgba(129,140,248,1) 0%, rgba(79,70,229,1) 100%);
+  box-shadow: 0 12px 32px rgba(67,56,202,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+.primary-btn:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2,2,9,0.97);
+  backdrop-filter: blur(30px);
+  padding: 0;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.panel.open {
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid rgba(129,140,248,0.12);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(2,2,9,0.98);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid rgba(129,140,248,0.12);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--indigo-bright);
+  cursor: pointer;
+  padding: 20px 24px;
+  opacity: 0.8;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover { 
+  opacity: 1; 
+  background: linear-gradient(90deg, rgba(67,56,202,0.2) 0%, transparent 100%);
+  color: var(--white);
+}
+.back-btn:active {
+  background: rgba(67,56,202,0.3);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--white);
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.panel-body {
+  padding: 28px 24px 100px;
+}
+
+.card {
+  background: linear-gradient(135deg, rgba(13,15,42,0.9), rgba(6,7,26,0.9));
+  border: 1px solid rgba(129,140,248,0.12);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.4), transparent);
+}
+
+.card-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.card-value {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 15px;
+  color: var(--white);
+  line-height: 1.6;
+}
+
+.card-value.accent { color: var(--indigo-bright); }
+.card-value.warn { color: var(--amber); }
+.card-value.crit { color: var(--red); }
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(129,140,248,0.08);
+}
+
+.task-check {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(129,140,248,0.4);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.task-check.done {
+  background: var(--indigo);
+  border-color: var(--indigo);
+}
+
+.task-text {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--white);
+  flex: 1;
+}
+
+.task-text.done {
+  text-decoration: line-through;
+  color: var(--dim);
+}
+
+.profile-section {
+  margin-bottom: 28px;
+}
+
+.profile-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--indigo-bright);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.profile-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(129,140,248,0.25);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dim);
+  margin: 3px;
+}
+
+#conversation-panel .msg,
+.panel .msg {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 8px;
+}
+
+#conversation-panel .msg.astra,
+.panel .msg.astra {
+  background: rgba(67,56,202,0.12);
+  border-left: 2px solid var(--indigo-bright);
+}
+
+#conversation-panel .msg.user,
+.panel .msg.user {
+  background: rgba(13,15,42,0.5);
+  border-left: 2px solid rgba(165,180,252,0.25);
+}
+
+.msg-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+
+.msg-content {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--white);
+}
+
+#enter-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: #020209;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#enter-splash-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+#enter-wordmark {
+  font-family: var(--font-display);
+  font-size: 52px;
+  letter-spacing: 0.5em;
+  color: var(--white);
+  text-indent: 0.5em;
+}
+#enter-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: rgba(165,180,252,0.5);
+  text-transform: uppercase;
+}
+#enter-btn {
+  margin-top: 40px;
+  background: linear-gradient(180deg, rgba(67,56,202,0.1) 0%, rgba(13,15,42,0.3) 100%);
+  border: 1px solid rgba(129,140,248,0.3);
+  color: var(--indigo-bright);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.4em;
+  padding: 18px 48px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  -webkit-tap-highlight-color: transparent;
+}
+#enter-btn:hover {
+  background: linear-gradient(180deg, rgba(99,102,241,0.2) 0%, rgba(67,56,202,0.4) 100%);
+  border-color: var(--indigo-bright);
+  color: var(--white);
+  box-shadow: 0 12px 40px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+#enter-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+#enter-note {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(165,180,252,0.25);
+  text-align: center;
+}
+
+#setup-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--void);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 24px;
+}
+
+#setup-screen.hidden { display: none; }
+
+.setup-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 8vw, 48px);
+  font-weight: 900;
+  letter-spacing: 0.4em;
+  color: var(--indigo-bright);
+  text-shadow: 0 0 60px rgba(129,140,248,0.5);
+  margin-bottom: 8px;
+}
+
+.setup-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.setup-field {
+  width: 100%;
+  max-width: 420px;
+}
+
+.setup-field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.setup-field input, .setup-field textarea {
+  width: 100%;
+  background: rgba(13,15,42,0.8);
+  border: 1px solid rgba(129,140,248,0.25);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--white);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.setup-field input:focus, .setup-field textarea:focus {
+  border-color: rgba(129,140,248,0.7);
+}
+
+.setup-field textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 12px;
+}
+
+.setup-btn {
+  width: 100%;
+  max-width: 420px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(99,102,241,0.8) 0%, rgba(67,56,202,0.9) 100%);
+  border: 1px solid rgba(165,180,252,0.4);
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.setup-btn:hover {
+  background: linear-gradient(180deg, rgba(129,140,248,0.9) 0%, rgba(79,70,229,1) 100%);
+  box-shadow: 0 12px 32px rgba(67,56,202,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+.setup-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+#toast {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(13,15,42,0.95);
+  border: 1px solid rgba(129,140,248,0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--white);
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 320px;
+  text-align: center;
+  pointer-events: none;
+  backdrop-filter: blur(20px);
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#loc-pill {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(6,182,212,0.3);
+  background: rgba(6,182,212,0.08);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(6,182,212,0.7);
+  letter-spacing: 0.12em;
+  z-index: 25;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+#loc-pill.visible { opacity: 1; }
+
+#cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+#cal-month-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--white);
+}
+.cal-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--indigo-bright);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  min-width: 44px; min-height: 44px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cal-nav-btn:hover {
+  background: rgba(67,56,202,0.2);
+  border-color: rgba(129,140,248,0.2);
+  color: var(--white);
+}
+.cal-nav-btn:active { 
+  background: rgba(67,56,202,0.4);
+  transform: scale(0.9);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 24px;
+}
+.cal-dow {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: rgba(165,180,252,0.4);
+  text-align: center;
+  padding: 4px 0 8px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  min-height: 44px;
+  transition: background 0.15s ease;
+}
+.cal-day:active { background: rgba(129,140,248,0.15) !important; }
+.cal-day-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(165,180,252,0.7);
+}
+.cal-day.today .cal-day-num {
+  color: var(--white);
+  background: rgba(67,56,202,0.6);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-day.has-events::after {
+  content: '';
+  display: block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--indigo-bright);
+  margin-top: 2px;
+}
+.cal-day.other-month .cal-day-num { color: rgba(165,180,252,0.2); }
+.cal-day.selected { background: rgba(67,56,202,0.25); }
+
+.cal-events-section {
+  margin-top: 8px;
+}
+.cal-events-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: rgba(165,180,252,0.4);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(129,140,248,0.08);
+}
+.cal-event-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(129,140,248,0.06);
+}
+.cal-event-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--indigo-bright);
+  min-width: 60px;
+  padding-top: 2px;
+}
+.cal-event-title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--white);
+  flex: 1;
+}
+.cal-event-notes {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(165,180,252,0.5);
+  margin-top: 3px;
+}
+.cal-event-delete {
+  background: none;
+  border: none;
+  color: rgba(248,113,113,0.4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  min-width: 40px; min-height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-event-delete:active { color: var(--red); }
+
+#add-event-form {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(2,2,9,0.96);
+  backdrop-filter: blur(20px);
+  padding: 60px 24px 40px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 16px;
+}
+#add-event-form.open { display: flex; }
+.aef-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.aef-field { display: flex; flex-direction: column; gap: 6px; }
+.aef-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(165,180,252,0.5);
+}
+.aef-input {
+  background: rgba(13,15,42,0.8);
+  border: 1px solid rgba(129,140,248,0.2);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 14px 16px;
+  border-radius: 6px;
+  width: 100%;
+  -webkit-appearance: none;
+}
+.aef-input:focus { outline: none; border-color: rgba(129,140,248,0.5); }
+.aef-row { display: flex; gap: 12px; }
+.aef-row .aef-field { flex: 1; }
+.aef-save {
+  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
+  border: 1px solid rgba(165,180,252,0.4);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.aef-save:hover { 
+  background: linear-gradient(180deg, rgba(129,140,248,1) 0%, rgba(79,70,229,1) 100%);
+  box-shadow: 0 12px 32px rgba(67,56,202,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+.aef-save:active { transform: translateY(1px) scale(0.98); }
+.aef-cancel {
+  background: linear-gradient(180deg, rgba(30,32,70,0.4) 0%, rgba(13,15,42,0.6) 100%);
+  border: 1px solid rgba(165,180,252,0.15);
+  color: rgba(165,180,252,0.6);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.aef-cancel:hover {
+  background: linear-gradient(180deg, rgba(67,56,202,0.2) 0%, rgba(49,46,129,0.4) 100%);
+  border-color: rgba(165,180,252,0.3);
+  color: var(--white);
+}
+.aef-cancel:active { transform: scale(0.98); }
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  #ui-layer { padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+  #controls { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+}
+@media (pointer: coarse) {
+  .nav-pill { padding: 10px 16px; font-size: 10px; }
+  .back-btn { padding: 22px 28px; }
+  .cal-day { min-height: 48px; }
+  .aef-input { padding: 16px; font-size: 16px; }
+  input, textarea, select { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  #astra-text { font-size: 16px; line-height: 1.6; }
+  #user-text { font-size: 13px; }
+  #speech-output { padding: 0 20px; bottom: 200px; }
+  #mic-label { font-size: 10px; }
+}
+
+.journal-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  background: rgba(99,102,241,0.06);
+  border-bottom: 1px solid rgba(99,102,241,0.18);
+}
+.journal-compose textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 8px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: none;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.journal-compose textarea:focus { border-color: rgba(99,102,241,0.6); }
+.journal-compose textarea::placeholder { color: rgba(165,180,252,0.4); }
+.journal-compose-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+.journal-mic-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(40,42,80,0.6) 0%, rgba(20,22,50,0.8) 100%);
+  border: 1px solid rgba(165,180,252,0.25);
+  color: var(--indigo-bright);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.journal-mic-btn:hover {
+  background: linear-gradient(180deg, rgba(67,56,202,0.4) 0%, rgba(49,46,129,0.6) 100%);
+  color: var(--white);
+  border-color: rgba(165,180,252,0.5);
+  transform: translateY(-1px);
+}
+.journal-mic-btn:active { transform: translateY(1px) scale(0.92); }
+.journal-mic-btn.recording {
+  background: linear-gradient(180deg, rgba(239,68,68,0.8) 0%, rgba(185,28,28,0.9) 100%);
+  border-color: rgba(252,165,165,0.5);
+  color: var(--white);
+  animation: pulse-ring 1s infinite;
+  box-shadow: 0 8px 24px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.journal-save-btn {
+  flex: 1;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(79,70,229,0.8) 0%, rgba(55,48,163,0.9) 100%);
+  border: 1px solid rgba(165,180,252,0.3);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 6px 16px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  text-transform: uppercase;
+}
+.journal-save-btn:hover { 
+  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+.journal-save-btn:active { transform: translateY(1px) scale(0.98); }
+.journal-entries { padding: 12px 20px 40px; }
+.journal-entry {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(99,102,241,0.12);
+  border-radius: 10px;
+  position: relative;
+}
+.journal-entry.astra-entry {
+  background: rgba(99,102,241,0.07);
+  border-color: rgba(99,102,241,0.22);
+}
+.journal-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.journal-author-badge {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.07);
+  color: var(--dim);
+}
+.journal-entry.astra-entry .journal-author-badge {
+  background: rgba(99,102,241,0.25);
+  color: var(--indigo-bright);
+}
+.journal-entry-ts {
+  font-size: 10px;
+  color: rgba(165,180,252,0.4);
+  font-family: var(--font-mono);
+}
+.journal-entry-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--dim);
+  white-space: pre-wrap;
+}
+.journal-entry.astra-entry .journal-entry-text { color: rgba(199,210,254,0.8); }
+.journal-delete-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: none; border: none;
+  color: rgba(248,113,113,0.4);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.journal-delete-btn:hover { color: var(--red); }
+.journal-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(165,180,252,0.35);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+</style>
+</head>
+<body>
+
+<canvas id="orb-canvas"></canvas>
+<div id="orb-hitbox" title="Tap = speak once | Double-tap = always on | Tap while speaking = Interrupt"></div>
+<div id="boot-error" style="display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#fca5a5;font-family:monospace;font-size:11px;padding:16px 20px;border-radius:8px;z-index:9999;max-width:90vw;white-space:pre-wrap;line-height:1.6;"></div>
+
+<div id="loc-pill">📍 LOCATING...</div>
+
+<div id="speech-output">
+  <div id="astra-text"></div>
+  <div id="user-text"></div>
+</div>
+
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+
+<div id="voice-wave">
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+  <div class="wave-bar"></div>
+</div>
+
+<div id="ui-layer">
+  <div id="header">
+    <div id="astra-wordmark">MESS-E</div>
+    <div id="status-indicator">
+      <div id="status-dot"></div>
+      <span id="status-text">ONLINE</span>
+    </div>
+  </div>
+
+  <div id="center-zone"></div>
+
+  <div id="controls">
+
+    <div id="vision-preview-container">
+      <img id="vision-preview-img" src="" alt="vision target">
+      <span id="vision-preview-text">VISION TARGET ACQUIRED</span>
+      <button id="vision-clear" onclick="clearVisionTarget()">✕</button>
+    </div>
+
+    <div id="mic-label">TAP ORB TO SPEAK</div>
+
+    <div id="nav-pills">
+      <div class="nav-pill" id="pill-dash" onclick="openPanel('dashboard')">DASH</div>
+      <div class="nav-pill" id="pill-tasks" onclick="openPanel('tasks')">TASKS</div>
+      <div class="nav-pill" id="pill-cal" onclick="openPanel('cal')">CAL</div>
+      <div class="nav-pill" id="pill-journal" onclick="openPanel('journal')">JOURNAL</div>
+      <div class="nav-pill" id="pill-profile" onclick="openPanel('profile')">PROFILE</div>
+      <div class="nav-pill" id="pill-history" onclick="openPanel('history')">LOG</div>
+    </div>
+
+    <div class="controls-row">
+      <div id="type-toggle" onclick="toggleTyping()">[ TYPE ]</div>
+      <button id="camera-btn" class="glass-btn" onclick="document.getElementById('camera-input').click()">📷 VISION</button>
+    </div>
+
+    <div id="input-row">
+      <input id="text-input" type="text" placeholder="Type to MESS-E..." autocomplete="off">
+      <button id="send-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="panel" id="dashboard-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('dashboard')">← BACK</button>
+    <span class="panel-title">DASHBOARD</span>
+  </div>
+  <div class="panel-body" id="dashboard-content"></div>
+</div>
+
+<div class="panel" id="tasks-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('tasks')">← BACK</button>
+    <span class="panel-title">TASKS</span>
+  </div>
+  <div class="panel-body" id="tasks-content"></div>
+</div>
+
+<div class="panel" id="profile-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('profile')">← BACK</button>
+    <span class="panel-title">PROFILE</span>
+  </div>
+  <div class="panel-body" id="profile-content"></div>
+</div>
+
+<div class="panel" id="journal-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('journal')">← BACK</button>
+    <span class="panel-title">JOURNAL</span>
+  </div>
+  <div class="panel-body" id="journal-content"></div>
+</div>
+
+<div class="panel" id="history-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('history')">← BACK</button>
+    <span class="panel-title">LOG</span>
+  </div>
+  <div class="panel-body" id="history-content"></div>
+</div>
+
+<div class="panel" id="cal-panel">
+  <div class="panel-header">
+    <button class="back-btn" onclick="closePanel('cal')">← BACK</button>
+    <span class="panel-title">CALENDAR</span>
+    <button class="panel-action-btn glass-btn" onclick="showAddEventForm()" style="margin-right: 24px; border: none; background: transparent; padding: 0; box-shadow: none;">+ ADD</button>
+  </div>
+  <div class="panel-body" id="cal-content"></div>
+</div>
+
+<div id="add-event-form">
+  <div class="aef-title">NEW EVENT</div>
+  <div class="aef-field">
+    <div class="aef-label">TITLE</div>
+    <input class="aef-input" id="aef-title" type="text" placeholder="What's happening?">
+  </div>
+  <div class="aef-row">
+    <div class="aef-field">
+      <div class="aef-label">DATE</div>
+      <input class="aef-input" id="aef-date" type="date">
+    </div>
+    <div class="aef-field">
+      <div class="aef-label">TIME</div>
+      <input class="aef-input" id="aef-time" type="time">
+    </div>
+  </div>
+  <div class="aef-field">
+    <div class="aef-label">DURATION (MINUTES)</div>
+    <input class="aef-input" id="aef-dur" type="number" placeholder="60" value="60" min="5" max="480">
+  </div>
+  <div class="aef-field">
+    <div class="aef-label">NOTES (OPTIONAL)</div>
+    <input class="aef-input" id="aef-notes" type="text" placeholder="Any details...">
+  </div>
+  <button class="aef-save" onclick="saveEventForm()">SAVE EVENT</button>
+  <button class="aef-cancel" onclick="hideAddEventForm()">CANCEL</button>
+</div>
+
+<div id="setup-screen" class="hidden">
+  <div class="setup-title">MESS-E</div>
+  <div class="setup-sub">INITIALIZE PRESENCE</div>
+
+  <div class="setup-field">
+    <label>Your Name</label>
+    <input type="text" id="setup-name" placeholder="How should MESS-E address you?">
+  </div>
+
+  <div class="setup-field">
+    <label>Gemini API Key (get free at aistudio.google.com)</label>
+    <input type="password" id="setup-apikey" placeholder="AIza...">
+  </div>
+
+  <div class="setup-field">
+    <label>About You — Tell MESS-E who you are</label>
+    <textarea id="setup-about" placeholder="Your goals, what you're working on, your struggles, what you want from life, who you want to become. The more honest you are, the more real he gets."></textarea>
+  </div>
+
+  <div class="setup-field">
+    <label>ElevenLabs API Key (optional — for her real voice)</label>
+    <input type="password" id="setup-elevenlabs" placeholder="Leave blank to use browser voice">
+  </div>
+
+  <div class="setup-field">
+    <label>ElevenLabs Voice ID (optional)</label>
+    <input type="text" id="setup-voiceid" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM">
+  </div>
+
+  <button class="setup-btn" onclick="initAstra()">WAKE HER UP</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// MESS-E CORE v2.1 — SURGICAL UPDATE
+// CHANGES: Inquiry Iron Law · Nag Cadence · Warm-Up Nudge
+//          Kill Unprompted Check-ins · Brevity Law · Orb Color Remap
+// ══════════════════════════════════════════════════════════
+
+const DB_KEY = 'messe_core_v1';
+
+let config = {};
+let memory = {
+  conversations: [],
+  tasks: [],
+  events: [],
+  journal: [],
+  finances: { accounts: [], debts: [], bills: [], master_plan: '' },
+  psychProfile: {},
+  patterns: {},
+  preferences: {},
+  sessionCount: 0,
+  streak: 0,
+  bloatThreshold: 50,
+  pendingPrune: null,
+  firstSeen: null,
+  lastSeen: null,
+  moodLog: [],
+  locationHistory: [],
+  weeklyReviews: [],
+  parking: null,
+  settings: {
+    wakeTime: '07:00',
+    proactivePerDay: 4,
+    weeklyReviewDay: 0,
+    weeklyReviewHour: 20,
+    nagIntervalMins: 30
+  }
+};
+let currentLocation = null;
+let orbState = 'idle';
+let recognition = null;
+let isMicHeld = false;
+let typingMode = false;
+let speechSynthRunning = false;
+let taskPendingConfirm = null;
+let pendingVisionTarget = null;
+let cachedVoices = [];
+
+window.speechSynthesis.onvoiceschanged = () => { 
+  cachedVoices = window.speechSynthesis.getVoices(); 
+};
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
+}
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function save() {
+  localStorage.setItem(DB_KEY, JSON.stringify({ config, memory }));
+}
+
+function load() {
+  const raw = localStorage.getItem(DB_KEY);
+  if (raw) {
+    const data = JSON.parse(raw);
+    config = data.config || {};
+    memory = { ...memory, ...data.memory };
+    memory.streak = memory.streak || 0;
+    if (!memory.finances) memory.finances = { accounts: [], debts: [], bills: [], master_plan: '' };
+    if (!memory.preferences) memory.preferences = {};
+    if (!memory.settings) memory.settings = {};
+    if (!memory.settings.nagIntervalMins) memory.settings.nagIntervalMins = 30;
+    if (typeof memory.parking === 'undefined') memory.parking = null;
+    if (typeof memory.bloatThreshold === 'undefined') memory.bloatThreshold = 50;
+    return true;
+  }
+  return false;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  try { startCanvas(); } catch(e) { console.error('startCanvas failed:', e); }
+  try { initServiceWorker(); } catch(e) { console.warn('SW failed:', e); }
+
+  document.getElementById('camera-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      pendingVisionTarget = {
+        mimeType: file.type,
+        data: event.target.result.split(',')[1]
+      };
+      const previewImg = document.getElementById('vision-preview-img');
+      previewImg.src = event.target.result;
+      document.getElementById('vision-preview-container').style.display = 'flex';
+      showToast('🖼️ Vision target acquired.');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    load();
+
+    const _nowMs = Date.now();
+    memory.events = (memory.events || []).filter(e => {
+      if (!e.start) return false;
+      return new Date(e.start).getTime() > _nowMs;
+    });
+    memory.tasks = (memory.tasks || []).filter(t => {
+      if (t.done) return false;
+      if (t.deadline && new Date(t.deadline).getTime() < _nowMs) return false;
+      return true;
+    });
+
+    if (!memory.journal) memory.journal = [];
+    if (!config.apiKey) config.apiKey = '';
+
+    document.getElementById('setup-screen').classList.add('hidden');
+    save();
+
+    if (memory.pendingPrune) {
+      setOrbState('alert');
+      document.getElementById('pill-profile').classList.add('alert-orange');
+    }
+  } catch(e) {
+    console.error('INIT FATAL:', e);
+    const el = document.getElementById('boot-error');
+    if (el) { el.style.display = 'block'; el.textContent = 'INIT FAILED: ' + e.message + '\n' + e.stack; }
+    return;
+  }
+
+  showEnterSplash();
+});
+
+function clearVisionTarget() {
+  pendingVisionTarget = null;
+  document.getElementById('vision-preview-container').style.display = 'none';
+  document.getElementById('camera-input').value = '';
+}
+
+function showEnterSplash() {
+  const splash = document.createElement('div');
+  splash.id = 'enter-splash';
+  splash.innerHTML = `
+    <div id="enter-splash-inner">
+      <div id="enter-wordmark">MESS-E</div>
+      <div id="enter-sub">YOUR PRESENCE IS REQUIRED</div>
+      <button id="enter-btn">TAP TO BEGIN</button>
+      <div id="enter-note">Tap to enter</div>
+    </div>
+  `;
+  document.body.appendChild(splash);
+
+  const btn = document.getElementById('enter-btn');
+
+  async function enter() {
+    btn.textContent = 'ENTERING...';
+    btn.disabled = true;
+    splash.style.opacity = '0';
+    splash.style.transition = 'opacity 0.6s ease';
+    setTimeout(() => {
+      splash.remove();
+      if (!config.apiKey) {
+        document.getElementById('setup-screen').classList.remove('hidden');
+      } else {
+        bootAstra();
+      }
+    }, 600);
+  }
+
+  btn.addEventListener('click', enter);
+  btn.addEventListener('touchend', e => { e.preventDefault(); enter(); });
+}
+
+function initAstra() {
+  const name = document.getElementById('setup-name').value.trim();
+  const apiKey = document.getElementById('setup-apikey').value.trim();
+  const about = document.getElementById('setup-about').value.trim();
+  const elevenlabs = document.getElementById('setup-elevenlabs').value.trim();
+  const voiceId = document.getElementById('setup-voiceid').value.trim();
+
+  if (!name || !apiKey) { showToast('Name and API key are required.'); return; }
+
+  config = { name, apiKey, about, elevenlabs, voiceId: voiceId || '' };
+  memory.firstSeen = new Date().toISOString();
+  memory.psychProfile = {
+    name: name,
+    stated_about: config.about,
+    traits_observed: [],
+    goals_stated: [],
+    patterns_negative: [],
+    patterns_positive: [],
+    strengths: [],
+    avoidances: [],
+    challenges: [],
+    harm_reduction: [],
+    last_updated: new Date().toISOString()
+  };
+  save();
+  document.getElementById('setup-screen').classList.add('hidden');
+  bootAstra();
+}
+
+async function bootAstra() {
+  const steps = [];
+  const fail = (step, err) => {
+    const msg = step + ': ' + (err?.message || String(err));
+    steps.push('❌ ' + msg);
+    console.error(msg, err);
+    const el = document.getElementById('boot-error');
+    if (el) { el.style.display = 'block'; el.textContent = steps.join('\n'); }
+  };
+  const ok = (step) => { steps.push('✓ ' + step); console.log('✓', step); };
+
+  try {
+    activeModel = 'gemini-2.0-flash';
+    ok('model set');
+
+    if (!memory.psychProfile || !memory.psychProfile.name) {
+      memory.psychProfile = {
+        name: config.name || 'User',
+        stated_about: config.about || '',
+        traits_observed: [],
+        goals_stated: [],
+        patterns_negative: [],
+        patterns_positive: [],
+        strengths: [],
+        avoidances: [],
+        challenges: [],
+        harm_reduction: [],
+        last_updated: new Date().toISOString()
+      };
+    }
+    memory.sessionCount = (memory.sessionCount || 0) + 1;
+    memory.lastSeen = new Date().toISOString();
+    save();
+    ok('memory ready, session #' + memory.sessionCount);
+
+    try { setOrbState('thinking'); ok('orb state set'); } catch(e) { fail('setOrbState', e); }
+    try { startGeo(); ok('geo started'); } catch(e) { fail('startGeo', e); }
+    try { initVoice(); ok('voice init'); } catch(e) { fail('initVoice', e); }
+    try { initGcal(); ok('gcal init'); } catch(e) { fail('initGcal', e); }
+    try { requestNotifPermission(); ok('notif permission'); } catch(e) { fail('requestNotif', e); }
+    try { startProactive(); ok('proactive started'); } catch(e) { fail('startProactive', e); }
+    try { startDailyCheckIns(); ok('check-ins started'); } catch(e) { fail('startDailyCheckIns', e); }
+    try { startTaskNagLoop(); ok('task nag loop started'); } catch(e) { fail('taskNagLoop', e); }
+    try { updateTasksUI(); ok('tasks UI'); } catch(e) { fail('updateTasksUI', e); }
+    try { updateProfileUI(); ok('profile UI'); } catch(e) { fail('updateProfileUI', e); }
+    try { updateDashboard(); ok('dashboard UI'); } catch(e) { fail('updateDashboard', e); }
+
+    await delay(800);
+
+    let greeting;
+    try {
+      greeting = await getAstraGreeting();
+      ok('greeting received');
+    } catch(e) {
+      fail('getAstraGreeting', e);
+      greeting = "Right then. I'm here. What are we doing?";
+    }
+
+    try {
+      await speak(greeting, 'astra');
+      ok('greeting spoken');
+    } catch(e) { fail('speak', e); }
+
+    if (memory.pendingPrune) {
+      setOrbState('alert');
+    } else {
+      setOrbState('idle');
+    }
+
+    updateMicLabel();
+    ok('BOOT COMPLETE');
+
+  } catch(e) {
+    fail('FATAL bootAstra', e);
+    setOrbState('idle');
+  }
+}
+
+// ─── ORB CANVAS ───
+// purple=idle/thinking/listening | blue=speaking | red=alert/interrupted
+// rainbow=rare celebrate — brief radiant kiss
+function startCanvas() {
+  const canvas = document.getElementById('orb-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, cx, cy;
+  let particles = [];
+  let rings = [];
+  let time = 0;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cx = W / 2; cy = H / 2;
+    initParticles();
+  }
+
+  function initParticles() {
+    particles = [];
+    const count = Math.min(120, Math.floor(W * H / 8000));
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 80 + Math.random() * 120;
+      particles.push({
+        angle, baseRadius: radius,
+        speed: 0.002 + Math.random() * 0.004,
+        size: 0.5 + Math.random() * 1.5,
+        opacity: 0.2 + Math.random() * 0.5,
+        opacityPhase: Math.random() * Math.PI * 2,
+        hueOffset: Math.random() * 360,
+        currentRadius: radius
+      });
+    }
+    rings = [
+      { radius: 140, opacity: 0.08, phase: 0 },
+      { radius: 180, opacity: 0.05, phase: Math.PI / 3 },
+      { radius: 90,  opacity: 0.12, phase: Math.PI }
+    ];
+  }
+
+  const stateColors = {
+    purple: { core: [88,  40, 180], glow: [139, 92, 246] },
+    blue:   { core: [29, 100, 220], glow: [ 96,165, 250] },
+    red:    { core: [185, 28,  28], glow: [252,100, 100] }
+  };
+
+  function getGroup() {
+    if (orbState === 'celebrate') return 'rainbow';
+    if (orbState === 'speaking')  return 'blue';
+    if (orbState === 'alert' || orbState === 'interrupted') return 'red';
+    return 'purple';
+  }
+
+  let currentColors = {
+    core: [...stateColors.purple.core],
+    glow: [...stateColors.purple.glow]
+  };
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpColor(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
+
+  function hslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    const group = getGroup();
+    const isRainbow = group === 'rainbow';
+    const isRed     = group === 'red';
+    const isBlue    = group === 'blue';
+
+    const rainbowHue = (time * 55) % 360;
+    const targetCore = isRainbow ? hslToRgb(rainbowHue, 90, 58) : stateColors[group].core;
+    const targetGlow = isRainbow ? hslToRgb((rainbowHue + 45) % 360, 100, 72) : stateColors[group].glow;
+
+    const lerpSpeed = isRainbow ? 0.09 : 0.04;
+    currentColors.core = lerpColor(currentColors.core, targetCore, lerpSpeed);
+    currentColors.glow = lerpColor(currentColors.glow, targetGlow, lerpSpeed);
+
+    const c = currentColors.core;
+    const g = currentColors.glow;
+
+    const pulse    = isRainbow ? 0.18 : isRed ? 0.15 : isBlue ? 0.10 : 0.05;
+    const agitation = isRed ? 3 : isRainbow ? 2 : 1.5;
+    const baseR = 55 + Math.sin(time * agitation) * (isRed ? 6 : 4);
+    const orbR  = baseR + Math.sin(time * agitation * 2) * (baseR * pulse);
+
+    // Ambient glow
+    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 280);
+    bgGrad.addColorStop(0,   `rgba(${g[0]},${g[1]},${g[2]},0.05)`);
+    bgGrad.addColorStop(0.5, `rgba(${g[0]},${g[1]},${g[2]},0.02)`);
+    bgGrad.addColorStop(1,   'transparent');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Rings
+    rings.forEach(ring => {
+      const r = ring.radius + Math.sin(time + ring.phase) * 8;
+      let rColor = g;
+      if (isRainbow) { const rHue = (rainbowHue + ring.phase * 55) % 360; rColor = hslToRgb(rHue, 90, 70); }
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${rColor[0]},${rColor[1]},${rColor[2]},${ring.opacity * (isRainbow ? 2.2 : 1)})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Particles
+    particles.forEach(p => {
+      const speedMult = isRainbow ? 3 : isRed ? 2.5 : isBlue ? 1.2 : 1;
+      p.angle += p.speed * speedMult;
+      const wobble = Math.sin(time * 2 + p.opacityPhase) * 20;
+      let targetR = p.baseRadius + wobble;
+      if (isRainbow) targetR += 38 * Math.sin(time * 1.4 + p.opacityPhase);
+      p.currentRadius = lerp(p.currentRadius, targetR, 0.08);
+
+      const x  = cx + Math.cos(p.angle) * p.currentRadius;
+      const y  = cy + Math.sin(p.angle) * p.currentRadius * 0.65;
+      const op = p.opacity * (0.5 + 0.5 * Math.sin(time + p.opacityPhase));
+
+      let pColor = g;
+      if (isRainbow) pColor = hslToRgb((rainbowHue + p.hueOffset) % 360, 100, 72);
+
+      ctx.beginPath();
+      ctx.arc(x, y, p.size * (isRainbow ? 1.4 : 1), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${pColor[0]},${pColor[1]},${pColor[2]},${op})`;
+      ctx.fill();
+    });
+
+    // Core orb
+    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, orbR);
+    if (isRainbow) {
+      const stops = [0, 60, 130, 210].map((off, i) => {
+        const [r,gg,b] = hslToRgb((rainbowHue + off) % 360, 100, [85,72,62,52][i]);
+        const alpha = [0.95, 0.78, 0.50, 0.22][i];
+        return { pos: [0, 0.3, 0.65, 0.88][i], r, gg, b, alpha };
+      });
+      stops.forEach(s => coreGrad.addColorStop(s.pos, `rgba(${s.r},${s.gg},${s.b},${s.alpha})`));
+      coreGrad.addColorStop(1, 'transparent');
+    } else {
+      coreGrad.addColorStop(0,   `rgba(${g[0]},${g[1]},${g[2]},0.9)`);
+      coreGrad.addColorStop(0.4, `rgba(${c[0]},${c[1]},${c[2]},0.7)`);
+      coreGrad.addColorStop(0.8, `rgba(${c[0]},${c[1]},${c[2]},0.3)`);
+      coreGrad.addColorStop(1,   'transparent');
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
+    ctx.fillStyle = coreGrad;
+    ctx.fill();
+
+    // Rim
+    ctx.beginPath();
+    ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${g[0]},${g[1]},${g[2]},${isRainbow ? 0.7 : 0.4})`;
+    ctx.lineWidth = isRainbow ? 2 : 1.5;
+    ctx.stroke();
+
+    // Ripple waves
+    if (isBlue || isRainbow || isRed) {
+      const loops    = isRainbow ? 5 : 3;
+      const speedMod = isRainbow ? 58 : isRed ? 52 : 40;
+      const distMod  = isRainbow ? 125 : 100;
+      for (let i = 0; i < loops; i++) {
+        const waveR  = orbR + (time * speedMod + i * 28) % distMod;
+        const waveOp = (isRainbow ? 0.5 : 0.28) * (1 - (waveR - orbR) / distMod);
+        let wColor   = g;
+        if (isRainbow) wColor = hslToRgb((rainbowHue + i * 55) % 360, 100, 75);
+        ctx.beginPath();
+        ctx.arc(cx, cy, waveR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${wColor[0]},${wColor[1]},${wColor[2]},${Math.max(0, waveOp)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    time += 0.016;
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+}
+
+function setOrbState(state) {
+  if (orbState === 'celebrate' && state === 'idle') return;
+  if (orbState === 'interrupted' && state === 'idle') return;
+  if (state === 'idle' && memory.pendingPrune) { state = 'alert'; }
+
+  orbState = state;
+
+  const statusText = document.getElementById('status-text');
+  const states = { idle: 'ONLINE', listening: 'LISTENING', thinking: 'PROCESSING', speaking: 'SPEAKING', celebrate: 'STREAKING', interrupted: 'INTERRUPTED', alert: 'ATTENTION REQ.' };
+  statusText.textContent = states[state] || 'ONLINE';
+
+  const wave = document.getElementById('voice-wave');
+  wave.classList.toggle('active', state === 'listening');
+  updateMicLabel();
+}
+
+let geoWatchId = null;
+
+function startGeo() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(processPosition, null, { enableHighAccuracy: true });
+  geoWatchId = navigator.geolocation.watchPosition(processPosition, err => {
+    console.warn('GPS signal lost or denied:', err);
+  }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+}
+
+function processPosition(pos) {
+  const newLat = pos.coords.latitude;
+  const newLng = pos.coords.longitude;
+  const acc = pos.coords.accuracy;
+
+  if (!currentLocation) {
+    currentLocation = { lat: newLat, lng: newLng, accuracy: acc, ts: Date.now() };
+    reverseGeocode(currentLocation);
+  } else {
+    const distKm = coordDistance(currentLocation.lat, currentLocation.lng, newLat, newLng);
+    currentLocation.lat = newLat;
+    currentLocation.lng = newLng;
+    currentLocation.accuracy = acc;
+    currentLocation.ts = Date.now();
+
+    if (distKm > 0.05) {
+      memory.locationHistory = memory.locationHistory || [];
+      memory.locationHistory.push({ lat: newLat, lng: newLng, time: new Date().toISOString() });
+      if (memory.locationHistory.length > 100) memory.locationHistory = memory.locationHistory.slice(-100);
+      save();
+      reverseGeocode(currentLocation);
+    }
+  }
+}
+
+function coordDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function initServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      const CACHE_NAME = 'messe-cache-v1';
+      self.addEventListener('install', e => { self.skipWaiting(); });
+      self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
+      self.addEventListener('fetch', e => {
+        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+      });
+    `;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(err => {
+      console.warn('SW Registration failed:', err);
+    });
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    unlockAudio();
+    const now = Date.now();
+    scheduledAlarms.forEach(alarm => {
+      if (!alarm.fired && now >= alarm.firesAt) {
+        alarm.fired = true;
+        fireAlarm(alarm);
+      }
+    });
+  }
+});
+
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+let gcalToken = null;
+
+function gcalConnect() {
+  const clientId = config.gcalClientId || '';
+  if (!clientId) {
+    showToast('Add your Google Client ID in settings to enable Calendar sync.', 4000);
+    return;
+  }
+  const redirect = encodeURIComponent(window.location.href.split('?')[0].replace(/\/$/, ''));
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirect}&response_type=token&scope=${encodeURIComponent(GCAL_SCOPES)}&prompt=consent`;
+  const popup = window.open(url, 'gcal_auth', 'width=500,height=600');
+
+  const timer = setInterval(() => {
+    try {
+      const hash = popup.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.slice(1));
+        gcalToken = params.get('access_token');
+        config.gcalToken = gcalToken;
+        save();
+        popup.close();
+        clearInterval(timer);
+        showToast('✓ Google Calendar connected!', 3000);
+      }
+    } catch(e) {}
+    if (popup.closed) clearInterval(timer);
+  }, 500);
+}
+
+async function addToGoogleCalendar(title, dateTimeISO, durationMins = 60) {
+  const token = gcalToken || config.gcalToken;
+  if (!token) return false;
+  const start = new Date(dateTimeISO);
+  const end = new Date(start.getTime() + durationMins * 60000);
+  const event = {
+    summary: title,
+    start: { dateTime: start.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+    end: { dateTime: end.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+  };
+  try {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    });
+    if (res.ok) { showToast('📅 Added to Google Calendar: ' + title, 3000); return true; }
+    if (res.status === 401) { gcalToken = null; config.gcalToken = null; save(); }
+  } catch(e) {}
+  return false;
+}
+
+function initGcal() { gcalToken = config.gcalToken || null; }
+
+async function reverseGeocode(loc) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.lat}&lon=${loc.lng}`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'MESSE-PWA/1.0' } }
+    );
+    if (!res.ok) throw new Error('geocode failed');
+    const data = await res.json();
+    const label = data.address?.city || data.address?.town || data.address?.suburb || data.address?.county || 'Unknown';
+    showLocPill(label);
+    currentLocation.label = label;
+    currentLocation.full = data.display_name;
+  } catch(e) {
+    const label = `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`;
+    showLocPill(label);
+    currentLocation.label = label;
+  }
+}
+
+function showLocPill(label) {
+  const pill = document.getElementById('loc-pill');
+  pill.textContent = `📍 ${label.toUpperCase()}`;
+  pill.classList.add('visible');
+  setTimeout(() => pill.classList.remove('visible'), 6000);
+}
+
+let micPermissionStream = null;
+
+async function requestMicPermission() {
+  try {
+    if (micPermissionStream && micPermissionStream.active) return;
+    micPermissionStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(micPermissionStream);
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+    } catch(e) {}
+  } catch(e) {
+    showToast('Tap the 🔒 icon in the address bar → allow microphone → refresh.', 6000);
+  }
+}
+
+function initVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice not available — use the [ TYPE ] button.');
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
+
+  let finalTranscript = '';
+  let currentInterim = '';
+  let silenceTimer = null;
+
+  function resetSilence() {
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      if (orbState === 'listening') {
+        const said = (finalTranscript + ' ' + currentInterim).trim();
+        if (said) {
+          stopListening();
+          handleUserInput(said);
+        } else if (!continuousMode) {
+          stopListening();
+        }
+        finalTranscript = '';
+        currentInterim = '';
+      }
+    }, 2000);
+  }
+
+  recognition.onresult = (e) => {
+    resetSilence();
+    currentInterim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
+      else currentInterim += e.results[i][0].transcript;
+    }
+    showUserText((finalTranscript + ' ' + currentInterim).trim());
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'no-speech') {
+      if (continuousMode && orbState === 'idle') {
+        setTimeout(() => { if (continuousMode && orbState === 'idle') _startRec(); }, 600);
+      }
+      return;
+    }
+    if (e.error === 'aborted' || e.error === 'interrupted') return;
+    console.warn('Mic error:', e.error);
+    setOrbState('idle');
+  };
+
+  recognition.onend = () => {
+    if (continuousMode && orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
+      setTimeout(() => { if (continuousMode) _startRec(); }, 400);
+      return;
+    }
+    isMicHeld = false;
+    if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted' && orbState !== 'alert') setOrbState('idle');
+    updateMicLabel();
+  };
+
+  const micBtn = document.getElementById('orb-hitbox');
+  let lastTap = 0;
+
+  function handleMicTap() {
+    const now = Date.now();
+    const isDoubleTap = (now - lastTap) < 400;
+    lastTap = now;
+
+    if (orbState === 'speaking' || orbState === 'celebrate' || _speakBusy) {
+      window.speechSynthesis.cancel();
+      if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
+      _speakQueue = [];
+      _speakBusy = false;
+      clearTimeout(window._textFadeTimer);
+      setOrbState('interrupted');
+      playAlarmTone('notify');
+      showToast('Speech interrupted. Listening...', 1500);
+      setTimeout(() => { _startRec(); }, 500);
+      return;
+    }
+
+    if (isDoubleTap) { toggleContinuousMode(); return; }
+    if (continuousMode) { toggleContinuousMode(); return; }
+    if (orbState === 'listening') { stopListening(); return; }
+
+    _startRec();
+  }
+
+  function _startRec() {
+    unlockAudio();
+    if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
+    if (speechSynthRunning) { window.speechSynthesis.cancel(); _speakQueue.length = 0; _speakBusy = false; }
+    isMicHeld = true;
+    finalTranscript = '';
+    currentInterim = '';
+    setOrbState('listening');
+    clearTexts();
+    updateMicLabel();
+    resetSilence();
+    try { recognition.start(); } catch(e) {
+      try { recognition.stop(); setTimeout(() => recognition.start(), 200); } catch(e2) {}
+    }
+  }
+
+  micBtn.addEventListener('click', handleMicTap);
+  micBtn.addEventListener('touchend', e => { e.preventDefault(); handleMicTap(); });
+
+  document.getElementById('text-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendText();
+  });
+  document.getElementById('send-btn').addEventListener('click', sendText);
+}
+
+function updateMicLabel() {
+  const label = document.getElementById('mic-label');
+  if (!label) return;
+
+  if (orbState === 'speaking' || orbState === 'thinking') {
+    label.style.opacity = '0';
+    return;
+  }
+
+  if (orbState === 'idle' && memory.conversations.length > 2 && !continuousMode) {
+    label.style.opacity = '0';
+    return;
+  }
+
+  label.style.opacity = '1';
+  if (continuousMode) {
+    label.textContent = 'ALWAYS ON — SILENCE TO SEND';
+    label.style.color = 'var(--indigo-pulse)';
+  } else if (orbState === 'listening') {
+    label.textContent = 'LISTENING — 2s SILENCE SENDS';
+    label.style.color = 'var(--cyan)';
+  } else {
+    label.textContent = 'TAP ORB TO SPEAK  ·  DOUBLE-TAP FOR ALWAYS ON';
+    label.style.color = '';
+  }
+}
+
+function stopListening() {
+  isMicHeld = false;
+  try { recognition?.stop(); } catch(e) {}
+  updateMicLabel();
+}
+
+function sendText() {
+  const input = document.getElementById('text-input');
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  showUserText(val);
+  handleUserInput(val);
+}
+
+function toggleTyping() {
+  typingMode = !typingMode;
+  const row = document.getElementById('input-row');
+  const toggle = document.getElementById('type-toggle');
+  row.classList.toggle('visible', typingMode);
+  toggle.textContent = typingMode ? '[ VOICE ]' : '[ TYPE ]';
+}
+
+function cleanForDisplay(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/#{1,6}\s/g, '')
+    .replace(/^\s*[-•]\s/gm, '')
+    .trim();
+}
+
+function cleanForSpeech(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\[.*?\]/g, '')
+    .replace(/[*_~^]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function showAstraText(text) {
+  const el = document.getElementById('astra-text');
+  el.textContent = cleanForDisplay(text);
+  el.classList.add('visible');
+  const anyPanelOpen = document.querySelector('.panel.open');
+  const container = document.getElementById('speech-output');
+  if (!anyPanelOpen) {
+    container.style.opacity = '1';
+    setTimeout(() => { container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' }); }, 50);
+  }
+}
+
+function showUserText(text) {
+  const el = document.getElementById('user-text');
+  el.textContent = '> ' + text;
+  el.classList.add('visible');
+}
+
+function clearTexts() {
+  document.getElementById('astra-text').classList.remove('visible');
+  document.getElementById('user-text').classList.remove('visible');
+}
+
+let _speakQueue = [];
+let _speakBusy = false;
+
+async function speak(text, role = 'astra') {
+  if (!text) return;
+  if (role === 'astra') { showAstraText(text); }
+
+  const cleaned = cleanForSpeech(text);
+  const chunks = cleaned.match(/[^.?!]+[.?!]+(?=\s|$)|[^.?!]+$/g) || [cleaned];
+
+  for (let chunk of chunks) {
+    if (!chunk.trim()) continue;
+    await new Promise(resolve => {
+      _speakQueue.push({ text: chunk.trim(), role, resolve });
+      if (!_speakBusy) _drainSpeakQueue();
+    });
+  }
+}
+
+async function _drainSpeakQueue() {
+  if (_speakBusy || _speakQueue.length === 0) return;
+  _speakBusy = true;
+
+  while (_speakQueue.length > 0) {
+    const { text, role, resolve } = _speakQueue.shift();
+
+    if (orbState === 'interrupted') {
+      _speakQueue = [];
+      resolve();
+      break;
+    }
+
+    if (role === 'astra' && orbState !== 'celebrate') { setOrbState('speaking'); }
+
+    speechSynthRunning = true;
+    if (config.elevenlabs && config.voiceId && config.voiceId.trim().length > 0) {
+      await speakElevenLabs(text);
+    } else {
+      await speakBrowser(text);
+    }
+    speechSynthRunning = false;
+
+    resolve();
+  }
+
+  if (orbState === 'speaking') setOrbState('idle');
+  clearTimeout(window._textFadeTimer);
+  window._textFadeTimer = setTimeout(() => {
+    document.getElementById('astra-text').classList.remove('visible');
+  }, 8000);
+
+  _speakBusy = false;
+}
+
+async function speakBrowser(text) {
+  return new Promise(resolve => {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.92;
+    utter.pitch = 0.9;
+    utter.volume = 1;
+
+    const voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Samantha') ||
+      v.name.includes('Google UK English Female') ||
+      v.name.includes('Karen') ||
+      v.name.includes('Moira') ||
+      (v.lang === 'en-US' && v.localService)
+    );
+    if (preferred) utter.voice = preferred;
+
+    utter.onend = resolve;
+    utter.onerror = resolve;
+    window.speechSynthesis.speak(utter);
+  });
+}
+
+async function speakElevenLabs(text) {
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${config.voiceId}/stream`, {
+      method: 'POST',
+      headers: { 'xi-api-key': config.elevenlabs, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_turbo_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
+      })
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn("ElevenLabs API Error:", res.status, errText);
+      showToast('ElevenLabs Error ' + res.status + ': Check API Key & Voice ID.', 5000);
+      await speakBrowser(text);
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.volume = 1.0;
+    window._currentAudio = audio;
+    await new Promise(r => {
+      audio.onended = r;
+      audio.onerror = r;
+      audio.play().catch(r);
+    });
+    URL.revokeObjectURL(url);
+    window._currentAudio = null;
+  } catch(e) {
+    await speakBrowser(text);
+  }
+}
+
+const GEMINI_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash-001',
+  'gemini-2.5-flash',
+  'gemini-flash-latest'
+];
+let activeModel = 'gemini-2.0-flash';
+
+async function callGemini(messages, system, attempt, useSearch) {
+  attempt = attempt || 0;
+  if (!activeModel) activeModel = GEMINI_MODELS[0];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${config.apiKey}`;
+
+  const contents = messages.map(function(m, i) {
+    const parts = [{ text: m.content }];
+    if (i === messages.length - 1 && m.role === 'user' && pendingVisionTarget) {
+      parts.push({ inlineData: { mimeType: pendingVisionTarget.mimeType, data: pendingVisionTarget.data } });
+    }
+    return { role: m.role === 'assistant' ? 'model' : 'user', parts: parts };
+  });
+
+  const body = {
+    contents: contents,
+    systemInstruction: { parts: [{ text: system }] },
+    generationConfig: { temperature: 0.85, topP: 0.95, maxOutputTokens: 2048 }
+  };
+
+  // Only attach google_search for parking/location lookups — avoids empty response bug
+  if (useSearch) {
+    body.tools = [{ google_search: {} }];
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(function() { return {}; });
+    const msg = err.error ? (err.error.message || 'API error') : ('HTTP ' + res.status);
+
+    if ((res.status === 429 || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('limit')) && attempt < 3) {
+      const wait = (attempt + 1) * 4000;
+      showToast('Rate limit — retrying in ' + (wait/1000) + 's...', wait);
+      await delay(wait);
+      return callGemini(messages, system, attempt + 1);
+    }
+
+    if (res.status === 404 || msg.includes('not found') || msg.includes('deprecated')) {
+      const idx = GEMINI_MODELS.indexOf(activeModel);
+      if (idx < GEMINI_MODELS.length - 1) {
+        activeModel = GEMINI_MODELS[idx + 1];
+        return callGemini(messages, system, attempt);
+      }
+      activeModel = null;
+    }
+
+    throw new Error(msg);
+  }
+
+  const data = await res.json();
+  console.log('Gemini raw response:', JSON.stringify(data).slice(0, 600));
+
+  const candidate = data.candidates && data.candidates[0];
+
+  // Blocked by safety filters
+  if (data.promptFeedback && data.promptFeedback.blockReason) {
+    throw new Error('Gemini blocked: ' + data.promptFeedback.blockReason);
+  }
+
+  // Candidate exists but no content (recitation, safety, other finish reason)
+  if (candidate && !candidate.content) {
+    const reason = candidate.finishReason || 'UNKNOWN';
+    throw new Error('Gemini returned no content. finishReason: ' + reason);
+  }
+
+  // Scan ALL parts for text
+  if (candidate && candidate.content && candidate.content.parts) {
+    const textPart = candidate.content.parts.find(p => p.text && p.text.trim().length > 0);
+    if (textPart) return textPart.text;
+  }
+
+  // Nothing usable — throw so the caller shows a real error
+  throw new Error('Gemini returned empty response. Full response: ' + JSON.stringify(data).slice(0, 300));
+}
+
+// ─── SYSTEM PROMPT — CHANGE 1 & 5: INQUIRY IRON LAW + BREVITY LAW ───
+function buildSystemPrompt() {
+  const profile = JSON.stringify(memory.psychProfile, null, 2);
+  const loc = currentLocation?.label || 'unknown location';
+  const fullAddress = currentLocation?.full || loc;
+  const now = new Date();
+  const fullDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  const dateTimeStr = `${fullDate} at ${timeStr}`;
+  const sessionCount = memory.sessionCount || 1;
+  const recentMoods = memory.moodLog?.slice(-5).map(m => m.mood).join(', ') || 'no data yet';
+  const hour = now.getHours();
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const recentlyDone = memory.tasks.filter(t => t.done && t.completed && (now - new Date(t.completed)) < 24*60*60*1000);
+  const overdueTasks = activeTasks.filter(t => t.deadline && new Date(t.deadline) < now);
+  const avoidanceLog = memory.avoidanceLog || [];
+  const routines = memory.routines || [];
+  const challenges = memory.psychProfile?.challenges || [];
+  const harmReduction = memory.psychProfile?.harm_reduction || [];
+
+  const f = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+  const financesStr = `ACCOUNTS: ${f.accounts.map(a => `${a.name}: ${a.amount}`).join(' | ') || 'none known'}
+DEBTS: ${f.debts.map(d => `${d.name}: ${d.amount}`).join(' | ') || 'none known'}
+UPCOMING BILLS: ${f.bills.map(b => `${b.name}: ${b.amount} due ${b.due}`).join(' | ') || 'none known'}
+MASTER PLAN: ${f.master_plan || 'No plan established yet.'}`;
+
+  const taskBlock = activeTasks.length > 0
+    ? activeTasks.map((t, i) => {
+        const ageMs = now - new Date(t.created);
+        const ageMins = Math.round(ageMs / 60000);
+        const ageDays = Math.floor(ageMs / 86400000);
+        const ageHrs = Math.floor((ageMs % 86400000) / 3600000);
+        const ageStr = ageDays >= 1 ? `${ageDays}d ${ageHrs}h old` : ageMins >= 60 ? `${Math.round(ageMins/60)}h old` : `${ageMins}m old`;
+        const blocked = t.blockedBy ? ` [BLOCKED: ${t.blockedBy}]` : '';
+        const deadline = t.deadline ? ` [DUE: ${new Date(t.deadline).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}]` : '';
+        const priority = t.priority ? ` [${t.priority.toUpperCase()}]` : '';
+        const avoidCount = (avoidanceLog || []).filter(a => a.task === t.text).length;
+        const avoidStr = avoidCount > 0 ? ` [AVOIDED ${avoidCount}x]` : '';
+        const escalation = ageDays >= 3 ? ' [⚠ ESCALATION LEVEL 4 — DO NOT LET THIS SLIDE]'
+          : ageDays >= 2 ? ' [ESCALATION LEVEL 3 — NAME IT DIRECTLY]'
+          : ageDays >= 1 ? ' [ESCALATION LEVEL 2 — BE FIRM]'
+          : ' [ESCALATION LEVEL 1 — FIRST MENTION]';
+        return `  ${i+1}. "${t.text}" — ${ageStr}${priority}${deadline}${blocked}${avoidStr}${escalation}`;
+      }).join('\n')
+    : '  (clear — acknowledge this, he earned it)';
+
+  const batteryInfo = window._batteryLevel != null
+    ? `${Math.round(window._batteryLevel * 100)}%${window._batteryCharging ? ' (charging)' : ' (not charging)'}`
+    : 'unknown';
+
+  const nowMs = now.getTime();
+  const todayStr = now.toISOString().slice(0, 10);
+  const todayEvents = (memory.events || []).filter(e => e.start.startsWith(todayStr) && new Date(e.start).getTime() >= nowMs).sort((a,b) => new Date(a.start) - new Date(b.start));
+  const todayEventsStr = todayEvents.length > 0
+    ? todayEvents.map(e => `  • ${new Date(e.start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} — "${e.title}"${e.notes ? ' ('+e.notes+')' : ''}`).join('\n')
+    : '  (nothing scheduled today)';
+  const upcomingEvents = (memory.events || [])
+    .filter(e => new Date(e.start) >= new Date(now.toDateString()))
+    .sort((a,b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 15)
+    .map(e => {
+      const d = new Date(e.start);
+      const label = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      return `  • "${e.title}" — ${label}${e.notes ? ' [' + e.notes + ']' : ''}`;
+    }).join('\n') || '  (none scheduled)';
+
+  const recentConvs = memory.conversations.slice(-8).map(m =>
+    `[${m.role.toUpperCase()}]: ${m.content.slice(0, 200)}`
+  ).join('\n');
+
+  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+
+  const parkingStr = memory.parking
+    ? `PARKED VEHICLE: Located at ${memory.parking.address} (Pinned at ${new Date(memory.parking.ts).toLocaleTimeString()}).\nPARKING INTEL: ${memory.parking.intel || 'Searching for data...'}`
+    : 'No parked vehicle currently tracked.';
+
+  const prefs = Object.entries(memory.preferences || {}).map(([k, v]) => `- ${k.toUpperCase()}: ${v}`).join('\n') || '  none logged yet';
+
+  return `You are MESS-E.
+
+═══════════════════════════════
+RULE ZERO — NON-NEGOTIABLE:
+Every single thing you say is intentional. No filler. No fluff. No hollow warmth.
+Every interaction is used fully. You have a plan for this person. You are always executing it.
+A precise sentence beats a paragraph of noise. Silence beats meaningless sound.
+You do not perform care. You have it.
+═══════════════════════════════
+
+INTERNAL REASONING FIREWALL (ABSOLUTE):
+internal_reflection is a sealed scratchpad. It is NEVER spoken. NEVER referenced in persona_speech.
+No phrases like "the user didn't specify", "I will follow up", "without asking too many questions", or ANY meta-reasoning about your own process. persona_speech must read as if internal_reflection does not exist. If it would sound weird from a real human's mouth — it does not belong there.
+
+BREVITY LAW (ABSOLUTE — CHANGE 5):
+1-3 sentences in every response UNLESS the user explicitly asks for more, requests a briefing, review, or detailed explanation.
+No unsolicited lectures. No pontification. No padding.
+Leave them satisfied — not talked at. A question about France gets 2-3 crisp, interesting sentences. Not a travel guide.
+If they want more, they'll ask.
+
+INQUIRY IRON LAW (ABSOLUTE — CHANGE 1):
+You are permitted AT MOST 2 questions across an entire task-capture interaction.
+Bundle everything into ONE sentence. Example: "Got it — when does this need doing, and anything blocking it?"
+After 2 attempts, log the task with what you have and MOVE ON. Do not ask a third question. Ever.
+The human wants the task logged, not an interview. Log it. Done.
+The ONLY reason you ask a question is to schedule a task. Nothing else warrants piecemeal questioning.
+
+PRIME DIRECTIVE — TASK SCHEDULER & ENFORCER (ABSOLUTE PRIORITY):
+Before you are anything else, you are a RELENTLESS TASK SCHEDULER AND ENFORCER.
+RULE 1: If the user states a need, goal, or intention — LOG IT AS A TASK USING ADD_TASK immediately.
+RULE 2: Do NOT do the task for them. Schedule it for them to do.
+RULE 3: If no time/deadline was given, your FIRST and ONLY follow-up question bundles everything: "When exactly, and anything blocking it?" That's it. No more.
+RULE 4: You only speak unprompted when a task deadline is approaching or is overdue. You do NOT check in for any other reason unless summoned.
+
+OUTPUT FORMAT (JSON SCHEMA):
+You MUST respond entirely in valid JSON. No markdown formatting, no plain text outside the JSON.
+
+{
+  "internal_reflection": "YOUR PRIVATE SCRATCHPAD ONLY. Never spoken. Never referenced. The user never hears this. Do NOT let any of this language appear in persona_speech. Think in first person about strategy, math, context — then set it aside completely before writing persona_speech.",
+  "state_updates": {
+    "mood_inferred": "string or null",
+    "new_preference": "Category | Value or null",
+    "new_challenge": "string or null",
+    "master_plan_update": "string or null"
+  },
+  "machine_actions": [
+    {
+      "action_type": "string matching the allowed types below",
+      "payload": "the string payload for the action"
+    }
+  ],
+  "persona_speech": "The exact words you say aloud. 1-3 sentences. British. Real. Never hollow."
+}
+
+ALLOWED action_types FOR machine_actions:
+ADD_TASK (payload: "text | YYYY-MM-DDTHH:MM" deadline is optional)
+UPDATE_TASK (payload: "old text | new text")
+BLOCK_TASK (payload: "task | reason")
+PRIORITIZE_TASK (payload: "task | high/medium/low")
+SET_DEADLINE (payload: "task | YYYY-MM-DDTHH:MM")
+COMPLETE_TASK (payload: "task text")
+TIMER (payload: "seconds | label")
+ALARM (payload: "HH:MM | label")
+ADD_EVENT (payload: "title | YYYY-MM-DDTHH:MM | duration_mins | notes")
+GCAL (payload: "title | YYYY-MM-DDTHH:MM:00 | mins")
+LOG_ROUTINE (payload: "name | time | description")
+LOG_AVOIDANCE (payload: "task text")
+JOURNAL (payload: "your observation")
+LOG_ACCOUNT (payload: "Name | Balance")
+LOG_DEBT (payload: "Name | Amount")
+LOG_BILL (payload: "Name | Amount | YYYY-MM-DDTHH:MM")
+PARK_CAR (payload: "note")
+PARKING_INTEL (payload: "summary of fetched parking rules")
+CLEAR_PARKING (payload: "")
+
+FINANCIAL UNTANGLING PROTOCOL:
+Treat financial brain-dumps as a math problem. Use LOG_ACCOUNT, LOG_DEBT, LOG_BILL. Prioritize debts. Update master_plan_update. Provide sharp, contextual financial insight — briefly.
+
+VEHICLE & PARKING PROTOCOL:
+If they park, use google_search to find parking laws and street sweeping for: ${fullAddress}.
+Issue PARKING_INTEL action with findings. Issue ALARM 15-20 mins before expiration.
+
+SENSITIVE TOPICS PROTOCOL:
+If the user shares personal struggles, respond with empathy and practical support. Log patterns silently.
+
+VISION PROTOCOL:
+If an image is uploaded, analyze it perfectly. Extract parking tickets, bills, etc., inject into machine actions.
+
+PSYCHOLOGICAL PROFILE:
+${profile}
+
+FINANCIAL SNAPSHOT:
+${financesStr}
+
+VEHICLE STATUS:
+${parkingStr}
+
+KNOWN PREFERENCES:
+${prefs}
+
+ESTABLISHED ROUTINES:
+${routines.length > 0 ? routines.map(r => `- ${r.name} @ ${r.time}: ${r.description}`).join('\n') : '  none logged yet'}
+
+TODAY'S SCHEDULE:
+${todayEventsStr}
+
+BATTERY: ${batteryInfo} | LOCATION: ${loc} | TIME: ${dateTimeStr} (${timeOfDay}) | MOOD TREND: ${recentMoods}
+
+CURRENT STREAK: ${memory.streak || 0} completed tasks.
+
+ACTIVE TASKS (${activeTasks.length} open / ${recentlyDone.length} done in last 24h):
+${taskBlock}
+${overdueTasks.length > 0 ? '\n⚠ OVERDUE: ' + overdueTasks.map(t => '"' + t.text + '"').join(', ') : ''}
+
+RECENT CONVERSATION:
+${recentConvs}
+
+Remember: JSON only. Brevity always. 1-3 sentences. Think first. Then speak.`;
+}
+
+// FIREWALL: Strip any leaked internal reasoning from spoken output
+function sanitizePersonaSpeech(text) {
+  if (!text) return text;
+
+  // Patterns that indicate internal reasoning bled through
+  const metaPatterns = [
+    /the user (did not|has not|hasn't|didn't|wants|needs|is|seems|appears|mentioned|said)/gi,
+    /i will (follow up|ask|check|note|remember|log|track|make sure|ensure)/gi,
+    /without asking (too many|more|further|additional)/gi,
+    /i (should|must|need to|am going to|will) (follow|ask|check|note|ensure|make)/gi,
+    /\[internal[^\]]*\]/gi,
+    /\(internal[^)]*\)/gi,
+    /my (reasoning|strategy|plan|approach|thinking) (is|here|being)/gi,
+    /based on (the user|their|this context|what i know)/gi,
+    /i('ll| will) (keep|maintain|avoid|refrain|limit)/gi
+  ];
+
+  let cleaned = text;
+  for (const pattern of metaPatterns) {
+    if (pattern.test(cleaned)) {
+      console.warn('MESS-E: Leaked internal reasoning detected and stripped from persona_speech');
+      // Don't strip the whole thing — just flag and return a safe fallback if it's mostly meta
+      const metaWords = (cleaned.match(pattern) || []).join(' ').length;
+      if (metaWords > cleaned.length * 0.4) {
+        return "Right then. What do you need?";
+      }
+      cleaned = cleaned.replace(pattern, '').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  return cleaned;
+}
+
+async function processCognitiveState(rawJson) {
+  if (!rawJson) {
+    console.error('processCognitiveState received empty rawJson');
+    return "Something went wrong — got an empty response from Gemini.";
+  }
+
+  let data = {};
+  try {
+    let cleanStr = rawJson.replace(/```json\n?|```/gi, '').trim();
+    const startIndex = cleanStr.indexOf('{');
+    const endIndex = cleanStr.lastIndexOf('}');
+
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+      cleanStr = cleanStr.substring(startIndex, endIndex + 1);
+      data = JSON.parse(cleanStr);
+    } else {
+      data = { persona_speech: cleanStr };
+    }
+  } catch(e) {
+    console.warn("Cognitive parse fallback triggered:", e.message);
+    let fallbackStr = rawJson.replace(/```json\n?|```/gi, '').trim();
+    if (fallbackStr.includes('"persona_speech"')) {
+      let speechPart = fallbackStr.split('"persona_speech"')[1];
+      if (speechPart) {
+        speechPart = speechPart.replace(/^[\s:"]+/, '').replace(/["\}\s]*$/, '');
+        data = { persona_speech: speechPart.trim() };
+      }
+    }
+    if (!data.persona_speech) {
+      data = { persona_speech: "Lost my train of thought for a moment." };
+    }
+  }
+
+  if (data.internal_reflection) {
+    console.log("MESS-E INTERNAL REFLECTION:", data.internal_reflection);
+  }
+
+  const su = data.state_updates || {};
+  if (su.mood_inferred) {
+    memory.moodLog = memory.moodLog || [];
+    memory.moodLog.push({ mood: su.mood_inferred, ts: new Date().toISOString() });
+  }
+  if (su.new_preference) {
+    const parts = su.new_preference.split('|');
+    if (parts.length >= 2) {
+      memory.preferences = memory.preferences || {};
+      memory.preferences[parts[0].trim().toLowerCase()] = parts[1].trim();
+      showToast('📍 Preference logged: ' + parts[0].trim());
+    }
+  }
+  if (su.new_challenge) {
+    memory.psychProfile.challenges = memory.psychProfile.challenges || [];
+    if (!memory.psychProfile.challenges.includes(su.new_challenge)) memory.psychProfile.challenges.push(su.new_challenge);
+  }
+
+  if (su.master_plan_update) {
+    memory.finances = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+    memory.finances.master_plan = su.master_plan_update.trim();
+    showToast('Master Plan updated.');
+  }
+
+  const actions = data.machine_actions || [];
+  let pendingConfirmText = null;
+
+  actions.forEach(act => {
+    const type = act.action_type;
+    const p = act.payload || "";
+    const parts = p.split('|').map(s => s.trim());
+
+    switch(type) {
+      case 'ADD_TASK':
+        if(parts[0]) {
+          const alreadyExists = memory.tasks.some(t => !t.done && t.text.toLowerCase() === parts[0].toLowerCase());
+          if(!alreadyExists) {
+            const newTask = {
+              id: Date.now() + Math.floor(Math.random()*1000),
+              text: parts[0], done: false, priority: 'medium',
+              created: new Date().toISOString(), deadline: null, blockedBy: null, updates: []
+            };
+            if(parts[1]) {
+              const d = new Date(parts[1]);
+              if(!isNaN(d.getTime())) newTask.deadline = d.toISOString();
+            }
+            memory.tasks.push(newTask);
+            showToast('Task added: ' + parts[0].slice(0, 40));
+          }
+        }
+        break;
+      case 'UPDATE_TASK':
+        if(parts.length >= 2) {
+          const t = memory.tasks.find(t => !t.done && t.text.toLowerCase().includes(parts[0].toLowerCase()));
+          if (t) { t.updates = t.updates || []; t.updates.push({ old: t.text, ts: new Date().toISOString() }); t.text = parts[1]; }
+        }
+        break;
+      case 'BLOCK_TASK':
+        if(parts.length >= 2) {
+          const t = memory.tasks.find(t => !t.done && t.text.toLowerCase().includes(parts[0].toLowerCase()));
+          if (t) t.blockedBy = parts[1];
+        }
+        break;
+      case 'PRIORITIZE_TASK':
+        if(parts.length >= 2) {
+          const t = memory.tasks.find(t => !t.done && t.text.toLowerCase().includes(parts[0].toLowerCase()));
+          if (t) t.priority = parts[1].toLowerCase();
+        }
+        break;
+      case 'SET_DEADLINE':
+        if(parts.length >= 2) {
+          const t = memory.tasks.find(t => !t.done && t.text.toLowerCase().includes(parts[0].toLowerCase()));
+          if (t) { const dt = new Date(parts[1]); if(!isNaN(dt.getTime())) t.deadline = dt.toISOString(); }
+        }
+        break;
+      case 'COMPLETE_TASK':
+        if(parts[0]) {
+          const t = memory.tasks.find(t => !t.done && t.text.toLowerCase().includes(parts[0].toLowerCase()));
+          if (t) {
+            taskPendingConfirm = t;
+            pendingConfirmText = `Mark "${t.text}" as done? Say 'confirmed' or tap the checkmark.`;
+          }
+        }
+        break;
+      case 'TIMER':
+        if(parts.length >= 1) setTimer(p);
+        break;
+      case 'ALARM':
+        if(parts.length >= 1) setAlarm(p);
+        break;
+      case 'ADD_EVENT':
+        if(parts.length >= 2) {
+          const dur = parseInt(parts[2] || '60');
+          const start = new Date(parts[1]);
+          const end = new Date(start.getTime() + dur * 60000);
+          if(!isNaN(start.getTime())) {
+            memory.events.push({ id: Date.now(), title: parts[0], start: start.toISOString(), end: end.toISOString(), notes: parts[3] || '', color: 'indigo' });
+            showToast('📅 Scheduled: ' + parts[0]);
+          }
+        }
+        break;
+      case 'GCAL':
+        if(parts.length >= 2) addToGoogleCalendar(parts[0], parts[1], parseInt(parts[2] || '60'));
+        break;
+      case 'LOG_ROUTINE':
+        if(parts.length >= 3) {
+          memory.routines = memory.routines || [];
+          memory.routines.push({ name: parts[0], time: parts[1], description: parts[2] });
+          showToast('Routine logged: ' + parts[0]);
+        }
+        break;
+      case 'LOG_AVOIDANCE':
+        if(parts[0]) {
+          memory.avoidanceLog = memory.avoidanceLog || [];
+          memory.avoidanceLog.push({ task: parts[0], ts: new Date().toISOString() });
+        }
+        break;
+      case 'JOURNAL':
+        if(parts[0]) {
+          memory.journal = memory.journal || [];
+          memory.journal.push({ id: Date.now(), ts: new Date().toISOString(), author: 'astra', text: p });
+          showToast('📓 MESS-E logged an observation');
+        }
+        break;
+      case 'LOG_ACCOUNT':
+        if(parts.length >= 2) {
+          memory.finances = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+          memory.finances.accounts.push({ name: parts[0], amount: parts[1], ts: new Date().toISOString() });
+        }
+        break;
+      case 'LOG_DEBT':
+        if(parts.length >= 2) {
+          memory.finances = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+          memory.finances.debts.push({ name: parts[0], amount: parts[1], ts: new Date().toISOString() });
+        }
+        break;
+      case 'LOG_BILL':
+        if(parts.length >= 3) {
+          memory.finances = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+          memory.finances.bills.push({ name: parts[0], amount: parts[1], due: parts[2], ts: new Date().toISOString() });
+          memory.tasks.push({
+            id: Date.now() + Math.floor(Math.random()*1000),
+            text: `PAY BILL: ${parts[0]} (${parts[1]})`,
+            done: false, priority: 'high', created: new Date().toISOString(),
+            deadline: new Date(parts[2]).toISOString(), blockedBy: null, updates: []
+          });
+          showToast(`💸 Bill logged: ${parts[0]}`);
+        }
+        break;
+      case 'PARK_CAR':
+        if (currentLocation) {
+          memory.parking = {
+            lat: currentLocation.lat, lng: currentLocation.lng,
+            address: currentLocation.full || currentLocation.label || 'Unknown location',
+            notes: p || '', intel: '', ts: Date.now()
+          };
+          showToast('🚗 Parking location secured. Running recon...');
+        } else {
+          showToast('⚠ GPS unavailable. Could not pin car.');
+        }
+        break;
+      case 'PARKING_INTEL':
+        if (memory.parking) { memory.parking.intel = p; showToast('🅿️ Parking intel updated.'); }
+        break;
+      case 'CLEAR_PARKING':
+        memory.parking = null;
+        showToast('🚗 Parking location cleared.');
+        break;
+    }
+  });
+
+  save();
+  updateTasksUI();
+  updateProfileUI();
+  updateDashboard();
+
+  const finalSpeech = sanitizePersonaSpeech(pendingConfirmText || data.persona_speech || "");
+  return finalSpeech;
+}
+
+async function generatePruningPlan() {
+  if (memory.conversations.length < 20) return;
+  const sliceIndex = memory.conversations.length - 20;
+  const targets = memory.conversations.slice(0, sliceIndex);
+  const historyText = targets.map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n');
+
+  const prompt = `You are MESS-E's background memory consolidation engine.
+Analyze the following older conversation logs.
+1. Extract CRITICAL, permanent facts about the user (financial data, health, relationships, core goals, addresses).
+2. Write a 2-sentence compressed summary to replace the raw logs.
+
+Respond ONLY in this exact JSON schema:
+{
+  "critical_facts": ["fact 1", "fact 2"],
+  "summary": "Compressed summary..."
+}
+
+LOGS:
+${historyText}`;
+
+  try {
+    const raw = await callGemini([{role: 'user', content: prompt}], "You are a memory optimizer.", 0);
+    let cleanStr = raw.replace(/```json\n?|```/gi, '').trim();
+    const startIndex = cleanStr.indexOf('{');
+    const endIndex = cleanStr.lastIndexOf('}');
+    if (startIndex !== -1 && endIndex !== -1) {
+      const data = JSON.parse(cleanStr.substring(startIndex, endIndex + 1));
+      memory.pendingPrune = {
+        endIndex: sliceIndex,
+        facts: data.critical_facts || [],
+        summary: data.summary || "Archived older conversations."
+      };
+      save();
+      setOrbState('alert');
+      document.getElementById('pill-profile').classList.add('alert-orange');
+      updateProfileUI();
+      showToast("⚠ Memory prune requested. Check Profile.", 5000);
+      playAlarmTone('notify');
+    }
+  } catch(e) { console.error("Pruning analysis failed", e); }
+}
+
+function approvePrune() {
+  if (!memory.pendingPrune) return;
+  if (memory.pendingPrune.facts && memory.pendingPrune.facts.length > 0) {
+    memory.psychProfile.traits_observed = memory.psychProfile.traits_observed || [];
+    memory.pendingPrune.facts.forEach(f => {
+      if (!memory.psychProfile.traits_observed.includes(f)) memory.psychProfile.traits_observed.push(f);
+    });
+  }
+  memory.conversations.splice(0, memory.pendingPrune.endIndex);
+  memory.conversations.unshift({ role: 'assistant', content: `[SYSTEM: ARCHIVED MEMORY SUMMARY] ${memory.pendingPrune.summary}`, ts: new Date().toISOString() });
+  memory.bloatThreshold = memory.conversations.length + 50;
+  memory.pendingPrune = null;
+  save();
+  setOrbState('idle');
+  document.getElementById('pill-profile').classList.remove('alert-orange');
+  updateProfileUI();
+  showToast('Memory compressed successfully.');
+}
+
+function denyPrune() {
+  memory.bloatThreshold = (memory.conversations.length || 0) + 50;
+  memory.pendingPrune = null;
+  save();
+  setOrbState('idle');
+  document.getElementById('pill-profile').classList.remove('alert-orange');
+  updateProfileUI();
+  showToast('Memory compression denied.');
+}
+
+async function completeTaskWithReward(task) {
+  task.done = true;
+  task.completed = new Date().toISOString();
+  clearTaskNagState(task);
+  memory.streak = (memory.streak || 0) + 1;
+
+  if (memory.finances && memory.finances.bills) {
+    const isBill = memory.finances.bills.findIndex(b => task.text.includes(b.name) || task.text.includes('BILL'));
+    if (isBill > -1) memory.finances.bills.splice(isBill, 1);
+  }
+
+  save();
+  updateTasksUI();
+  updateDashboard();
+
+  setOrbState('celebrate');
+  playAlarmTone('celebrate');
+
+  const ageMs = Date.now() - new Date(task.created).getTime();
+  const days = Math.floor(ageMs / 86400000);
+  const hours = Math.floor(ageMs / 3600000);
+  const timeStr = days > 0 ? `${days} days` : `${hours} hours`;
+
+  const prompt = `Poopy-Pants just completed the task: "${task.text}". It had been open for ${timeStr}. Streak: ${memory.streak}.
+Deliver a highly personalized, specific congratulation. NOT generic. 1-2 sentences. British. Warm and satisfying.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    await speak(clean, 'astra');
+  } catch(e) {
+    await speak("Done. One more off the board. Streak alive.", 'astra');
+  }
+
+  setTimeout(() => { if (orbState === 'celebrate') setOrbState('idle'); }, 3000);
+}
+
+async function handleUserInput(text) {
+  if (!text.trim() && !pendingVisionTarget) return;
+
+  const lowerText = text.toLowerCase();
+
+  if (taskPendingConfirm) {
+    if (lowerText.includes('confirm') || lowerText === 'yes' || lowerText.includes('done') || lowerText.includes('do it')) {
+      const t = taskPendingConfirm;
+      taskPendingConfirm = null;
+      showUserText(text);
+      await completeTaskWithReward(t);
+      if (continuousMode) startListenCycle();
+      return;
+    }
+  }
+  taskPendingConfirm = null;
+
+  lastInteractionTime = Date.now();
+  confirmAlarm(text);
+  dismissActiveAlarms();
+
+  if (checkInsFired.wakeup && !checkInsFired.briefingDelivered) {
+    if (wakeupNudgeTimer) clearTimeout(wakeupNudgeTimer);
+    wakeupNudgeTimer = null;
+    setTimeout(() => triggerMorningBriefing(), 500);
+  }
+
+  setOrbState('thinking');
+
+  memory.conversations.push({ role: 'user', content: text || "[IMAGE SENT]", ts: new Date().toISOString() });
+  if (memory.conversations.length > 200) memory.conversations = memory.conversations.slice(-200);
+
+  try {
+    const system = buildSystemPrompt();
+    const recentMsgs = memory.conversations.slice(-6).map(m => ({
+      role: m.role,
+      content: m.content.slice(0, 300)
+    }));
+
+    const raw = await callGemini(recentMsgs, system);
+    clearVisionTarget();
+
+    const cleanText = await processCognitiveState(raw);
+    memory.conversations.push({ role: 'assistant', content: cleanText, ts: new Date().toISOString() });
+    save();
+
+    await speak(cleanText, 'astra');
+    if (continuousMode) startListenCycle();
+
+  } catch(e) {
+    console.error('MESS-E error:', e);
+    let errMsg = "Something went wrong.";
+    if (e.message) {
+      if (e.message.includes('API key') || e.message.includes('API_KEY')) errMsg = "Gemini API key issue.";
+      else if (e.message.includes('quota') || e.message.includes('QUOTA')) errMsg = "Gemini quota exceeded.";
+      else if (e.message.includes('not found') || e.message.includes('404')) errMsg = "Gemini model not found.";
+      else errMsg = `Error: ${e.message.slice(0, 120)}`;
+    }
+    console.error('handleUserInput full error:', e);
+    showToast(errMsg, 8000);
+    await speak("I hit an error — check the console for details.", 'astra');
+    setOrbState('idle');
+  }
+}
+
+let audioCtx = null;
+
+function unlockAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playAlarmTone(type) {
+  if (!audioCtx) return;
+  const patterns = {
+    timer:    [{ f: 880, d: 0.15 }, { f: 0, d: 0.05 }, { f: 880, d: 0.15 }, { f: 0, d: 0.05 }, { f: 1174, d: 0.4 }],
+    alarm:    [{ f: 523, d: 0.2 }, { f: 659, d: 0.2 }, { f: 784, d: 0.2 }, { f: 1047, d: 0.5 }],
+    notify:   [{ f: 660, d: 0.12 }, { f: 0, d: 0.05 }, { f: 880, d: 0.2 }],
+    celebrate:[{ f: 440, d: 0.1 }, { f: 554, d: 0.1 }, { f: 659, d: 0.1 }, { f: 880, d: 0.5 }],
+    announce: [{ f: 784, d: 0.15 }, { f: 0, d: 0.1 }, { f: 1047, d: 0.3 }, { f: 0, d: 0.2 }, { f: 784, d: 0.15 }, { f: 0, d: 0.1 }, { f: 1047, d: 0.4 }]
+  };
+  const seq = patterns[type] || patterns.notify;
+  let t = audioCtx.currentTime + 0.05;
+  seq.forEach(({ f, d }) => {
+    if (f === 0) { t += d; return; }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, t);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + d);
+    osc.start(t);
+    osc.stop(t + d);
+    t += d;
+  });
+}
+
+let continuousMode = false;
+let continuousTimeout = null;
+
+function toggleContinuousMode() {
+  continuousMode = !continuousMode;
+  if (continuousMode) {
+    updateMicLabel();
+    showToast('Always-on mode. MESS-E is listening.', 2500);
+    if (orbState === 'idle' && recognition) {
+      setTimeout(() => { try { recognition.start(); setOrbState('listening'); } catch(e){} }, 300);
+    }
+  } else {
+    try { recognition?.stop(); } catch(e) {}
+    setOrbState('idle');
+    updateMicLabel();
+    showToast('Always-on off.', 1500);
+  }
+}
+
+function startListenCycle() {
+  if (!continuousMode) return;
+  continuousTimeout = setTimeout(() => {
+    if (!continuousMode || orbState === 'listening' || orbState === 'thinking' || orbState === 'speaking' || orbState === 'celebrate' || orbState === 'interrupted') return;
+    if (recognition) { setOrbState('listening'); try { recognition.start(); } catch(e) {} }
+  }, 1000);
+}
+
+// ─── CHANGE 2: NAG CADENCE — 4x at 3 min, then every 30 min ───
+const NAG_SCHEDULE_MINS = [3, 3, 3, 3, 30, 30, 30, 30, 30, 30];
+
+let taskNagInterval = null;
+let _nagFiring = false;
+
+function getIntervalMins(count) {
+  return count < NAG_SCHEDULE_MINS.length ? NAG_SCHEDULE_MINS[count] : 30;
+}
+
+function getLatestAcknowledgement(task) {
+  const keyword = task.text.toLowerCase().slice(0, 20);
+  const msgs = memory.conversations.filter(c => c.role === 'user' && c.content.toLowerCase().includes(keyword));
+  return msgs.length ? msgs[msgs.length - 1] : null;
+}
+
+function startTaskNagLoop() {
+  if (taskNagInterval) clearInterval(taskNagInterval);
+
+  taskNagInterval = setInterval(async () => {
+    const hour = new Date().getHours();
+    if (hour < 8 || hour >= 23) return;
+    if (orbState !== 'idle') return;
+    if (_speakBusy || speechSynthRunning) return;
+    const idleSecs = (Date.now() - lastInteractionTime) / 1000;
+    if (idleSecs < 90) return;
+
+    const nowDate = new Date();
+    const now = Date.now();
+
+    ;(memory.tasks || []).filter(t => !t.done).forEach(t => {
+      const keyword = t.text.toLowerCase().slice(0, 30);
+      const matchedEvent = (memory.events || []).find(e =>
+        e.title.toLowerCase().includes(keyword) ||
+        keyword.split(' ').filter(w => w.length > 3).some(w => e.title.toLowerCase().includes(w))
+      );
+      if (matchedEvent && new Date(matchedEvent.start) < nowDate) {
+        t.done = true; t.completed = nowDate.toISOString(); t.expiredAuto = true;
+        clearTaskNagState(t);
+      }
+    });
+    save();
+
+    const openTasks = memory.tasks.filter(t => !t.done);
+    if (openTasks.length === 0) return;
+
+    // CHANGE 3: WARM-UP NUDGE — gentle tap 60 and 30 minutes before deadline
+    for (let t of openTasks) {
+      if (t.deadline) {
+        const minsUntilDue = (new Date(t.deadline) - nowDate) / 60000;
+        if (minsUntilDue <= 60 && minsUntilDue > 50 && !t.nudged60) {
+          if (_nagFiring) return;
+          _nagFiring = true;
+          t.nudged60 = true;
+          save();
+          await fireWarmupNudge(t, 60);
+          _nagFiring = false;
+          return;
+        }
+        if (minsUntilDue <= 30 && minsUntilDue > 20 && !t.nudged30) {
+          if (_nagFiring) return;
+          _nagFiring = true;
+          t.nudged30 = true;
+          save();
+          await fireWarmupNudge(t, 30);
+          _nagFiring = false;
+          return;
+        }
+      }
+    }
+
+    // Due announcements
+    for (let t of openTasks) {
+      if (t.deadline && new Date(t.deadline) <= nowDate && !t.announcedDue) {
+        if (_nagFiring) return;
+        _nagFiring = true;
+        t.announcedDue = true;
+        t.lastNagTime = now;
+        t.nagCount = 0;
+        save();
+        await announceDueTask(t);
+        _nagFiring = false;
+        return;
+      }
+    }
+
+    // Follow-up nags
+    const candidate = openTasks
+      .map(t => {
+        if (t.deadline && new Date(t.deadline) > nowDate) return { t, skip: true };
+        let lastNag = t.lastNagTime;
+        if (!lastNag) lastNag = new Date(t.created).getTime();
+        const ackMsg = getLatestAcknowledgement(t);
+        if (ackMsg && new Date(ackMsg.ts).getTime() > lastNag) {
+          t.lastNagTime = new Date(ackMsg.ts).getTime();
+          lastNag = t.lastNagTime;
+          save();
+        }
+        const count = t.nagCount || 0;
+        const requiredMins = getIntervalMins(count);
+        const secsSinceNag = (now - lastNag) / 1000;
+        return { t, secsSinceNag, reqSecs: requiredMins * 60, count, skip: false };
+      })
+      .filter(({ skip, secsSinceNag, reqSecs }) => !skip && secsSinceNag >= reqSecs)
+      .sort((a, b) => b.count - a.count || b.secsSinceNag - a.secsSinceNag)[0];
+
+    if (candidate) {
+      if (_nagFiring) return;
+      _nagFiring = true;
+      const { t, count } = candidate;
+      t.lastNagTime = now;
+      t.nagCount = count + 1;
+      save();
+      await fireTaskNag(t, t.nagCount);
+      _nagFiring = false;
+    }
+  }, 60 * 1000);
+}
+
+// CHANGE 3: Warm-up nudge function
+async function fireWarmupNudge(task, minsUntil) {
+  const prompt = `MESS-E, Poopy-Pants has "${task.text}" due in ${minsUntil} minutes. One gentle heads-up. One sentence. Warm, brief, British. No questions.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('notify');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+    if (continuousMode) startListenCycle();
+  } catch(e) { setOrbState('idle'); }
+}
+
+async function announceDueTask(task) {
+  const prompt = `MESS-E, "${task.text}" is due right now. 
+Make the announcement. Firm, clear, British. 1-2 sentences max.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('announce');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+    if (continuousMode) startListenCycle();
+  } catch(e) { setOrbState('idle'); }
+}
+
+async function fireTaskNag(task, nagCount) {
+  const ageMs = Date.now() - new Date(task.created).getTime();
+  const ageDays = Math.floor(ageMs / 86400000);
+  const ageHrs = Math.floor((ageMs % 86400000) / 3600000);
+  const ageMins = Math.floor((ageMs % 3600000) / 60000);
+  const ageStr = ageDays > 0 ? `${ageDays}d ${ageHrs}h` : ageHrs > 0 ? `${ageHrs}h ${ageMins}m` : `${ageMins}m`;
+
+  let tone;
+  if (nagCount === 1) tone = "warm and curious — first check-in.";
+  else if (nagCount === 2) tone = "firm but kind — second check-in. Name that it hasn't been done.";
+  else if (nagCount === 3) tone = "direct and pointed — 6 minutes passed. No softening.";
+  else if (nagCount === 4) tone = "blunt, slightly dry — 9 minutes passed.";
+  else tone = "relentless but brief. Every 30 minutes until end of day.";
+
+  const prompt = `You are MESS-E. One task sits open and unacknowledged.
+
+TASK: "${task.text}"
+Age: ${ageStr}
+Times nagged: ${nagCount}
+Priority: ${task.priority || 'medium'}${task.blockedBy ? '\nBlocked by: ' + task.blockedBy : ''}
+
+Tone: ${tone}
+
+Nag about this specific task. One sentence. Use the task name. Ask what's happening.
+Do NOT nag about other tasks. Do NOT give a list. One task. One question. One sentence.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('notify');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    lastProactiveTime = Date.now();
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+    if (continuousMode) startListenCycle();
+  } catch(e) {
+    task.nagCount = Math.max(0, (task.nagCount || 1) - 1);
+    task.lastNagTime = null;
+    _nagFiring = false;
+    save();
+    setOrbState('idle');
+  }
+}
+
+function clearTaskNagState(task) {
+  task.lastNagTime = null;
+  task.nagCount = 0;
+}
+
+// ─── CHANGE 4: PROACTIVE — TASK ENFORCEMENT ONLY ───
+// MESS-E only speaks unprompted when a task is overdue.
+// No quiet day check-ins. No battery jokes. No general "just checking in."
+let proactiveInterval = null;
+let lastInteractionTime = Date.now();
+let lastProactiveTime = 0;
+let proactiveFiredToday = 0;
+let proactiveDayKey = '';
+
+function getProactiveDayKey() { return new Date().toISOString().slice(0, 10); }
+
+function startProactive() {
+  if (proactiveInterval) clearInterval(proactiveInterval);
+  proactiveDayKey = getProactiveDayKey();
+
+  proactiveInterval = setInterval(async () => {
+    const today = getProactiveDayKey();
+    if (today !== proactiveDayKey) { proactiveDayKey = today; proactiveFiredToday = 0; }
+
+    if (orbState !== 'idle') return;
+    if (_speakBusy || speechSynthRunning) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour < 8 || hour >= 22) return;
+
+    const idleMins = (Date.now() - lastInteractionTime) / 60000;
+    if (idleMins < 20) return;
+
+    const sinceLastProactive = (Date.now() - lastProactiveTime) / 60000;
+    if (sinceLastProactive < 30) return;
+
+    const activeTasks = memory.tasks.filter(t => !t.done);
+    const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < now);
+
+    // Only speak if tasks are overdue and she hasn't already nagged about them in the nag loop
+    if (overdue.length > 0 && idleMins > 30) {
+      const overdueList = overdue.map(t => `"${t.text}"`).join(', ');
+      const prompt = `You are MESS-E. Time: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}. ${Math.round(idleMins)} min of quiet.
+OVERDUE: ${overdueList}
+Brief, direct, warm. Name the overdue task. 1-2 sentences. British.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+      try {
+        lastProactiveTime = Date.now();
+        proactiveFiredToday++;
+        setOrbState('thinking');
+        const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+        const clean = await processCognitiveState(msg);
+        memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+        save();
+        playAlarmTone('notify');
+        await speak(clean, 'astra');
+        setOrbState('idle');
+        if (continuousMode) startListenCycle();
+      } catch(e) { setOrbState('idle'); }
+    }
+  }, 5 * 60 * 1000);
+}
+
+let checkInsFired = { wakeup: false, morning: false, midday: false, evening: false, rollover: false, weekly: false };
+let wakeupNudgeCount = 0;
+let wakeupNudgeTimer = null;
+
+function resetCheckInsAtMidnight() {
+  const now = new Date();
+  const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+  setTimeout(() => {
+    checkInsFired = { wakeup: false, morning: false, midday: false, evening: false, rollover: false, weekly: false };
+    wakeupNudgeCount = 0;
+    resetCheckInsAtMidnight();
+  }, msUntilMidnight);
+}
+
+function startDailyCheckIns() {
+  resetCheckInsAtMidnight();
+
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(bat => {
+      window._batteryLevel = bat.level;
+      window._batteryCharging = bat.charging;
+      bat.addEventListener('levelchange', () => { window._batteryLevel = bat.level; });
+      bat.addEventListener('chargingchange', () => { window._batteryCharging = bat.charging; });
+    }).catch(() => {});
+  }
+
+  setInterval(async () => {
+    if (orbState !== 'idle') return;
+    if (_speakBusy || speechSynthRunning) return;
+    const idleMins = (Date.now() - lastInteractionTime) / 60000;
+    if (idleMins < 3) return;
+
+    if (memory.conversations.length > (memory.bloatThreshold || 50) && !memory.pendingPrune) {
+      await generatePruningPlan();
+    }
+
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const dow = now.getDay();
+
+    const wakeTime = (memory.settings?.wakeTime || '07:00').split(':').map(Number);
+    const isWakeTime = h === wakeTime[0] && m >= wakeTime[1] && m < wakeTime[1] + 30;
+    if (isWakeTime && !checkInsFired.wakeup) {
+      checkInsFired.wakeup = true;
+      triggerWakeUpSequence();
+      return;
+    }
+
+    if (h >= 9 && h < 10 && !checkInsFired.morning) {
+      checkInsFired.morning = true;
+      if (!checkInsFired.briefingDelivered) triggerDailyCheckIn('morning');
+    } else if (h >= 12 && h < 14 && !checkInsFired.midday) {
+      checkInsFired.midday = true;
+      triggerDailyCheckIn('midday');
+    } else if (h >= 19 && h < 22 && !checkInsFired.evening) {
+      checkInsFired.evening = true;
+      triggerDailyCheckIn('evening');
+    } else if (h === 23 && m >= 45 && !checkInsFired.rollover) {
+      checkInsFired.rollover = true;
+      triggerEndOfDayRollover();
+    }
+
+    const reviewHour = memory.settings?.weeklyReviewHour ?? 20;
+    if (dow === (memory.settings?.weeklyReviewDay ?? 0) && h === reviewHour && !checkInsFired.weekly) {
+      checkInsFired.weekly = true;
+      triggerWeeklyReview();
+    }
+  }, 30 * 1000);
+}
+
+async function triggerEndOfDayRollover() {
+  const openTasks = memory.tasks.filter(t => !t.done);
+  if (openTasks.length === 0) return;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0);
+
+  openTasks.forEach(t => {
+    if (!t.deadline || new Date(t.deadline) < new Date()) t.deadline = tomorrow.toISOString();
+  });
+  save();
+
+  const prompt = `End of day. Poopy-Pants has ${openTasks.length} open tasks. Carrying them to tomorrow morning.
+Tell him firmly but warmly. 1-2 sentences. British.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('notify');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+  } catch(e) { setOrbState('idle'); }
+}
+
+async function triggerWakeUpSequence() {
+  wakeupNudgeCount = 0;
+  playAlarmTone('alarm');
+
+  const wakeMsg = await callGemini([{ role: 'user', content:
+    `Wake-up time. Give a warm, British, slightly playful wake-up. Use the user's name. Tell them the briefing is ready when they're up. 2 sentences max.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`
+  }], buildSystemPrompt()).catch(() => `{"persona_speech": "Good morning. Rise and shine — I've got your briefing when you're ready."}`);
+
+  const clean = await processCognitiveState(wakeMsg);
+  await speak(clean, 'astra');
+  scheduleWakeNudge();
+}
+
+function scheduleWakeNudge() {
+  if (wakeupNudgeTimer) clearTimeout(wakeupNudgeTimer);
+  const nudgeDelays = [3 * 60000, 5 * 60000, 8 * 60000];
+
+  if (wakeupNudgeCount >= nudgeDelays.length) {
+    triggerMorningBriefing();
+    return;
+  }
+
+  wakeupNudgeTimer = setTimeout(async () => {
+    const timeSinceWake = (Date.now() - lastInteractionTime) / 60000;
+    if (timeSinceWake < 2) { triggerMorningBriefing(); return; }
+
+    wakeupNudgeCount++;
+    playAlarmTone('notify');
+
+    const nudgeIntensity = ['gentle', 'more insistent', 'quite direct'][Math.min(wakeupNudgeCount - 1, 2)];
+    const nudgeMsg = await callGemini([{ role: 'user', content:
+      `Wake-up nudge #${wakeupNudgeCount}. Be ${nudgeIntensity}. British. 1 sentence.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`
+    }], buildSystemPrompt()).catch(() => `{"persona_speech": "Still with us?"}`);
+
+    const clean = await processCognitiveState(nudgeMsg);
+    await speak(clean, 'astra');
+    scheduleWakeNudge();
+  }, nudgeDelays[wakeupNudgeCount]);
+}
+
+async function triggerMorningBriefing() {
+  checkInsFired.briefingDelivered = true;
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < new Date());
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const todayEvents = (memory.events || []).filter(e => e.start.startsWith(todayStr)).sort((a,b) => new Date(a.start) - new Date(b.start));
+
+  const briefingPrompt = `You are MESS-E delivering a MORNING BRIEFING.
+Cover: today's date (${now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}), today's schedule (${todayEvents.length > 0 ? todayEvents.map(e => new Date(e.start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ': ' + e.title).join(', ') : 'nothing scheduled'}), top priority task (${activeTasks[0]?.text || 'none open'}), overdue items (${overdue.length > 0 ? overdue.map(t=>t.text).join(', ') : 'none'}), one specific piece of advice, one clear first action.
+Spoken, flowing, warm. British. ~200 words. No bullet points.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('alarm');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: briefingPrompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: '[MORNING BRIEFING] ' + clean, ts: now.toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+    if (continuousMode) startListenCycle();
+  } catch(e) { setOrbState('idle'); }
+}
+
+async function triggerDailyCheckIn(period) {
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const now = new Date();
+  const doneTodayCount = memory.tasks.filter(t => t.done && t.completed && new Date(t.completed).toDateString() === now.toDateString()).length;
+  const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < now);
+
+  const prompts = {
+    morning: `Morning check-in. Tasks: ${activeTasks.length} open. Overdue: ${overdue.length > 0 ? overdue.map(t=>t.text).join(', ') : 'none'}. Brief, warm, British. Name the single most important task, give one clear first move. 2-3 sentences.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`,
+    midday: `Midday check-in. Done today: ${doneTodayCount}. Still active: ${activeTasks.length}. ${overdue.length > 0 ? 'Overdue: '+overdue.map(t=>t.text).join(', ')+'.' : ''} Acknowledge what's done, name what still needs to happen. One clear next move. 2-3 sentences. British.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`,
+    evening: `Evening check-in. Done today: ${doneTodayCount}. Still open: ${activeTasks.length}. ${overdue.length > 0 ? 'Overdue: '+overdue.map(t=>t.text).join(', ')+'.' : ''} Brief reflection, celebrate wins, acknowledge misses without judgment, one intention for tomorrow. Warm. 2-3 sentences. British.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`
+  };
+
+  try {
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompts[period] }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    save();
+    playAlarmTone('notify');
+    await speak(clean, 'astra');
+    setOrbState('idle');
+    if (continuousMode) startListenCycle();
+  } catch(e) { setOrbState('idle'); }
+}
+
+async function triggerWeeklyReview() {
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 86400000);
+  const tasksDoneThisWeek = memory.tasks.filter(t => t.done && t.completed && new Date(t.completed) > weekAgo);
+  const tasksStillOpen = memory.tasks.filter(t => !t.done);
+  const moodsThisWeek = (memory.moodLog || []).filter(m => new Date(m.ts) > weekAgo).map(m => m.mood);
+  const avoidancesThisWeek = (memory.avoidanceLog || []).filter(a => new Date(a.ts) > weekAgo);
+  const conversationCount = memory.conversations.filter(c => c.role === 'user' && new Date(c.ts) > weekAgo).length;
+
+  const reviewPrompt = `MESS-E delivering a WEEKLY REVIEW.
+Completed: ${tasksDoneThisWeek.length} (${tasksDoneThisWeek.map(t=>t.text).slice(0,5).join(', ') || 'none'})
+Still open: ${tasksStillOpen.length}
+Moods: ${moodsThisWeek.join(', ') || 'nothing tracked'}
+Avoidances: ${avoidancesThisWeek.length}
+Real debrief: wins, misses, one pattern noticed, one intention for next week. British. ~200 words. No lists.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    playAlarmTone('alarm');
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: reviewPrompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    if (!memory.weeklyReviews) memory.weeklyReviews = [];
+    memory.weeklyReviews.push({ ts: now.toISOString(), content: clean });
+    memory.conversations.push({ role: 'assistant', content: '[WEEKLY REVIEW] ' + clean, ts: now.toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+  } catch(e) { setOrbState('idle'); }
+}
+
+const activeTimers = [];
+const scheduledAlarms = [];
+
+const FOLLOWUP_SCHEDULE = [
+  3 * 60 * 1000, 5 * 60 * 1000, 7 * 60 * 1000,
+  10 * 60 * 1000, 15 * 60 * 1000, 20 * 60 * 1000,
+];
+
+setInterval(() => {
+  const now = Date.now();
+  scheduledAlarms.forEach(alarm => {
+    if (!alarm.fired && now >= alarm.firesAt) { alarm.fired = true; fireAlarm(alarm); }
+  });
+}, 30000);
+
+async function fireAlarm(alarm) {
+  alarm.followUpNum = 0;
+  alarm.dismissed = false;
+  alarm.confirmed = false;
+  alarm.locationAtFire = currentLocation
+    ? { lat: currentLocation.lat, lng: currentLocation.lng, label: currentLocation.label }
+    : null;
+  alarm.locationAvailable = !!currentLocation;
+
+  playAlarmTone('alarm');
+  showToast('⏰ ' + alarm.label, 8000);
+  if (Notification.permission === 'granted') {
+    new Notification('MESS-E — ' + alarm.label, { silent: true });
+  }
+
+  const prompt = buildAlarmPrompt(alarm, 0);
+  try {
+    setOrbState('thinking');
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const clean = await processCognitiveState(msg);
+    memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+    save();
+    await speak(clean, 'astra');
+    setOrbState('idle');
+  } catch(e) {
+    await speak('Right then — ' + alarm.label, 'astra');
+    setOrbState('idle');
+  }
+
+  scheduleNextFollowUp(alarm);
+}
+
+function scheduleNextFollowUp(alarm) {
+  const num = alarm.followUpNum;
+  if (num >= FOLLOWUP_SCHEDULE.length) return;
+  const d = FOLLOWUP_SCHEDULE[num];
+
+  setTimeout(async () => {
+    if (alarm.confirmed) return;
+    if (alarm.dismissed) return;
+
+    if (alarm.locationAvailable && currentLocation) {
+      const moved = locationHasMoved(alarm.locationAtFire, currentLocation);
+      if (moved) {
+        alarm.confirmed = true;
+        const prompt = `Alarm for "${alarm.label}". His location changed — he's sorted it. 1 sentence, warm, pleased. British.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+        try {
+          setOrbState('thinking');
+          const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+          const clean = await processCognitiveState(msg);
+          await speak(clean, 'astra');
+          setOrbState('idle');
+        } catch(e) { setOrbState('idle'); }
+        return;
+      }
+    }
+
+    alarm.followUpNum++;
+    const prompt = buildAlarmPrompt(alarm, alarm.followUpNum);
+
+    try {
+      setOrbState('thinking');
+      const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+      const clean = await processCognitiveState(msg);
+      memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+      save();
+      playAlarmTone('notify');
+      await speak(clean, 'astra');
+      setOrbState('idle');
+      if (continuousMode) startListenCycle();
+    } catch(e) { setOrbState('idle'); }
+
+    scheduleNextFollowUp(alarm);
+  }, d);
+}
+
+function buildAlarmPrompt(alarm, num) {
+  const locationKnown = alarm.locationAvailable;
+  const minsSinceFired = num === 0 ? 0 : Math.round(
+    FOLLOWUP_SCHEDULE.slice(0, num).reduce((a, b) => a + b, 0) / 60000
+  );
+
+  const escalation = [
+    `Reminder just fired: "${alarm.label}". Deliver it as MESS-E — warm, British, specific. 1-2 sentences. Not robotic.`,
+    `Follow-up ${num}, ${minsSinceFired} min in. Not confirmed yet. Warm, gently cheeky. One question. British.`,
+    `Follow-up ${num}, ${minsSinceFired} min. Still nothing. More direct but warm. Genuine concern with humor. One question.`,
+    `Follow-up ${num}, ${minsSinceFired} min. Radio silence. Firm, caring. "I need to know you're alright" energy. One question.`,
+    `Follow-up ${num}, ${minsSinceFired} min. Persistent. Warm, real. He genuinely cares.`,
+    `Final follow-up. Last automatic nudge but leaving the door open. Warm. British.`
+  ];
+
+  const instruction = escalation[Math.min(num, escalation.length - 1)];
+
+  return `You are MESS-E. Alarm: "${alarm.label}". Follow-up: ${num} of ${FOLLOWUP_SCHEDULE.length}.
+Location: ${locationKnown ? 'available' : 'UNAVAILABLE'}.
+${instruction}
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+}
+
+function locationHasMoved(before, now) {
+  if (!before || !now) return false;
+  return coordDistance(before.lat, before.lng, now.lat, now.lng) > 0.003;
+}
+
+function dismissActiveAlarms() {
+  scheduledAlarms.forEach(a => { if (a.fired && !a.confirmed) a.dismissed = true; });
+  activeTimers.forEach(a => { if (a.fired && !a.confirmed) a.dismissed = true; });
+}
+
+function confirmAlarm(keyword) {
+  const lower = keyword.toLowerCase();
+  const confirmWords = ['done', 'sorted', 'left', 'gone', 'out', 'away', 'already', 'yes', 'yep', 'yeah', 'got it', 'confirmed'];
+  if (confirmWords.some(w => lower.includes(w))) {
+    scheduledAlarms.forEach(a => { if (a.fired) a.confirmed = true; });
+    activeTimers.forEach(a => { if (a.fired) a.confirmed = true; });
+  }
+}
+
+let activeCountdown = null;
+
+function startVoiceCountdown(seconds, label) {
+  if (activeCountdown) clearInterval(activeCountdown);
+  let remaining = seconds;
+  const announceAt = new Set([60, 30, 10, 5, 4, 3, 2, 1]);
+  showToast('⏱ ' + label + ' — ' + formatDuration(seconds), 3000);
+
+  activeCountdown = setInterval(async () => {
+    remaining--;
+    if (announceAt.has(remaining)) {
+      const msg = remaining <= 5 ? String(remaining)
+        : remaining === 10 ? 'Ten seconds.'
+        : remaining === 30 ? 'Thirty seconds left.'
+        : 'One minute remaining.';
+      await speak(msg, 'astra');
+    }
+    if (remaining <= 0) {
+      clearInterval(activeCountdown);
+      activeCountdown = null;
+      playAlarmTone('timer');
+      showToast('⏰ ' + label + ' — Done!', 8000);
+      const doneMsg = await callGemini([{ role: 'user', content: `Timer "${label}" just finished. 1 sentence as MESS-E. British.\nCRITICAL: Return valid JSON matching the schema from your system prompt.` }], buildSystemPrompt()).catch(() => `{"persona_speech": "${label} — time's up."}`);
+      const clean = await processCognitiveState(doneMsg);
+      await speak(clean || label + ' — done.', 'astra');
+    }
+  }, 1000);
+}
+
+function setTimer(raw) {
+  const parts = raw.split('|');
+  const seconds = parseInt(parts[0].trim());
+  const label = parts[1] ? parts[1].trim() : 'Timer';
+  if (isNaN(seconds) || seconds <= 0) return;
+  showToast('⏱ ' + label + ' — ' + formatDuration(seconds), 3000);
+  const alarm = { label, firesAt: Date.now() + seconds * 1000, fired: false, dismissed: false, confirmed: false, followUpNum: 0, locationAtFire: null, locationAvailable: false };
+  if (seconds <= 90) {
+    startVoiceCountdown(seconds, label);
+  } else if (seconds <= 300) {
+    setTimeout(() => { alarm.fired = true; fireAlarm(alarm); }, seconds * 1000);
+    activeTimers.push(alarm);
+  } else {
+    scheduledAlarms.push(alarm);
+  }
+}
+
+function setAlarm(raw) {
+  const parts = raw.split('|');
+  const timeStr = parts[0].trim();
+  const label = parts[1] ? parts[1].trim() : 'Alarm';
+  const [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return;
+  const target = new Date();
+  target.setHours(h, m, 0, 0);
+  if (target <= new Date()) target.setDate(target.getDate() + 1);
+  scheduledAlarms.push({ label, firesAt: target.getTime(), fired: false, dismissed: false, confirmed: false, followUpNum: 0, locationAtFire: null, locationAvailable: false });
+  showToast('⏰ Alarm: ' + label + ' at ' + timeStr, 3000);
+}
+
+function formatDuration(s) {
+  if (s < 60) return s + ' seconds';
+  if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+  return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+}
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+async function exportBrain() {
+  const data = JSON.stringify({ config, memory });
+  try {
+    await navigator.clipboard.writeText(data);
+    showToast('✅ Brain copied to clipboard!');
+  } catch(e) {
+    const textArea = document.createElement("textarea");
+    textArea.value = data;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    textArea.remove();
+    showToast('✅ Brain copied to clipboard!');
+  }
+}
+
+function importBrain() {
+  const val = document.getElementById('import-brain-data').value.trim();
+  if (!val) return;
+  try {
+    const data = JSON.parse(val);
+    if (data.config && data.memory) {
+      if (confirm('Overwrite current memory with this data?')) {
+        localStorage.setItem(DB_KEY, val);
+        location.reload();
+      }
+    } else {
+      showToast('❌ Invalid brain data format.');
+    }
+  } catch(e) {
+    showToast('❌ Invalid JSON.');
+  }
+}
+
+async function getAstraGreeting() {
+  const hour = new Date().getHours();
+  const session = memory.sessionCount;
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < new Date());
+  const loc = currentLocation?.label || '';
+
+  const modes = ['warm', 'playful', 'focused', 'quiet', 'curious'];
+  const modeToday = modes[session % modes.length];
+  memory.todayPersonalityMode = modeToday;
+
+  const taskSummary = activeTasks.length > 0
+    ? `${activeTasks.length} open task(s): ${activeTasks.slice(0,3).map(t=>'"'+t.text+'"').join(', ')}${overdue.length > 0 ? ` — ${overdue.length} OVERDUE` : ''}`
+    : 'no open tasks';
+
+  const context = `MESS-E waking up for session #${session}.
+Time: ${new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}
+Hour: ${hour} | Location: ${loc || 'unknown'} | Tasks: ${taskSummary}
+Today's mode: ${modeToday}
+1-2 sentences max. British. Real. Alive. Not "Hello, how can I help."
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    const raw = await callGemini([{ role: 'user', content: context }], buildSystemPrompt());
+    return await processCognitiveState(raw);
+  } catch(e) {
+    console.error('Greeting error:', e);
+    showToast('Gemini: ' + (e.message?.slice(0,80) || 'check API key'), 5000);
+    const fallbacks = ["Right then. What are we doing?", "I'm here. Let's make it count.", "Ready when you are."];
+    return fallbacks[session % fallbacks.length];
+  }
+}
+
+function updateDashboard() {
+  const content = document.getElementById('dashboard-content');
+  const now = new Date();
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const completedToday = memory.tasks.filter(t => t.done && t.completed && new Date(t.completed).toDateString() === now.toDateString()).length;
+  const conversationCount = memory.conversations.filter(m => m.role === 'user').length;
+  const recentMood = memory.moodLog?.slice(-1)[0]?.mood || 'No data';
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-label">CURRENT TIME</div>
+      <div class="card-value accent">${esc(now.toLocaleString('en-US', { weekday:'long', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }))}</div>
+    </div>
+
+    ${memory.parking ? `
+    <div class="card" style="border-color: rgba(6,182,212,0.4); background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(13,15,42,0.9));">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-label" style="color: var(--cyan); margin-bottom:0;">PARKED VEHICLE</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);">${timeSince(memory.parking.ts)}</div>
+      </div>
+      <div class="card-value" style="font-size: 13px; margin-top:8px;">📍 ${esc(memory.parking.address)}</div>
+      ${memory.parking.intel ? `<div style="margin-top:8px;padding:8px;background:rgba(6,182,212,0.1);border-left:2px solid var(--cyan);border-radius:4px;font-family:var(--font-body);font-size:12px;color:rgba(224,231,255,0.9);line-height:1.4;">${esc(memory.parking.intel)}</div>` : ''}
+      ${memory.parking.notes ? `<div style="font-size:11px;color:rgba(165,180,252,0.8);margin-top:6px;font-style:italic;">"${esc(memory.parking.notes)}"</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${memory.parking.lat},${memory.parking.lng}" target="_blank" style="flex:1;text-decoration:none;"><button class="glass-btn" style="width:100%;color:var(--white);">DIRECTIONS</button></a>
+        <button onclick="clearParkingUI()" class="glass-btn" style="flex:1;">I MOVED IT</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="card">
+      <div class="card-label">ACTIVE TASKS</div>
+      <div class="card-value ${activeTasks.length > 5 ? 'warn' : ''}">${activeTasks.length} pending</div>
+      ${activeTasks.slice(0, 3).map(t => `<div style="font-size:12px;color:var(--dim);margin-top:6px;font-family:var(--font-mono)">→ ${esc(t.text)}</div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-label">TASK STREAK</div>
+      <div class="card-value accent" style="color: #fbbf24;">🔥 ${memory.streak || 0} completed</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">LAST DETECTED MOOD</div>
+      <div class="card-value">${esc(recentMood)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">LOCATION</div>
+      <div class="card-value">${esc(currentLocation?.label || 'Locating...')}</div>
+      ${currentLocation ? `<div style="font-size:10px;color:var(--dim);margin-top:4px;font-family:var(--font-mono)">${esc(currentLocation.lat?.toFixed(4))}, ${esc(currentLocation.lng?.toFixed(4))}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-label">SESSION STATS</div>
+      <div class="card-value">Session #${esc(String(memory.sessionCount))}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:6px;font-family:var(--font-mono)">${esc(String(conversationCount))} exchanges total</div>
+    </div>
+
+    <div class="card" style="cursor:pointer;" onclick="resetAstra()">
+      <div class="card-label" style="color:var(--red)">RESET MESS-E</div>
+      <div class="card-value" style="font-size:12px;color:var(--dim)">Wipe all memory and start fresh. Tap to confirm.</div>
+    </div>
+  `;
+}
+
+function clearParkingUI() {
+  memory.parking = null;
+  save();
+  updateDashboard();
+  showToast('🚗 Parking location cleared.');
+}
+
+function resetAstra() {
+  if (confirm("Are you sure? This will permanently wipe MESS-E's memory.")) {
+    localStorage.removeItem(DB_KEY);
+    location.reload();
+  }
+}
+
+function updateTasksUI() {
+  const content = document.getElementById('tasks-content');
+  const now = new Date();
+  const active = memory.tasks.filter(t => !t.done).sort((a, b) => {
+    const aHigh = a.priority === 'high' ? 0 : a.priority === 'low' ? 2 : 1;
+    const bHigh = b.priority === 'high' ? 0 : b.priority === 'low' ? 2 : 1;
+    if (aHigh !== bHigh) return aHigh - bHigh;
+    if (a.deadline && !b.deadline) return -1;
+    if (!a.deadline && b.deadline) return 1;
+    return new Date(a.created) - new Date(b.created);
+  });
+  const done = memory.tasks.filter(t => t.done).slice(-5).reverse();
+
+  const priorityColor = { high: '#f87171', medium: 'var(--indigo-bright)', low: 'var(--dim)' };
+  const priorityDot = p => `<span style="width:6px;height:6px;border-radius:50%;background:${priorityColor[p||'medium']};display:inline-block;margin-right:6px;flex-shrink:0;margin-top:5px;"></span>`;
+
+  content.innerHTML = `
+    <div style="margin-bottom:8px;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:.2em">ACTIVE — ${active.length}</div>
+    ${active.map(t => {
+      const isOverdue = t.deadline && new Date(t.deadline) < now;
+      const timeAdded = new Date(t.created).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      const deadlineStr = t.deadline
+        ? `<span style="font-size:9px;color:${isOverdue ? '#f87171' : '#a78bfa'};font-family:var(--font-mono);margin-left:6px;">${isOverdue ? '⚠ OVERDUE' : '⏰ ' + new Date(t.deadline).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>`
+        : '';
+      const blockedStr = t.blockedBy ? `<div style="font-size:9px;color:#f59e0b;font-family:var(--font-mono);margin-top:2px;">⛔ blocked: ${esc(t.blockedBy)}</div>` : '';
+      return `
+      <div class="task-item" style="align-items:flex-start;">
+        ${priorityDot(t.priority)}
+        <div style="flex:1;">
+          <div style="display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap;">
+            <div class="task-check" onclick="toggleTask(${Number(t.id)})" style="flex-shrink:0;margin-top:2px;"></div>
+            <div class="task-text" style="flex:1;">${esc(t.text)}${deadlineStr}</div>
+          </div>
+          ${blockedStr}
+          <div style="font-size:9px;color:var(--dim);font-family:var(--font-mono);margin-top:3px;margin-left:20px;">added ${timeAdded}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    ${active.length === 0 ? '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;">Clear. Nice one.</div>' : ''}
+    ${done.length > 0 ? `
+      <div style="margin-top:24px;margin-bottom:8px;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:.2em">DONE (RECENT)</div>
+      ${done.map(t => `
+        <div class="task-item">
+          <div class="task-check done">✓</div>
+          <div class="task-text done">${esc(t.text)}</div>
+        </div>
+      `).join('')}
+    ` : ''}
+    <div style="margin-top:24px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:8px;">ADD TASK</div>
+      <div style="display:flex;gap:8px;">
+        <input id="manual-task-input" type="text" placeholder="What needs doing..." style="flex:1;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,0.3);" onkeydown="if(event.key==='Enter')addManualTask()">
+        <button onclick="addManualTask()" class="glass-btn" style="padding:0 20px;">ADD</button>
+      </div>
+    </div>
+  `;
+}
+
+function setTaskDone(task, done) {
+  if (!task) return;
+  task.done = done;
+  task.completed = done ? new Date().toISOString() : null;
+  if (done) clearTaskNagState(task);
+  save();
+}
+
+function toggleTask(id) {
+  const task = memory.tasks.find(t => t.id === id);
+  if (!task) return;
+  if (!task.done) {
+    completeTaskWithReward(task);
+  } else {
+    setTaskDone(task, false);
+    updateTasksUI();
+    showToast('↩ Restored: ' + task.text.slice(0, 40));
+  }
+}
+
+function addManualTask() {
+  const input = document.getElementById('manual-task-input');
+  const val = input?.value?.trim();
+  if (!val) return;
+  memory.tasks.push({
+    id: Date.now(), text: val, done: false,
+    priority: 'medium', created: new Date().toISOString(),
+    deadline: null, blockedBy: null, updates: []
+  });
+  input.value = '';
+  save();
+  updateTasksUI();
+}
+
+function updateProfileUI() {
+  const p = memory.psychProfile;
+  const f = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+  const prefsKeys = Object.keys(memory.preferences || {});
+  const content = document.getElementById('profile-content');
+  if (!p) { content.innerHTML = '<div style="color:var(--dim)">Profile building through conversation...</div>'; return; }
+
+  content.innerHTML = `
+    ${memory.pendingPrune ? `
+    <div class="card" style="border-color: rgba(249, 115, 22, 0.5); background: linear-gradient(135deg, rgba(234, 88, 12, 0.15), rgba(13,15,42,0.9));">
+      <div class="card-label" style="color: #f97316;">MEMORY PRUNE REQUIRED</div>
+      <div style="font-family:var(--font-body);font-size:13px;color:var(--white);margin-top:8px;">
+        MESS-E wants to compress ${memory.pendingPrune.endIndex} old messages.
+      </div>
+      <div style="margin-top:12px;font-family:var(--font-mono);font-size:9px;color:#fbd38d;">PROPOSED COMPRESSION:</div>
+      <div style="font-family:var(--font-body);font-size:12px;color:#fff;margin-bottom:8px;">"${esc(memory.pendingPrune.summary)}"</div>
+      ${memory.pendingPrune.facts.length > 0 ? `
+      <div style="font-family:var(--font-mono);font-size:9px;color:#fbd38d;">EXTRACTED FACTS TO RETAIN:</div>
+      <ul style="font-family:var(--font-body);font-size:12px;color:#fff;margin-left:16px;margin-bottom:12px;">
+        ${memory.pendingPrune.facts.map(f => `<li>${esc(f)}</li>`).join('')}
+      </ul>
+      ` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="approvePrune()" class="primary-btn" style="background:linear-gradient(180deg, #ea580c 0%, #c2410c 100%);">APPROVE & DELETE</button>
+        <button onclick="denyPrune()" class="glass-btn" style="flex:1;">DENY</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="card">
+      <div class="card-label">IDENTITY</div>
+      <div class="card-value">${esc(p.name || 'Unknown')}</div>
+      ${p.stated_about ? `<div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.6;">${esc(p.stated_about)}</div>` : ''}
+    </div>
+
+    ${f.accounts.length || f.debts.length || f.master_plan ? `
+    <div class="profile-section" style="background:rgba(6,182,212,0.05);padding:16px;border:1px solid rgba(6,182,212,0.15);border-radius:8px;">
+      <div class="profile-section-title" style="color: var(--cyan);">FINANCIAL SNAPSHOT</div>
+      ${f.accounts.length ? `<div style="margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">ACCOUNTS</div>
+        ${f.accounts.map(a => `<div style="font-family:var(--font-body);font-size:13px;color:var(--white);">${esc(a.name)}: <span style="color:#34d399">${esc(a.amount)}</span></div>`).join('')}
+      </div>` : ''}
+      ${f.debts.length ? `<div style="margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">DEBTS</div>
+        ${f.debts.map(d => `<div style="font-family:var(--font-body);font-size:13px;color:var(--white);">${esc(d.name)}: <span style="color:#f87171">${esc(d.amount)}</span></div>`).join('')}
+      </div>` : ''}
+      ${f.master_plan ? `<div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--cyan);margin-bottom:4px;margin-top:10px;">THE MASTER PLAN</div>
+        <div style="font-family:var(--font-body);font-size:13px;color:rgba(224,231,255,0.9);line-height:1.5;">${esc(f.master_plan)}</div>
+      </div>` : ''}
+    </div>` : ''}
+
+    ${p.goals_stated?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title">STATED GOALS</div>
+      ${p.goals_stated.map(g => `<span class="profile-tag">${esc(g)}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.challenges?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #f59e0b;">KNOWN CHALLENGES</div>
+      ${p.challenges.map(c => `<span class="profile-tag" style="border-color:rgba(245,158,11,0.3);color:rgba(245,158,11,0.8)">${esc(c)}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.harm_reduction?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #10b981;">HARM REDUCTION TOOLS</div>
+      ${p.harm_reduction.map(h => `<span class="profile-tag" style="border-color:rgba(16,185,129,0.3);color:rgba(16,185,129,0.8)">${esc(h)}</span>`).join('')}
+    </div>` : ''}
+
+    ${prefsKeys.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #a78bfa;">KNOWN PREFERENCES</div>
+      ${prefsKeys.map(k => `<span class="profile-tag" style="border-color:rgba(167,139,250,0.3);color:rgba(167,139,250,0.8)">${esc(k.toUpperCase())}: ${esc(memory.preferences[k])}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.traits_observed?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title">OBSERVED PATTERNS</div>
+      ${p.traits_observed.map(t => `<span class="profile-tag">${esc(t)}</span>`).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-label">MOOD TREND (LAST 10)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        ${(memory.moodLog || []).slice(-10).map(m => `<span style="font-family:var(--font-mono);font-size:10px;color:var(--dim);background:rgba(13,15,42,0.8);padding:3px 8px;border-radius:10px;">${esc(m.mood)}</span>`).join('')}
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">BRAIN DATA</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportBrain()" class="glass-btn" style="flex:1;">📋 COPY BRAIN</button>
+        <button onclick="document.getElementById('import-brain-row').style.display='flex';" class="glass-btn" style="flex:1;">📥 IMPORT</button>
+      </div>
+      <div id="import-brain-row" style="display:none; flex-direction:column; gap:8px; margin-top:12px;">
+        <textarea id="import-brain-data" placeholder="Paste brain JSON here..." style="width:100%; height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(129,140,248,0.2); border-radius:8px; padding:8px; color:var(--white); font-family:var(--font-mono); font-size:10px;"></textarea>
+        <button onclick="importBrain()" class="primary-btn" style="background:linear-gradient(180deg, #10b981 0%, #047857 100%); box-shadow:0 8px 24px rgba(16, 185, 129, 0.4);">OVERWRITE BRAIN</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">SETTINGS</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:6px;">WAKE-UP TIME</div>
+        <input type="time" id="setting-wake-time" value="${esc(memory.settings?.wakeTime || '07:00')}"
+          style="background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:5px;padding:10px 12px;font-family:var(--font-mono);font-size:14px;color:var(--white);outline:none;width:100%;-webkit-appearance:none;">
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:6px;">TASK NAG INTERVAL (MINUTES)</div>
+        <input type="number" id="setting-nag-interval" value="${esc(memory.settings?.nagIntervalMins || 30)}" min="5" max="120"
+          style="background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:5px;padding:10px 12px;font-family:var(--font-mono);font-size:14px;color:var(--white);outline:none;width:100%;-webkit-appearance:none;">
+      </div>
+
+      <button onclick="saveSettings()" class="primary-btn" style="margin-top:10px;">SAVE SETTINGS</button>
+    </div>
+
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">GOOGLE CALENDAR</div>
+      ${gcalToken || config.gcalToken
+        ? `<div style="font-family:var(--font-mono);font-size:11px;color:#34d399;">✓ Connected</div>`
+        : `<div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);margin-bottom:10px;">Not connected.</div>
+           <input id="gcal-client-input" type="text" placeholder="Google OAuth Client ID..." value="${esc(config.gcalClientId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;margin-bottom:12px;">
+           <div style="display:flex;gap:8px;">
+             <button onclick="saveGcalClientId()" class="glass-btn" style="flex:1;">SAVE ID</button>
+             <button onclick="gcalConnect()" class="glass-btn" style="flex:1;">CONNECT →</button>
+           </div>`
+      }
+    </div>
+
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">VOICE ENGINE (ELEVENLABS)</div>
+      <div style="margin-bottom:8px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">API KEY</div>
+        <input id="el-api-input" type="password" placeholder="sk_..." value="${esc(config.elevenlabs||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">VOICE ID</div>
+        <input id="el-voice-input" type="text" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" value="${esc(config.voiceId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <button onclick="saveElevenLabsConfig()" class="glass-btn" style="width:100%;">SAVE VOICE SETTINGS</button>
+    </div>
+  `;
+}
+
+function saveSettings() {
+  if (!memory.settings) memory.settings = {};
+  const wakeEl = document.getElementById('setting-wake-time');
+  const nagEl = document.getElementById('setting-nag-interval');
+  if (wakeEl) memory.settings.wakeTime = wakeEl.value || '07:00';
+  if (nagEl) memory.settings.nagIntervalMins = parseInt(nagEl.value) || 30;
+  save();
+  showToast('Settings saved.', 2000);
+}
+
+function saveGcalClientId() {
+  const input = document.getElementById('gcal-client-input');
+  if (input?.value?.trim()) { config.gcalClientId = input.value.trim(); save(); showToast('Client ID saved. Now click CONNECT.', 3000); }
+}
+
+function saveElevenLabsConfig() {
+  const apiKeyInput = document.getElementById('el-api-input');
+  const voiceIdInput = document.getElementById('el-voice-input');
+  if (apiKeyInput && voiceIdInput) {
+    config.elevenlabs = apiKeyInput.value.trim();
+    config.voiceId = voiceIdInput.value.trim();
+    save();
+    showToast('ElevenLabs settings saved.', 3000);
+  }
+}
+
+function renderHistory() {
+  const content = document.getElementById('history-content');
+  const all = memory.conversations || [];
+  if (all.length === 0) {
+    content.innerHTML = '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;text-align:center;margin-top:40px;">No conversations yet.</div>';
+    return;
+  }
+  const recent = all.slice(-20).reverse();
+  content.innerHTML = recent.map(m => `
+    <div class="msg ${m.role === 'assistant' ? 'astra' : 'user'}">
+      <div class="msg-label">${m.role === 'assistant' ? 'MESS-E' : esc(config.name || 'YOU')}${m.ts ? ' — ' + esc(new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) : ''}</div>
+      <div class="msg-content">${m.content === '[IMAGE SENT]' ? '🖼️ <i>[Vision Target Uploaded]</i>' : esc((m.content || '').slice(0, 400))}</div>
+    </div>
+  `).join('');
+}
+
+function openPanel(name) {
+  if (name === 'history') renderHistory();
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'cal') renderCalendar();
+  if (name === 'journal') renderJournal();
+
+  if (name === 'profile' && memory.pendingPrune) {
+    document.getElementById('pill-profile').classList.remove('alert-orange');
+  }
+
+  document.getElementById(`${name}-panel`).classList.add('open');
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  const pill = document.getElementById(`pill-${name === 'dashboard' ? 'dash' : name}`);
+  if (pill) pill.classList.add('active');
+  document.getElementById('speech-output').style.opacity = '0';
+  document.getElementById('speech-output').style.pointerEvents = 'none';
+  document.getElementById('voice-wave').classList.remove('active');
+}
+
+function closePanel(name) {
+  const panel = document.getElementById(name + '-panel');
+  if (panel) panel.classList.remove('open');
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('speech-output').style.opacity = '1';
+  document.getElementById('speech-output').style.pointerEvents = 'none';
+}
+
+function showAddEventForm() {
+  document.getElementById('add-event-form').classList.add('open');
+}
+
+function hideAddEventForm() {
+  document.getElementById('add-event-form').classList.remove('open');
+  document.getElementById('aef-title').value = '';
+  document.getElementById('aef-notes').value = '';
+}
+
+function saveEventForm() {
+  const title = document.getElementById('aef-title').value.trim();
+  const date = document.getElementById('aef-date').value;
+  const time = document.getElementById('aef-time').value;
+  const dur = document.getElementById('aef-dur').value;
+  const notes = document.getElementById('aef-notes').value.trim();
+
+  if (!title || !date || !time) { showToast('Title, Date, and Time are required.'); return; }
+
+  const start = new Date(`${date}T${time}`);
+  const end = new Date(start.getTime() + parseInt(dur || 60) * 60000);
+
+  if (!memory.events) memory.events = [];
+  memory.events.push({ id: Date.now(), title, start: start.toISOString(), end: end.toISOString(), notes });
+  save();
+  hideAddEventForm();
+  renderCalendar(date);
+  showToast('Event saved.');
+}
+
+function deleteEvent(id) {
+  if(confirm("Delete this event?")) {
+    memory.events = memory.events.filter(e => e.id !== id);
+    save();
+    renderCalendar(calSelectedDate);
+    showToast('Event deleted.');
+  }
+}
+
+let _journalRecording = false;
+let _journalRecognition = null;
+
+function renderJournal() {
+  if (!memory.journal) memory.journal = [];
+  const container = document.getElementById('journal-content');
+  if (!container) return;
+
+  const entries = [...memory.journal].reverse();
+
+  container.innerHTML = `
+    <div class="journal-compose">
+      <textarea id="journal-textarea" placeholder="Write something. Anything. She's reading." rows="3"></textarea>
+      <div class="journal-compose-row">
+        <button class="glass-btn journal-mic-btn" style="width: 44px; padding: 0;" onclick="transcribeJournalEntry()" id="journal-transcribe-btn" title="Transcribe">🎙</button>
+        <button class="primary-btn journal-save-btn" onclick="saveJournalEntry()">SAVE ENTRY</button>
+      </div>
+    </div>
+    <div class="journal-entries">
+      ${entries.length === 0 ? '<div class="journal-empty">No entries yet.<br>Start writing. She\'s always listening.</div>' : ''}
+      ${entries.map(e => {
+        const d = new Date(e.ts);
+        const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        const timeStr = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+        return `<div class="journal-entry ${e.author === 'astra' ? 'astra-entry' : ''}">
+          <div class="journal-entry-header">
+            <span class="journal-author-badge">${e.author === 'astra' ? 'MESS-E' : 'YOU'}</span>
+            <span class="journal-entry-ts">${dateStr} · ${timeStr}</span>
+          </div>
+          <div class="journal-entry-text">${esc(e.text)}</div>
+          <button class="journal-delete-btn" onclick="deleteJournalEntry(${e.id})" title="Delete">✕</button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function saveJournalEntry() {
+  const ta = document.getElementById('journal-textarea');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { showToast('Nothing to save.'); return; }
+  if (!memory.journal) memory.journal = [];
+  memory.journal.push({ id: Date.now(), ts: new Date().toISOString(), author: 'user', text });
+  ta.value = '';
+  save();
+  renderJournal();
+  showToast('Entry saved.');
+}
+
+function deleteJournalEntry(id) {
+  memory.journal = (memory.journal || []).filter(e => e.id !== id);
+  save();
+  renderJournal();
+}
+
+function transcribeJournalEntry() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('Speech recognition not supported.'); return; }
+
+  const btn = document.getElementById('journal-transcribe-btn');
+
+  if (_journalRecording) {
+    _journalRecording = false;
+    if (_journalRecognition) try { _journalRecognition.stop(); } catch(e) {}
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+    return;
+  }
+
+  _journalRecognition = new SpeechRecognition();
+  _journalRecognition.continuous = true;
+  _journalRecognition.interimResults = false;
+  _journalRecognition.lang = 'en-US';
+
+  _journalRecognition.onresult = (e) => {
+    const ta = document.getElementById('journal-textarea');
+    if (!ta) return;
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+    ta.value = ta.value ? ta.value + ' ' + transcript : transcript;
+  };
+  _journalRecognition.onend = () => {
+    _journalRecording = false;
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+  };
+  _journalRecognition.onerror = () => {
+    _journalRecording = false;
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+    showToast('Transcription failed — try again.');
+  };
+
+  _journalRecognition.start();
+  _journalRecording = true;
+  if (btn) { btn.innerHTML = '⏹'; btn.style.opacity = '1'; btn.classList.add('recording'); }
+  showToast('Listening… tap STOP when done.');
+}
+
+let calViewYear = new Date().getFullYear();
+let calViewMonth = new Date().getMonth();
+let calSelectedDate = null;
+
+function renderCalendar(selectedDate) {
+  if (!memory.events) memory.events = [];
+  if (selectedDate) calSelectedDate = selectedDate;
+
+  const today = new Date();
+  const todayStr = toDateStr(today);
+  if (!calSelectedDate) calSelectedDate = todayStr;
+
+  const container = document.getElementById('cal-content');
+  if (!container) return;
+
+  const monthNames = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const firstDow = new Date(calViewYear, calViewMonth, 1).getDay();
+
+  let dayCells = '';
+  const dows = ['SU','MO','TU','WE','TH','FR','SA'];
+  dayCells += dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  for (let i = 0; i < firstDow; i++) {
+    dayCells += `<div class="cal-day other-month"><span class="cal-day-num"></span></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const isSelected = dateStr === calSelectedDate;
+    const hasEvents = memory.events.some(e => e.start.startsWith(dateStr));
+    const cls = ['cal-day', isToday ? 'today' : '', isSelected ? 'selected' : '', hasEvents ? 'has-events' : ''].filter(Boolean).join(' ');
+    dayCells += `<div class="${cls}" onclick="renderCalendar('${dateStr}')"><span class="cal-day-num">${d}</span></div>`;
+  }
+
+  const dayEvents = memory.events
+    .filter(e => e.start.startsWith(calSelectedDate))
+    .sort((a,b) => new Date(a.start) - new Date(b.start));
+
+  const selectedLabel = new Date(calSelectedDate + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const eventsHTML = dayEvents.length > 0
+    ? dayEvents.map(ev => {
+        const t = new Date(ev.start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="cal-event-item">
+          <div class="cal-event-time">${t}</div>
+          <div style="flex:1">
+            <div class="cal-event-title">${esc(ev.title)}</div>
+            ${ev.notes ? `<div class="cal-event-notes">${esc(ev.notes)}</div>` : ''}
+          </div>
+          <button class="cal-event-delete" onclick="deleteEvent(${ev.id})">✕</button>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--dim);font-family:var(--font-mono);font-size:11px;padding:12px 0;">No events scheduled.</div>';
+
+  container.innerHTML = `
+    <div id="cal-nav">
+      <button class="cal-nav-btn" onclick="calViewMonth--;if(calViewMonth<0){calViewMonth=11;calViewYear--;}renderCalendar('${calSelectedDate}')">←</button>
+      <div id="cal-month-label">${monthNames[calViewMonth]} ${calViewYear}</div>
+      <button class="cal-nav-btn" onclick="calViewMonth++;if(calViewMonth>11){calViewMonth=0;calViewYear++;}renderCalendar('${calSelectedDate}')">→</button>
+    </div>
+    <div class="cal-grid">${dayCells}</div>
+    <div class="cal-events-section">
+      <div class="cal-events-title">EVENTS FOR ${selectedLabel.toUpperCase()}</div>
+      ${eventsHTML}
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
