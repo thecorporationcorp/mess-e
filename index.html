@@ -1938,7 +1938,7 @@ async function bootAstra() {
   const ok = (step) => { steps.push('✓ ' + step); console.log('✓', step); };
 
   try {
-    activeModel = 'gemini-2.0-flash';
+    activeModel = 'gemini-1.5-flash';
     ok('model set');
 
     if (!memory.psychProfile || !memory.psychProfile.name) {
