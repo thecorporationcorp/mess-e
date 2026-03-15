@@ -2553,11 +2553,8 @@ MASTER PLAN: ${f.master_plan || 'No plan established yet.'}`;
         const priority = t.priority ? ` [${t.priority.toUpperCase()}]` : '';
         const avoidCount = (avoidanceLog || []).filter(a => a.task === t.text).length;
         const avoidStr = avoidCount > 0 ? ` [AVOIDED ${avoidCount}x]` : '';
-        const escalation = ageDays >= 3 ? ' [⚠ ESCALATION LEVEL 4 — DO NOT LET THIS SLIDE]'
-          : ageDays >= 2 ? ' [ESCALATION LEVEL 3 — NAME IT DIRECTLY]'
-          : ageDays >= 1 ? ' [ESCALATION LEVEL 2 — BE FIRM]'
-          : ' [ESCALATION LEVEL 1 — FIRST MENTION]';
-        return `  ${i+1}. "${t.text}" — ${ageStr}${priority}${deadline}${blocked}${avoidStr}${escalation}`;
+        const urgency = ageDays >= 3 ? ' [very old]' : ageDays >= 1 ? ' [overdue]' : '';
+        return `  ${i+1}. "${t.text}" — ${ageStr}${priority}${deadline}${blocked}${avoidStr}${urgency}`;
       }).join('\n')
     : '  (clear — acknowledge this, he earned it)';
 
