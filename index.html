@@ -1695,6 +1695,11 @@ html, body {
 const DB_KEY = 'messe_core_v1';
 const apiKey = ''; // global fallback — user key stored in config.apiKey
 
+// ─── DEFAULT CREDENTIALS — pre-loaded so you never type them again ───
+const DEFAULT_GEMINI_KEY   = 'AIzaSyDRicFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
+const DEFAULT_EL_KEY       = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
+const DEFAULT_VOICE_ID     = 'gCfJlk5vRqA6fyQnsmli';  // Bowie
+
 let config = {};
 let memory = {
   conversations: [],
@@ -1788,6 +1793,10 @@ function load() {
   if (raw) {
     const data = JSON.parse(raw);
     config = data.config || {};
+    // Auto-fill defaults if not set
+    if (!config.apiKey)    config.apiKey    = DEFAULT_GEMINI_KEY;
+    if (!config.elevenlabs) config.elevenlabs = DEFAULT_EL_KEY;
+    if (!config.voiceId)   config.voiceId   = DEFAULT_VOICE_ID;
     memory = { ...memory, ...data.memory };
     memory.streak = memory.streak || 0;
     if (!memory.finances) memory.finances = { accounts: [], debts: [], bills: [], master_plan: '' };
@@ -1872,6 +1881,13 @@ function clearVisionTarget() {
 }
 
 function showEnterSplash() {
+  // Pre-fill setup fields with defaults
+  const apiField = document.getElementById('setup-apikey');
+  const elField  = document.getElementById('setup-elevenlabs');
+  const vidField = document.getElementById('setup-voiceid');
+  if (apiField && !apiField.value) apiField.value = DEFAULT_GEMINI_KEY;
+  if (elField  && !elField.value)  elField.value  = DEFAULT_EL_KEY;
+  if (vidField && !vidField.value) vidField.value = DEFAULT_VOICE_ID;
   const splash = document.createElement('div');
   splash.id = 'enter-splash';
   splash.innerHTML = `
@@ -2997,7 +3013,7 @@ function _pcmBase64ToWavUrl(base64, sampleRate) {
 
 async function speakGemini(text) {
   try {
-    const key = config.apiKey ? config.apiKey : apiKey;
+    const key = config.apiKey || DEFAULT_GEMINI_KEY;
     if (!key) { await speakBrowser(text); return; }
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
     const res = await fetch(url, {
@@ -3038,7 +3054,7 @@ let activeModel = 'gemini-1.5-flash';
 async function callGemini(messages, system, attempt, useSearch) {
   attempt = attempt || 0;
   if (!activeModel) activeModel = GEMINI_MODELS[0];
-  const actualApiKey = config.apiKey ? config.apiKey : apiKey;
+  const actualApiKey = config.apiKey || DEFAULT_GEMINI_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${actualApiKey}`;
 
   const contents = messages.map(function(m, i) {
