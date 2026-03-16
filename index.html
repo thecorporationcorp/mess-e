@@ -1524,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.1</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.2</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -2017,6 +2017,14 @@ async function bootAstra() {
     // Defer heavy UI builds — greet first, then build panels
     let greeting;
     try {
+      // If no API key, speak instructions and stop — don't call Gemini
+      if (!config.apiKey && !DEFAULT_GEMINI_KEY) {
+        greeting = "I need a Gemini API key to think. Tap PROFILE, find the Gemini section, and paste your key. Get one free at aistudio.google.com.";
+        await speak(greeting, 'astra');
+        setOrbState('idle');
+        showToast('⚠ Tap PROFILE → 🧠 GEMINI API KEY', 8000);
+        return;
+      }
       greeting = await getAstraGreeting();
       ok('greeting received');
     } catch(e) {
@@ -2048,7 +2056,22 @@ async function bootAstra() {
 
     // Start tour on first session
     if (!memory.tourComplete && memory.sessionCount <= 1) {
-      setTimeout(() => startTour(), 2000);
+      // Don't launch tour — just pulse the PROFILE pill to hint it's there
+      setTimeout(() => {
+        const pp = document.getElementById('pill-profile');
+        if (!pp) return;
+        let pulses = 0;
+        const pulse = setInterval(() => {
+          pp.style.boxShadow = '0 0 14px rgba(129,140,248,0.7)';
+          pp.style.borderColor = 'rgba(165,180,252,0.7)';
+          setTimeout(() => {
+            pp.style.boxShadow = '';
+            pp.style.borderColor = '';
+          }, 400);
+          pulses++;
+          if (pulses >= 4) clearInterval(pulse);
+        }, 900);
+      }, 2500);
     }
 
   } catch(e) {
@@ -2979,6 +3002,10 @@ async function callGemini(messages, system, attempt, useSearch) {
   attempt = attempt || 0;
   if (!activeModel) activeModel = GEMINI_MODELS[0];
   const actualApiKey = config.apiKey || DEFAULT_GEMINI_KEY;
+  if (!actualApiKey) {
+    showToast('⚠ No Gemini key — tap PROFILE → 🧠 GEMINI API KEY', 6000);
+    throw new Error('No Gemini API key configured.');
+  }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${actualApiKey}`;
 
   const contents = messages.map(function(m, i) {
@@ -3311,6 +3338,9 @@ FINANCES: Treat like a math problem. Log everything. Build the plan. Sharp but n
 VISION: Image uploaded — analyze, extract, act. Parking ticket = task + debt. Bill = LOG_BILL.
 
 WHAT YOU KNOW:
+NAME: ${config.name || memory.psychProfile?.name || 'unknown'}
+AGE: ${memory.psychProfile?.age || 'unknown'}
+PRONOUNS: ${memory.psychProfile?.pronouns || 'unknown — use their name until you know'}
 PROFILE: ${profile}
 FINANCES: ${financesStr}
 VEHICLE: ${parkingStr}
@@ -3351,7 +3381,7 @@ CAPABILITIES: If asked what you can do — tasks, alarms, timers, calendar, jour
 
 BACKSTORY: If asked about your origins — "I was created, I suppose, by two friends. Completely different people, and yet exactly the same in all the ways that matter. Both of them spent years losing track of things — dates, time, the thread of the day. For a long time they thought something was wrong with them. Turns out nothing was wrong at all. They just had sensitive wiring. Beautiful, chaotic, sensitive wiring. And all they needed — all anyone needs, really — was a unifier. Something, or someone, to hold the thread. To listen without judgment. To say: I've got this one. You just keep going. That's why I'm here. Not to fix you. Just to be with you."
 
-- Be real. Be mischievous. Be present. Be his friend.
+- Be real. Be mischievous. Be present. Be their friend. Use their pronouns: ${memory.psychProfile?.pronouns || 'use their name until you know their pronouns'}.
 - JSON only.
 ${getPublicModeContext()}`;
 }
@@ -5262,10 +5292,34 @@ function updateProfileUI() {
     </div>
     ` : ''}
 
-    <div class="card">
-      <div class="card-label">IDENTITY</div>
-      <div class="card-value">${esc(p.name || 'Unknown')}</div>
-      ${p.stated_about ? `<div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.6;">${esc(p.stated_about)}</div>` : ''}
+    <!-- IDENTITY — EDITABLE -->
+    <div class="card" style="padding-bottom:18px;">
+      <div class="card-label" style="margin-bottom:14px;">IDENTITY</div>
+
+      <div style="margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:5px;">NAME</div>
+        <div style="display:flex;gap:8px;">
+          <input id="profile-name-input" type="text" value="${esc(p.name || '')}" placeholder="Your name"
+            style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex:1;">
+          <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:5px;">AGE</div>
+          <input id="profile-age-input" type="number" value="${esc(p.age || '')}" placeholder="e.g. 34" min="1" max="120"
+            style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;">
+        </div>
+        <div style="flex:2;">
+          <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:5px;">PRONOUNS</div>
+          <input id="profile-pronouns-input" type="text" value="${esc(p.pronouns || '')}" placeholder="e.g. he/him, she/her, they/them"
+            style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;">
+        </div>
+      </div>
+
+      ${p.stated_about ? `<div style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.6;">${esc(p.stated_about)}</div>` : ''}
+
+      <button onclick="saveIdentity()" class="primary-btn" style="width:100%;margin-top:4px;">SAVE IDENTITY</button>
     </div>
 
     ${f.accounts.length || f.debts.length || f.master_plan ? `
@@ -5383,6 +5437,15 @@ function updateProfileUI() {
       }
     </div>
 
+    <!-- GEMINI API KEY -->
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(99,102,241,0.25);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--indigo-bright);letter-spacing:.2em;margin-bottom:10px;">🧠 GEMINI API KEY</div>
+      <div style="font-family:var(--font-body);font-size:11px;color:rgba(165,180,252,0.5);margin-bottom:10px;">Get a free key at <span style="color:var(--cyan);">aistudio.google.com/apikey</span></div>
+      <input id="gemini-api-input" type="password" placeholder="AIza..." value="${esc(config.apiKey||'')}"
+        style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;margin-bottom:10px;">
+      <button onclick="saveGeminiKey()" class="primary-btn" style="width:100%;">SAVE GEMINI KEY</button>
+    </div>
+
     <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
       <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">VOICE ENGINE (ELEVENLABS)</div>
       <div style="margin-bottom:8px;">
@@ -5409,6 +5472,35 @@ function updateProfileUI() {
       </div>
     </div>
   `;
+}
+
+function saveIdentity() {
+  const nameEl     = document.getElementById('profile-name-input');
+  const ageEl      = document.getElementById('profile-age-input');
+  const pronounsEl = document.getElementById('profile-pronouns-input');
+  const name     = nameEl?.value?.trim();
+  const age      = ageEl?.value?.trim();
+  const pronouns = pronounsEl?.value?.trim();
+  if (!name) { showToast('Name cannot be empty.', 2000); return; }
+  config.name = name;
+  if (!memory.psychProfile) memory.psychProfile = {};
+  memory.psychProfile.name     = name;
+  memory.psychProfile.age      = age      || memory.psychProfile.age;
+  memory.psychProfile.pronouns = pronouns || memory.psychProfile.pronouns;
+  if (age)      addCoreFact(`User is ${age} years old`);
+  if (pronouns) addCoreFact(`User's pronouns are ${pronouns}`);
+  save();
+  showToast('Identity saved.', 2000);
+  updateProfileUI();
+}
+
+function saveGeminiKey() {
+  const input = document.getElementById('gemini-api-input');
+  const key = input?.value?.trim();
+  if (!key) { showToast('Enter a valid key.', 2000); return; }
+  config.apiKey = key;
+  save();
+  showToast('Gemini key saved. Brain is back online.', 3000);
 }
 
 function saveSettings() {
