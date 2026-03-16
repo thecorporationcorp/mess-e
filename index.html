@@ -5571,6 +5571,7 @@ function openPanel(name) {
   if (name === 'dashboard') updateDashboard();
   if (name === 'cal') renderCalendar();
   if (name === 'journal') renderJournal();
+  if (name === 'profile') updateProfileUI();
 
   if (name === 'profile' && memory.pendingPrune) {
     document.getElementById('pill-profile').classList.remove('alert-orange');
