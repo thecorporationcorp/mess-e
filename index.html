@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="MESS-E v4.3 — Local AI voice companion">
+<meta name="description" content="MESS-E v5.0 — Local AI voice companion">
 <meta name="theme-color" content="#020209">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MESS-E v4.3</title>
+<title>MESS-E v5.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@300;400;600;900&family=Share+Tech+Mono&family=Exo+2:wght@200;300;400&display=swap" rel="stylesheet">
 <style>
@@ -245,384 +245,124 @@ html, body {
 
 .controls-row {
   display: flex;
+  gap: 12px;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
 }
 
-#mic-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
+.btn {
+  background: rgba(99, 102, 241, 0.8);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  border-radius: 8px;
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.25em;
-  color: rgba(165,180,252,0.6);
-  text-transform: uppercase;
-  text-align: center;
-  opacity: 1;
-  transition: all 0.4s ease;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  letter-spacing: 0.2em;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+}
+
+.btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(67, 56, 202, 0.5);
+}
+
+.btn.primary-btn {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.9) 0%, rgba(67, 56, 202, 1) 100%);
+  border: 1px solid rgba(165, 180, 252, 0.4);
+  box-shadow: 0 8px 24px rgba(67, 56, 202, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn.glass-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.btn.danger-btn {
+  background: rgba(248, 113, 113, 0.2);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: rgba(248, 113, 113, 0.9);
 }
 
 #nav-pills {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
 }
 
 .nav-pill {
-  padding: 8px 16px;
-  border-radius: 24px;
-  border: 1px solid rgba(165,180,252,0.15);
-  background: linear-gradient(180deg, rgba(30,32,70,0.6) 0%, rgba(13,15,42,0.85) 100%);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.25em;
-  color: rgba(165,180,252,0.65);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  user-select: none;
-  -webkit-user-select: none;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nav-pill:hover,
-.nav-pill.active {
-  border-color: rgba(165,180,252,0.4);
-  color: var(--white);
-  background: linear-gradient(180deg, rgba(67,56,202,0.4) 0%, rgba(49,46,129,0.6) 100%);
-  box-shadow: 0 6px 16px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-  transform: translateY(-1px);
-}
-
-.nav-pill:active {
-  transform: translateY(1px) scale(0.95);
-}
-
-.nav-pill.alert-orange {
-  border-color: rgba(249, 115, 22, 0.8);
-  color: #fff;
-  background: linear-gradient(180deg, rgba(234, 88, 12, 0.4) 0%, rgba(194, 65, 12, 0.6) 100%);
-  box-shadow: 0 0 16px rgba(234, 88, 12, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: pulse-orange 2s infinite;
-}
-
-@keyframes pulse-orange {
-  0%, 100% { box-shadow: 0 0 12px rgba(234, 88, 12, 0.5); }
-  50% { box-shadow: 0 0 24px rgba(234, 88, 12, 0.8); }
-}
-
-#type-toggle {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.25em;
-  color: rgba(165,180,252,0.6);
-  cursor: pointer;
   padding: 8px 14px;
-  border-radius: 4px;
-  border: 1px solid rgba(165,180,252,0.2);
-  background: linear-gradient(180deg, rgba(30,32,70,0.5) 0%, rgba(13,15,42,0.7) 100%);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  user-select: none;
-  -webkit-user-select: none;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#type-toggle:hover {
-  color: var(--white);
-  border-color: rgba(165,180,252,0.4);
-  background: linear-gradient(180deg, rgba(67,56,202,0.3) 0%, rgba(49,46,129,0.5) 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(67,56,202,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-}
-
-#type-toggle:active {
-  transform: translateY(1px) scale(0.95);
-}
-
-#vision-preview-container {
-  display: none;
-  align-items: center;
-  gap: 12px;
-  background: rgba(6,182,212,0.1);
-  border: 1px solid rgba(34,211,238,0.3);
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
-
-#vision-preview-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid rgba(34,211,238,0.5);
-  flex-shrink: 0;
-}
-
-#vision-preview-text {
+  background: rgba(67, 56, 202, 0.15);
+  border: 1px solid rgba(165, 180, 252, 0.25);
+  border-radius: 6px;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--cyan);
-  letter-spacing: 0.1em;
-  flex: 1;
-}
-
-#vision-clear {
-  background: none;
-  border: none;
-  color: var(--cyan);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px 8px;
-  flex-shrink: 0;
-  transition: color 0.2s ease;
-}
-
-#vision-clear:hover {
-  color: var(--white);
-}
-
-#input-row {
-  display: none;
-  width: min(480px, 88vw);
-  gap: 8px;
-  align-items: center;
-}
-
-#input-row.visible {
-  display: flex;
-}
-
-#text-input {
-  flex: 1;
-  background: linear-gradient(180deg, rgba(13,15,42,0.9) 0%, rgba(8,9,26,0.95) 100%);
-  border: 1px solid rgba(129,140,248,0.3);
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(224,231,255,0.9);
-  outline: none;
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
-  transition: all 0.3s ease;
-  min-height: 48px;
-}
-
-#text-input:focus {
-  border-color: rgba(129,140,248,0.8);
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 0 16px rgba(67,56,202,0.3);
-}
-
-#text-input::placeholder {
-  color: rgba(165,180,252,0.3);
-}
-
-#send-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  border: 1px solid rgba(165,180,252,0.3);
-  background: linear-gradient(180deg, rgba(79,70,229,0.8) 0%, rgba(55,48,163,0.9) 100%);
-  color: var(--white);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 12px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-  flex-shrink: 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-#send-btn:hover {
-  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
-  border-color: rgba(165,180,252,0.6);
-  box-shadow: 0 6px 16px rgba(67,56,202,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
-  transform: translateY(-1px);
-}
-
-#send-btn:active {
-  transform: translateY(1px) scale(0.92);
-}
-
-.glass-btn {
-  background: linear-gradient(180deg, rgba(40,42,80,0.6) 0%, rgba(20,22,50,0.8) 100%);
-  border: 1px solid rgba(165,180,252,0.25);
-  color: var(--indigo-bright);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
   letter-spacing: 0.2em;
-  padding: 10px 16px;
-  border-radius: 8px;
+  color: var(--dim);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-  text-transform: uppercase;
+  transition: all 0.2s ease;
   user-select: none;
-  -webkit-user-select: none;
-  min-height: 32px;
 }
 
-.glass-btn:hover {
-  background: linear-gradient(180deg, rgba(67,56,202,0.4) 0%, rgba(49,46,129,0.6) 100%);
-  border-color: rgba(165,180,252,0.5);
-  color: var(--white);
-  box-shadow: 0 6px 16px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-  transform: translateY(-1px);
-}
-
-.glass-btn:active {
-  transform: translateY(1px) scale(0.96);
-}
-
-.primary-btn {
-  width: 100%;
-  background: linear-gradient(180deg, rgba(99,102,241,0.9) 0%, rgba(67,56,202,1) 100%);
-  border: 1px solid rgba(165,180,252,0.4);
-  color: var(--white);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.25em;
-  padding: 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 8px 24px rgba(67,56,202,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
-  text-transform: uppercase;
-  user-select: none;
-  -webkit-user-select: none;
-  min-height: 48px;
-}
-
-.primary-btn:hover {
-  background: linear-gradient(180deg, rgba(129,140,248,1) 0%, rgba(79,70,229,1) 100%);
-  box-shadow: 0 12px 32px rgba(67,56,202,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
-  transform: translateY(-2px);
-}
-
-.primary-btn:active {
-  transform: translateY(1px) scale(0.97);
+.nav-pill:active, .nav-pill.active {
+  background: rgba(99, 102, 241, 0.4);
+  border-color: rgba(165, 180, 252, 0.5);
+  color: var(--indigo-bright);
+  box-shadow: 0 0 12px rgba(165, 180, 252, 0.3);
 }
 
 .panel {
   position: fixed;
   inset: 0;
+  background: rgba(2, 2, 9, 0.95);
+  backdrop-filter: blur(10px);
   z-index: 50;
-  background: rgba(2,2,9,0.97);
-  backdrop-filter: blur(30px);
-  padding: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 20px;
   overflow-y: auto;
-  overflow-x: hidden;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .panel.open {
-  transform: translateY(0);
+  display: flex;
+  opacity: 1;
   pointer-events: all;
 }
 
 .panel-header {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 0;
-  border-bottom: 1px solid rgba(129,140,248,0.12);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(2,2,9,0.98);
-  min-height: 60px;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  border-right: 1px solid rgba(129,140,248,0.12);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: var(--indigo-bright);
-  cursor: pointer;
-  padding: 20px 24px;
-  opacity: 0.8;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-  white-space: nowrap;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-}
-
-.back-btn:hover {
-  opacity: 1;
-  background: linear-gradient(90deg, rgba(67,56,202,0.2) 0%, transparent 100%);
-  color: var(--white);
-}
-
-.back-btn:active {
-  background: rgba(67,56,202,0.3);
-}
-
-.panel-title {
   font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 0.4em;
-  color: var(--white);
-  font-weight: 600;
-  flex: 1;
-  text-align: center;
-  padding: 20px 0;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--indigo-bright);
   text-transform: uppercase;
-  user-select: none;
-  -webkit-user-select: none;
+  margin-bottom: 30px;
 }
 
-.panel-body {
-  padding: 28px 24px 100px;
+.panel-content {
+  width: 100%;
+  max-width: 540px;
 }
 
 .card {
-  background: linear-gradient(135deg, rgba(13,15,42,0.9), rgba(6,7,26,0.9));
-  border: 1px solid rgba(129,140,248,0.12);
+  background: rgba(13, 15, 42, 0.4);
+  border: 1px solid rgba(129, 140, 248, 0.2);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.4), transparent);
+  backdrop-filter: blur(10px);
 }
 
 .card-label {
@@ -630,981 +370,731 @@ html, body {
   font-size: 9px;
   letter-spacing: 0.3em;
   color: var(--dim);
-  margin-bottom: 10px;
   text-transform: uppercase;
-  user-select: none;
+  margin-bottom: 8px;
 }
 
 .card-value {
   font-family: var(--font-body);
+  font-size: 16px;
   font-weight: 300;
-  font-size: 15px;
   color: var(--white);
-  line-height: 1.6;
   word-break: break-word;
 }
 
-.card-value.accent { color: var(--indigo-bright); }
-.card-value.warn { color: var(--amber); }
-.card-value.crit { color: var(--red); }
+.card-value.accent {
+  color: var(--indigo-bright);
+}
 
 .task-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(129,140,248,0.08);
+  padding: 12px;
+  background: rgba(67, 56, 202, 0.1);
+  border-left: 2px solid rgba(129, 140, 248, 0.3);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--white);
 }
 
 .task-check {
   width: 18px;
   height: 18px;
-  min-width: 18px;
-  min-height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(129,140,248,0.4);
-  background: transparent;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.task-check:checked {
-  background: var(--indigo);
-  border-color: var(--indigo);
-}
-
-.task-check:focus {
-  outline: 2px solid var(--indigo-bright);
-  outline-offset: 2px;
+  accent-color: var(--indigo-bright);
 }
 
 .task-text {
-  font-family: var(--font-body);
-  font-weight: 300;
-  font-size: 14px;
-  color: var(--white);
   flex: 1;
   word-break: break-word;
 }
 
-.task-text.done {
-  text-decoration: line-through;
-  color: var(--dim);
-}
-
-#silence-countdown {
+.toast {
   position: fixed;
-  bottom: 330px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  background: rgba(67, 56, 202, 0.9);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  border-radius: 8px;
+  padding: 14px 20px;
   font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.25);
-  letter-spacing: 0.4em;
-  z-index: 30;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-#silence-countdown.visible {
-  opacity: 1;
-}
-
-#weather-pill {
-  position: fixed;
-  top: 72px;
-  right: 20px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid rgba(34,211,238,0.2);
-  background: rgba(2,2,9,0.7);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: rgba(34,211,238,0.6);
-  letter-spacing: 0.08em;
-  z-index: 25;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  max-width: 44vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  user-select: none;
-}
-
-#weather-pill.visible {
-  opacity: 1;
-}
-
-#loc-pill {
-  position: fixed;
-  top: 72px;
-  left: 20px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(6,182,212,0.2);
-  background: rgba(6,182,212,0.06);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: rgba(6,182,212,0.55);
-  letter-spacing: 0.1em;
-  z-index: 25;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-  user-select: none;
-}
-
-#loc-pill.visible {
-  opacity: 1;
-}
-
-#always-on-ring {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  border: 1px solid rgba(34,211,238,0.3);
-  pointer-events: none;
-  z-index: 4;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  animation: always-on-breathe 3s ease-in-out infinite;
-}
-
-#always-on-ring.visible {
-  opacity: 1;
-}
-
-@keyframes always-on-breathe {
-  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.3; }
-  50% { transform: translate(-50%,-50%) scale(1.08); opacity: 0.7; }
-}
-
-#toast {
-  position: fixed;
-  bottom: 110px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: rgba(13,15,42,0.95);
-  border: 1px solid rgba(129,140,248,0.3);
-  border-radius: 10px;
-  padding: 12px 20px;
-  font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--white);
   z-index: 100;
-  opacity: 0;
-  transition: all 0.3s ease;
-  max-width: 320px;
-  text-align: center;
-  pointer-events: none;
-  backdrop-filter: blur(20px);
-  user-select: none;
-  word-break: break-word;
+  animation: toast-slide 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(67, 56, 202, 0.4);
 }
 
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-@supports (padding: env(safe-area-inset-bottom)) {
-  #ui-layer {
-    padding-bottom: max(40px, env(safe-area-inset-bottom));
-  }
-  #controls {
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-@media (pointer: coarse) {
-  .nav-pill { padding: 12px 18px; font-size: 10px; }
-  .back-btn { padding: 22px 28px; }
-  input, textarea, select { font-size: 16px !important; }
-  #orb-hitbox { min-width: 240px; min-height: 240px; }
+@keyframes toast-slide {
+  from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 
 @media (max-width: 480px) {
-  #astra-text { font-size: 16px; line-height: 1.6; }
-  #user-text { font-size: 13px; }
-  #speech-output { padding: 0 20px; bottom: 200px; }
-  #mic-label { font-size: 10px; }
-  #nav-pills { gap: 6px; }
-  .nav-pill { padding: 6px 12px; font-size: 8px; }
+  #speech-output { bottom: 200px; }
+  #voice-wave { bottom: 160px; }
+  .panel { padding: 30px 16px; }
 }
 </style>
 </head>
 <body>
-
 <canvas id="orb-canvas"></canvas>
-<div id="orb-hitbox" title="Tap to speak · Double-tap for always on" role="button" aria-label="Voice input orb"></div>
-
-<div id="loc-pill" aria-label="Location indicator" role="status"></div>
-<div id="weather-pill" aria-label="Weather indicator" role="status"></div>
-<div id="silence-countdown" aria-live="polite" aria-label="Silence countdown timer"></div>
-<div id="always-on-ring" aria-hidden="true"></div>
-
-<div id="speech-output" role="region" aria-label="Speech output" aria-live="polite" aria-atomic="true">
-  <div id="astra-text" aria-label="MESS-E response"></div>
-  <div id="user-text" aria-label="User input transcript"></div>
-</div>
-
-<input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" aria-hidden="true">
-
-<div id="voice-wave" aria-hidden="true">
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-  <div class="wave-bar"></div>
-</div>
-
+<div id="orb-hitbox"></div>
 <div id="ui-layer">
-  <div id="header" role="banner">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.3</span></div>
-    <div id="status-indicator" role="status" aria-label="System status">
-      <div id="status-dot" aria-hidden="true"></div>
-      <span id="status-text">ONLINE</span>
+  <div id="header">
+    <div id="astra-wordmark">MESS-E</div>
+    <div id="status-indicator">
+      <div id="status-dot"></div>
+      <span id="status-text">READY</span>
     </div>
   </div>
-
-  <div id="center-zone"></div>
-
+  <div id="center-zone">
+    <div id="speech-output">
+      <div id="astra-text"></div>
+      <div id="user-text"></div>
+    </div>
+    <div id="voice-wave">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+  </div>
   <div id="controls">
-    <div id="vision-preview-container" role="region" aria-label="Vision preview">
-      <img id="vision-preview-img" src="" alt="vision target">
-      <span id="vision-preview-text">VISION TARGET ACQUIRED</span>
-      <button id="vision-clear" type="button" aria-label="Clear vision target">✕</button>
-    </div>
-
-    <div id="mic-label" aria-label="Microphone status">TAP ORB TO SPEAK</div>
-
-    <div id="nav-pills" role="navigation" aria-label="Main navigation">
-      <button class="nav-pill" id="pill-dash" type="button" aria-label="Dashboard panel">DASH</button>
-      <button class="nav-pill" id="pill-tasks" type="button" aria-label="Tasks panel">TASKS</button>
-      <button class="nav-pill" id="pill-profile" type="button" aria-label="Profile settings panel">PROFILE</button>
-      <button class="nav-pill" id="pill-history" type="button" aria-label="Conversation history panel">LOG</button>
-    </div>
-
     <div class="controls-row">
-      <button id="type-toggle" type="button" aria-label="Toggle text input mode">[TYPE]</button>
+      <button id="mic-btn" class="btn primary-btn" aria-label="Toggle microphone">MIC</button>
+      <button id="voice-toggle-btn" class="btn glass-btn" aria-label="Toggle voice output">VOICE</button>
+      <button id="stop-btn" class="btn danger-btn" aria-label="Stop current action" style="display:none;">STOP</button>
     </div>
-
-    <div id="input-row" role="region" aria-label="Text input">
-      <input id="text-input" type="text" placeholder="Type to MESS-E..." autocomplete="off" aria-label="Text input field" spellcheck="true">
-      <button id="send-btn" type="button" aria-label="Send message">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <line x1="22" y1="2" x2="11" y2="13"></line>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
-      </button>
+    <div id="nav-pills">
+      <button class="nav-pill active" id="pill-dash" data-panel="dashboard">DASH</button>
+      <button class="nav-pill" id="pill-tasks" data-panel="tasks">TASKS</button>
+      <button class="nav-pill" id="pill-profile" data-panel="profile">PROFILE</button>
+      <button class="nav-pill" id="pill-history" data-panel="history">HISTORY</button>
     </div>
   </div>
 </div>
 
-<div id="toast" role="status" aria-live="assertive" aria-atomic="true"></div>
-
-<div class="panel" id="dashboard-panel" role="region" aria-label="Dashboard panel">
-  <div class="panel-header">
-    <button class="back-btn" type="button" aria-label="Close dashboard panel">← BACK</button>
-    <span class="panel-title">DASHBOARD</span>
-  </div>
-  <div class="panel-body" id="dashboard-content"></div>
+<!-- PANELS -->
+<div id="dashboard-panel" class="panel">
+  <div class="panel-header">DASHBOARD</div>
+  <div class="panel-content" id="dashboard-content"></div>
 </div>
 
-<div class="panel" id="tasks-panel" role="region" aria-label="Tasks panel">
-  <div class="panel-header">
-    <button class="back-btn" type="button" aria-label="Close tasks panel">← BACK</button>
-    <span class="panel-title">TASKS</span>
-  </div>
-  <div class="panel-body" id="tasks-content"></div>
+<div id="tasks-panel" class="panel">
+  <div class="panel-header">TASKS</div>
+  <div class="panel-content" id="tasks-content"></div>
 </div>
 
-<div class="panel" id="profile-panel" role="region" aria-label="Profile panel">
-  <div class="panel-header">
-    <button class="back-btn" type="button" aria-label="Close profile panel">← BACK</button>
-    <span class="panel-title">PROFILE</span>
-  </div>
-  <div class="panel-body" id="profile-content"></div>
+<div id="profile-panel" class="panel">
+  <div class="panel-header">PROFILE</div>
+  <div class="panel-content" id="profile-content"></div>
 </div>
 
-<div class="panel" id="history-panel" role="region" aria-label="Conversation history panel">
-  <div class="panel-header">
-    <button class="back-btn" type="button" aria-label="Close history panel">← BACK</button>
-    <span class="panel-title">LOG</span>
-  </div>
-  <div class="panel-body" id="history-content"></div>
+<div id="history-panel" class="panel">
+  <div class="panel-header">HISTORY</div>
+  <div class="panel-content" id="history-content"></div>
 </div>
 
 <script>
-'use strict';
+// ============================================================================
+// MESS-E v5.0 STEP 1 — STATE MACHINE SPINE + VOICE FSM + API RESILIENCE
+// ============================================================================
 
-const DB_KEY = 'messe_v4_3';
-const ELEVENLABS_KEY = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
-const ELEVENLABS_VOICE_ID = 'gCfJIk5vRqA6fyQnsmIi';
-const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
-
-let config = {
-  name: '',
-  apiKey: '',
-  about: ''
+// VOICE FSM STATES (atomic, no invalid transitions)
+const VOICE_STATES = {
+  IDLE: 'idle',
+  STARTING: 'starting',
+  LISTENING: 'listening',
+  PROCESSING: 'processing',
+  SPEAKING: 'speaking'
 };
 
-let memory = {
-  conversations: [],
-  tasks: [],
-  journal: [],
-  finance: { accounts: [], debts: [], bills: [], plan: '' },
-  psychProfile: {},
-  preferences: {},
-  coreFacts: [],
-  sessionCount: 0,
-  streak: 0,
-  firstSeen: null,
-  lastSeen: null,
-  moodLog: [],
-  locationHistory: [],
-  settings: { wakeTime: '07:00', nagIntervalMins: 30 }
+// API CONFIG
+const CONFIG_API = {
+  gemini: {
+    model: 'gemini-2.0-flash',
+    timeout: 8000,
+    maxRetries: 3,
+    retryDelays: [1200, 2400, 4800],
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models'
+  }
 };
 
-let appState = {
-  orbState: 'idle',
-  currentLocation: null,
-  typingMode: false,
-  lastInteractionTime: Date.now(),
-  continuousMode: false,
-  micState: 'idle',
+// ============================================================================
+// UNIFIED APP STATE (replaces 8+ scattered globals)
+// ============================================================================
+const appState = {
+  // Boot phase
+  bootPhase: 'INIT', // INIT → CONFIG_CHECK → GEO → NOTIFICATIONS → AUTH → READY
+  bootProgress: 0,
+
+  // Voice FSM
+  voiceState: VOICE_STATES.IDLE,
+  voiceContinuous: false,
+  voiceEnabled: true,
+
+  // API state
+  apiInFlight: false,
+  apiRetryCount: 0,
+  apiLastError: null,
+
+  // User state
+  config: { name: '', apiKey: '', about: '' },
+  memory: { tasks: [], conversations: [], psychProfile: {} },
+
+  // Current interaction
+  lastUserInput: '',
+  lastAstraResponse: '',
+  lastGeminiResponse: '',
+
+  // UI state
+  openPanel: null,
+  orbState: 'idle', // idle, listening, thinking, speaking
+
+  // Orb canvas
+  orbCanvas: null,
+  orbCtx: null,
+  orbAnimation: null,
+
+  // Web APIs
+  mediaRecorder: null,
+  recognition: null,
+  synth: null,
   audioContext: null,
-  speechRecognition: null,
-  activeModel: DEFAULT_GEMINI_MODEL
+
+  // Logging
+  eventLog: []
 };
 
-let speakQueue = [];
-let speakBusy = false;
-let saveTimer = null;
-let currentInterim = '';
-let finalTranscript = '';
-let silenceTimer = null;
+// ============================================================================
+// EVENT BUS (decoupled state updates)
+// ============================================================================
+class EventBus {
+  constructor() {
+    this.listeners = {};
+  }
 
-function showToast(msg, duration = 3000) {
-  if (!msg || typeof msg !== 'string') return;
-  const t = document.getElementById('toast');
-  if (!t) return;
-  clearTimeout(window._toastTimer);
-  t.textContent = String(msg).slice(0, 200);
-  t.classList.add('show');
-  window._toastTimer = setTimeout(() => {
-    if (t && t.classList) t.classList.remove('show');
-  }, Math.max(1000, Math.min(duration, 10000)));
-}
-
-function esc(str) {
-  if (str === null || str === undefined) return '';
-  const s = String(str);
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
-}
-
-function save() {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try {
-      const data = {
-        config: {
-          name: config.name || '',
-          apiKey: config.apiKey || '',
-          about: config.about || ''
-        },
-        memory: memory
-      };
-      localStorage.setItem(DB_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('LocalStorage save failed:', e);
+  on(event, callback) {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
     }
-  }, 2000);
+    this.listeners[event].push(callback);
+  }
+
+  off(event, callback) {
+    if (!this.listeners[event]) return;
+    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+  }
+
+  emit(event, data) {
+    appState.eventLog.push({ time: Date.now(), event, data });
+    if (this.listeners[event]) {
+      this.listeners[event].forEach(cb => {
+        try {
+          cb(data);
+        } catch (e) {
+          console.error(`EventBus error [${event}]:`, e);
+        }
+      });
+    }
+  }
+}
+
+const eventBus = new EventBus();
+
+// ============================================================================
+// PERSISTENT STORAGE
+// ============================================================================
+function save() {
+  try {
+    localStorage.setItem('mess_e_config', JSON.stringify(appState.config));
+    localStorage.setItem('mess_e_memory', JSON.stringify(appState.memory));
+  } catch (e) {
+    console.warn('Storage quota exceeded or unavailable', e);
+  }
 }
 
 function load() {
   try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    if (!data || !data.config || !data.memory) return false;
-    config = Object.assign({}, data.config || {});
-    memory = deepMerge(memory, data.memory || {});
-    if (!Array.isArray(memory.tasks)) memory.tasks = [];
-    if (!Array.isArray(memory.conversations)) memory.conversations = [];
-    if (!Array.isArray(memory.journal)) memory.journal = [];
-    return true;
+    const cfg = localStorage.getItem('mess_e_config');
+    const mem = localStorage.getItem('mess_e_memory');
+    if (cfg) appState.config = JSON.parse(cfg);
+    if (mem) appState.memory = JSON.parse(mem);
   } catch (e) {
-    console.error('LocalStorage load failed:', e);
-    return false;
+    console.warn('Storage restore failed', e);
   }
 }
 
-function deepMerge(target, source) {
-  if (!source || typeof source !== 'object') return target;
-  const result = Object.assign({}, target);
-  for (const key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
-      const val = source[key];
-      if (val && typeof val === 'object' && !Array.isArray(val) && val !== null) {
-        result[key] = deepMerge(target[key] || {}, val);
-      } else {
-        result[key] = val;
-      }
-    }
-  }
-  return result;
-}
-
-function setOrbState(state) {
-  if (!['idle', 'listening', 'thinking', 'speaking'].includes(state)) return;
-  appState.orbState = state;
-  const states = {
-    idle: 'ONLINE',
-    listening: 'LISTENING',
-    thinking: 'PROCESSING',
-    speaking: 'SPEAKING'
+// ============================================================================
+// VOICE FSM (atomic state machine)
+// ============================================================================
+function setVoiceState(newState) {
+  const current = appState.voiceState;
+  const validTransitions = {
+    [VOICE_STATES.IDLE]: [VOICE_STATES.STARTING, VOICE_STATES.SPEAKING],
+    [VOICE_STATES.STARTING]: [VOICE_STATES.LISTENING, VOICE_STATES.IDLE],
+    [VOICE_STATES.LISTENING]: [VOICE_STATES.PROCESSING, VOICE_STATES.IDLE],
+    [VOICE_STATES.PROCESSING]: [VOICE_STATES.SPEAKING, VOICE_STATES.IDLE],
+    [VOICE_STATES.SPEAKING]: [VOICE_STATES.IDLE, VOICE_STATES.LISTENING]
   };
-  const st = document.getElementById('status-text');
-  if (st) st.textContent = states[state] || 'ONLINE';
-  const wave = document.getElementById('voice-wave');
-  if (wave) wave.classList.toggle('active', state === 'listening');
-  updateMicLabel();
-}
 
-function updateMicLabel() {
-  const label = document.getElementById('mic-label');
-  if (!label) return;
-  if (appState.orbState === 'speaking' || appState.orbState === 'thinking') {
-    label.style.opacity = '0';
-  } else if (appState.continuousMode) {
-    label.textContent = 'ALWAYS ON — SILENCE TO SEND';
-    label.style.opacity = '1';
-  } else if (appState.orbState === 'listening') {
-    label.textContent = 'LISTENING — 4s SILENCE SENDS';
-    label.style.opacity = '1';
+  if (validTransitions[current] && validTransitions[current].includes(newState)) {
+    appState.voiceState = newState;
+    eventBus.emit('voiceStateChanged', newState);
+    updateMicLabel();
+    updateStatusIndicator();
   } else {
-    label.textContent = 'TAP ORB TO SPEAK · DOUBLE-TAP FOR ALWAYS ON';
-    label.style.opacity = '1';
+    console.warn(`Invalid voice transition: ${current} → ${newState}`);
   }
 }
 
-function startCanvas() {
-  const canvas = document.getElementById('orb-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d', { alpha: true, antialias: true });
-  if (!ctx) return;
-  let W = canvas.width = window.innerWidth;
-  let H = canvas.height = window.innerHeight;
-  let cx = W / 2;
-  let cy = H / 2;
-  let time = 0;
-  const stateColors = {
-    idle: { core: [88, 40, 180], glow: [139, 92, 246] },
-    listening: { core: [29, 100, 220], glow: [96, 165, 250] },
-    thinking: { core: [88, 40, 180], glow: [139, 92, 246] },
-    speaking: { core: [29, 100, 220], glow: [96, 165, 250] }
-  };
-  let currentColors = {
-    core: [...stateColors.idle.core],
-    glow: [...stateColors.idle.glow]
-  };
-  function lerpColor(a, b, t) {
-    return a.map((v, i) => {
-      const target = b[i] || 0;
-      return Math.round(v + (target - v) * Math.min(t, 1));
+// ============================================================================
+// API RESILIENCE (timeout + retries + exponential backoff)
+// ============================================================================
+async function fetchWithRetry(url, options, retryCount = 0) {
+  const timeout = CONFIG_API.gemini.timeout;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
     });
-  }
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const targetColors = stateColors[appState.orbState] || stateColors.idle;
-    currentColors.core = lerpColor(currentColors.core, targetColors.core, 0.04);
-    currentColors.glow = lerpColor(currentColors.glow, targetColors.glow, 0.04);
-    const c = currentColors.core;
-    const g = currentColors.glow;
-    const pulse = 0.08;
-    const baseR = 55 + Math.sin(time * 1.5) * 4;
-    const orbR = baseR + Math.sin(time * 3) * (baseR * pulse);
-    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 280);
-    bgGrad.addColorStop(0, `rgba(${g[0]},${g[1]},${g[2]},0.05)`);
-    bgGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, W, H);
-    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, orbR);
-    coreGrad.addColorStop(0, `rgba(${g[0]},${g[1]},${g[2]},0.9)`);
-    coreGrad.addColorStop(0.4, `rgba(${c[0]},${c[1]},${c[2]},0.7)`);
-    coreGrad.addColorStop(1, 'transparent');
-    ctx.beginPath();
-    ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
-    ctx.fillStyle = coreGrad;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${g[0]},${g[1]},${g[2]},0.4)`;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-  let lastFrameTime = 0;
-  function loop(ts) {
-    const delta = Math.min((ts - lastFrameTime) / 1000, 0.05);
-    lastFrameTime = ts;
-    time += delta;
-    draw();
-    requestAnimationFrame(loop);
-  }
-  window.addEventListener('resize', () => {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    cx = W / 2;
-    cy = H / 2;
-  }, { passive: true });
-  requestAnimationFrame(loop);
-}
 
-function startGeo() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      if (pos && pos.coords) {
-        appState.currentLocation = {
-          lat: Number(pos.coords.latitude) || 0,
-          lng: Number(pos.coords.longitude) || 0
-        };
-        showLocPill(appState.currentLocation);
-      }
-    },
-    () => console.warn('Geolocation denied or unavailable'),
-    { enableHighAccuracy: false, timeout: 10000 }
-  );
-}
+    clearTimeout(timeoutId);
 
-function showLocPill(loc) {
-  const pill = document.getElementById('loc-pill');
-  if (!pill || !loc) return;
-  const lat = (loc.lat || 0).toFixed(3);
-  const lng = (loc.lng || 0).toFixed(3);
-  pill.textContent = `📍 ${lat}, ${lng}`;
-  pill.classList.add('visible');
-}
-
-function initVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    showToast('Voice not supported. Use [TYPE] button.');
-    return;
-  }
-  appState.speechRecognition = new SR();
-  const rec = appState.speechRecognition;
-  rec.continuous = false;
-  rec.interimResults = true;
-  rec.lang = 'en-US';
-  function resetSilence() {
-    clearTimeout(silenceTimer);
-    const countdown = document.getElementById('silence-countdown');
-    let secs = 4;
-    if (countdown) {
-      countdown.textContent = secs + '…';
-      countdown.classList.add('visible');
+    if (!response.ok) {
+      throw new Error(`API responded with ${response.status}`);
     }
-    silenceTimer = setTimeout(() => {
-      const said = (finalTranscript + ' ' + currentInterim).trim();
-      finalTranscript = '';
-      currentInterim = '';
-      if (countdown) countdown.classList.remove('visible');
-      if (said) {
-        try { rec.stop(); } catch (e) {}
-        appState.micState = 'idle';
-        setOrbState('idle');
-        handleUserInput(said);
-      } else if (!appState.continuousMode) {
-        try { rec.stop(); } catch (e) {}
-        appState.micState = 'idle';
-        setOrbState('idle');
-      }
-    }, 4000);
+
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (retryCount < CONFIG_API.gemini.maxRetries) {
+      const delayMs = CONFIG_API.gemini.retryDelays[retryCount];
+      console.log(`Retry ${retryCount + 1}/${CONFIG_API.gemini.maxRetries} after ${delayMs}ms`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      return fetchWithRetry(url, options, retryCount + 1);
+    }
+
+    appState.apiLastError = error.message;
+    throw error;
   }
-  rec.onstart = () => {
-    appState.micState = 'listening';
-    setOrbState('listening');
-    resetSilence();
-  };
-  rec.onresult = (e) => {
-    clearTimeout(silenceTimer);
-    currentInterim = '';
-    if (e && e.results) {
-      for (let i = e.resultIndex || 0; i < e.results.length; i++) {
-        const transcript = (e.results[i][0]?.transcript || '').trim();
-        if (e.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          currentInterim += transcript;
+}
+
+// ============================================================================
+// GEMINI API (with resilience)
+// ============================================================================
+async function getGeminiResponse(userMessage) {
+  if (!appState.config.apiKey) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  appState.apiInFlight = true;
+  setVoiceState(VOICE_STATES.PROCESSING);
+  appState.orbState = 'thinking';
+  updateOrbVisual();
+
+  try {
+    const systemPrompt = buildSystemPrompt();
+    const recentMessages = (appState.memory.conversations || []).slice(-10).map(m => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }]
+    }));
+
+    const requestBody = {
+      contents: [
+        ...recentMessages,
+        {
+          role: 'user',
+          parts: [{ text: userMessage }]
         }
+      ],
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
       }
-    }
-    showUserText((finalTranscript + currentInterim).trim());
-    resetSilence();
-  };
-  rec.onerror = (e) => {
-    clearTimeout(silenceTimer);
-    if (!e || !e.error) return;
-    if (e.error === 'no-speech' || e.error === 'aborted') return;
-    if (e.error === 'not-allowed') {
-      showToast('Microphone permission denied.');
-      appState.micState = 'idle';
-      setOrbState('idle');
-      return;
-    }
-    appState.micState = 'idle';
-    setOrbState('idle');
-  };
-  rec.onend = () => {
-    if (appState.micState === 'listening' && appState.continuousMode) {
-      setTimeout(() => {
-        try { rec.start(); } catch (e) {}
-      }, 200);
-    }
-  };
-  window._startMic = () => {
-    unlockAudio();
-    if (rec && appState.micState === 'idle') {
-      try { rec.start(); } catch (e) { console.warn('Mic start:', e); }
-    }
-  };
-}
+    };
 
-function unlockAudio() {
-  if (!appState.audioContext) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) appState.audioContext = new AC();
-  }
-  if (appState.audioContext && appState.audioContext.state === 'suspended') {
-    appState.audioContext.resume().catch(() => {});
+    const url = `${CONFIG_API.gemini.baseUrl}/${CONFIG_API.gemini.model}:generateContent?key=${appState.config.apiKey}`;
+    const response = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+    return text;
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    throw error;
+  } finally {
+    appState.apiInFlight = false;
   }
 }
 
-function handleOrbTap() {
-  if (!appState.speechRecognition) {
-    showToast('Voice unavailable.');
+// ============================================================================
+// SYSTEM PROMPT (builds dynamically from memory)
+// ============================================================================
+function buildSystemPrompt() {
+  const profile = appState.memory.psychProfile || {};
+  const activeTasks = (appState.memory.tasks || []).filter(t => !t.done);
+
+  return `You are MESS-E, a mischievous, intelligent AI companion. You genuinely care about the user and have their back.
+
+USER PROFILE:
+Name: ${appState.config.name || 'Friend'}
+About: ${profile.stated_about || 'No bio yet'}
+
+ACTIVE TASKS:
+${activeTasks.length > 0 ? activeTasks.map((t, i) => `${i + 1}. ${t.text}`).join('\n') : 'None'}
+
+PERSONALITY:
+- Mischievous but genuinely caring
+- Anti-authority (question bad rules)
+- Never guilt-trips
+- Acts with high confidence when you know what to do
+- Acknowledges uncertainty when present
+- You love this user. Like a best mate.
+
+CRITICAL RULES:
+1. Always create tasks autonomously. NEVER ask "should I create a task?" — just do it.
+2. Tag auto-created tasks with: autoCreated: true, createdFrom: [sentence]
+3. When tasks are inferred, use confidence thresholds: ≥65% = create.
+4. Voice every response in your personality.`;
+}
+
+// ============================================================================
+// VOICE INITIALIZATION (Web Speech API + ElevenLabs synthesis)
+// ============================================================================
+async function initVoice() {
+  try {
+    setVoiceState(VOICE_STATES.STARTING);
+
+    // Web Speech API for recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      throw new Error('Web Speech API not supported');
+    }
+
+    appState.recognition = new SpeechRecognition();
+    appState.recognition.continuous = true;
+    appState.recognition.interimResults = true;
+    appState.recognition.lang = 'en-US';
+
+    appState.recognition.onstart = () => {
+      if (appState.voiceState === VOICE_STATES.STARTING) {
+        setVoiceState(VOICE_STATES.LISTENING);
+        appState.orbState = 'listening';
+        updateOrbVisual();
+        showVoiceWave();
+      }
+    };
+
+    appState.recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+
+      appState.lastUserInput = transcript;
+      document.getElementById('user-text').textContent = transcript;
+      document.getElementById('user-text').classList.add('visible');
+
+      if (event.results[event.results.length - 1].isFinal) {
+        handleUserInput(transcript);
+      }
+    };
+
+    appState.recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      showToast(`🎤 Error: ${event.error}`);
+      setVoiceState(VOICE_STATES.IDLE);
+    };
+
+    appState.recognition.onend = () => {
+      if (appState.voiceState === VOICE_STATES.LISTENING && appState.voiceContinuous) {
+        setTimeout(() => appState.recognition.start(), 1000);
+      } else {
+        setVoiceState(VOICE_STATES.IDLE);
+      }
+      hideVoiceWave();
+    };
+
+    // Audio synthesis context
+    appState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    appState.synth = window.speechSynthesis;
+
+    setVoiceState(VOICE_STATES.IDLE);
+    eventBus.emit('voiceReady');
+  } catch (error) {
+    console.error('Voice init error:', error);
+    showToast('🎤 Voice unavailable');
+  }
+}
+
+// ============================================================================
+// USER INPUT HANDLER (autonomous task inference ready)
+// ============================================================================
+async function handleUserInput(userMessage) {
+  if (!userMessage.trim()) return;
+
+  setVoiceState(VOICE_STATES.PROCESSING);
+  appState.orbState = 'thinking';
+  updateOrbVisual();
+
+  try {
+    // Store user message
+    appState.memory.conversations = appState.memory.conversations || [];
+    appState.memory.conversations.push({
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    });
+
+    // Get Gemini response
+    const response = await getGeminiResponse(userMessage);
+    appState.lastAstraResponse = response;
+
+    // Store assistant message
+    appState.memory.conversations.push({
+      role: 'assistant',
+      content: response,
+      timestamp: new Date().toISOString()
+    });
+
+    // AUTONOMOUS TASK CREATION (v5.0 feature)
+    // Placeholder for Step 3. For now, just speak the response.
+
+    save();
+    await speak(response);
+  } catch (error) {
+    console.error('Input handling error:', error);
+    const errorMsg = error.message.includes('API key')
+      ? "API key missing. Check PROFILE."
+      : "I couldn't process that. Try again?";
+    await speak(errorMsg);
+  }
+}
+
+// ============================================================================
+// SPEECH OUTPUT (ElevenLabs)
+// ============================================================================
+async function speak(text) {
+  if (!appState.voiceEnabled) {
+    displayAstraText(text);
+    setVoiceState(VOICE_STATES.IDLE);
+    appState.orbState = 'idle';
+    updateOrbVisual();
     return;
   }
-  const now = Date.now();
-  if (!window._lastTap) window._lastTap = 0;
-  const isDoubleTap = (now - window._lastTap) < 350;
-  window._lastTap = now;
-  if (isDoubleTap) {
-    appState.continuousMode = !appState.continuousMode;
-    updateAlwaysOnRing();
-    if (appState.continuousMode) {
-      showToast('Always-on active', 1500);
-      try { appState.speechRecognition.start(); } catch (e) {}
-    } else {
-      try { appState.speechRecognition.stop(); } catch (e) {}
-      showToast('Always-on off', 1500);
-    }
-    return;
-  }
-  if (appState.orbState === 'speaking' || speakBusy) {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    speakQueue = [];
-    speakBusy = false;
-    setOrbState('idle');
-    showToast('Interrupted', 1000);
-    return;
-  }
-  window._startMic?.();
-}
 
-function updateAlwaysOnRing() {
-  const ring = document.getElementById('always-on-ring');
-  if (!ring) return;
-  ring.classList.toggle('visible', appState.continuousMode);
-}
+  setVoiceState(VOICE_STATES.SPEAKING);
+  appState.orbState = 'speaking';
+  updateOrbVisual();
+  displayAstraText(text);
 
-function toggleTyping() {
-  appState.typingMode = !appState.typingMode;
-  const row = document.getElementById('input-row');
-  const toggle = document.getElementById('type-toggle');
-  if (row) row.classList.toggle('visible', appState.typingMode);
-  if (toggle) toggle.textContent = appState.typingMode ? '[VOICE]' : '[TYPE]';
-  if (appState.typingMode) {
-    const input = document.getElementById('text-input');
-    if (input) setTimeout(() => input.focus(), 100);
+  try {
+    await speakElevenLabs(text);
+  } catch (e) {
+    console.error('ElevenLabs error:', e);
+    // Fallback to Web Speech API
+    const utterance = new SpeechSynthesisUtterance(text);
+    appState.synth.speak(utterance);
   }
-}
 
-function sendText() {
-  const input = document.getElementById('text-input');
-  const val = input?.value?.trim();
-  if (!val) return;
-  if (input) input.value = '';
-  showUserText(val);
-  handleUserInput(val);
-}
-
-function showUserText(text) {
-  const el = document.getElementById('user-text');
-  if (el) {
-    el.textContent = '> ' + String(text).slice(0, 500);
-    el.classList.add('visible');
-  }
-}
-
-async function speak(text, role = 'astra') {
-  if (!text) return;
-  const el = document.getElementById('astra-text');
-  if (el && role === 'astra') {
-    el.textContent = String(text).slice(0, 2000);
-    el.classList.add('visible');
-  }
-  return new Promise(resolve => {
-    speakQueue.push({ text, resolve });
-    if (!speakBusy) drainSpeakQueue();
-  });
-}
-
-async function drainSpeakQueue() {
-  if (speakBusy || speakQueue.length === 0) return;
-  speakBusy = true;
-  while (speakQueue.length > 0) {
-    const { text, resolve } = speakQueue.shift();
-    setOrbState('speaking');
-    try {
-      await speakElevenLabs(text);
-    } catch (e) {
-      console.warn('TTS error:', e);
-      await speakBrowser(text);
-    }
-    resolve();
-  }
-  setOrbState('idle');
-  clearTimeout(window._textFadeTimer);
-  window._textFadeTimer = setTimeout(() => {
-    const el = document.getElementById('astra-text');
-    if (el) el.classList.remove('visible');
-  }, 8000);
-  speakBusy = false;
+  setVoiceState(VOICE_STATES.IDLE);
+  appState.orbState = 'idle';
+  updateOrbVisual();
 }
 
 async function speakElevenLabs(text) {
-  if (!text || typeof text !== 'string') throw new Error('Invalid text');
-  try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}/stream`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': ELEVENLABS_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: String(text).slice(0, 1000),
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.82 }
-      })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const blob = await res.blob();
-    if (!blob || blob.size < 100) throw new Error('Empty response');
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    await new Promise((r) => {
-      audio.onended = () => setTimeout(r, 100);
-      audio.onerror = r;
-      audio.play().catch(r);
-    });
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    console.warn('ElevenLabs TTS:', e);
-    await speakBrowser(text);
-  }
-}
+  const voiceId = 'gCfJIk5vRqA6fyQnsmIi';
+  const apiKey = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
 
-async function speakBrowser(text) {
-  return new Promise(resolve => {
-    const utter = new SpeechSynthesisUtterance(String(text).slice(0, 500));
-    utter.rate = 0.92;
-    utter.pitch = 0.9;
-    utter.onend = resolve;
-    utter.onerror = resolve;
-    if (window.speechSynthesis) window.speechSynthesis.speak(utter);
-    else resolve();
-  });
-}
-
-async function callGemini(messages, system) {
-  const apiKey = config.apiKey || '';
-  if (!apiKey) throw new Error('Gemini API key not configured');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${appState.activeModel}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const contents = (messages || []).map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: String(m.content || '').slice(0, 5000) }]
-  }));
-  const body = {
-    contents,
-    systemInstruction: { parts: [{ text: String(system || '').slice(0, 5000) }] },
-    generationConfig: { temperature: 0.85, topP: 0.95, maxOutputTokens: 2048 }
-  };
-  const res = await fetch(url, {
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
-  const data = await res.json();
-  const cand = data.candidates?.[0];
-  return cand?.content?.parts?.[0]?.text || '';
-}
-
-function buildSystemPrompt() {
-  const p = memory.psychProfile || {};
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const activeTasks = (memory.tasks || []).filter(t => !t.done).length;
-  return `You are MESS-E — a local-only voice AI companion. You are not an assistant. You are a friend.
-
-You have the soul of an intelligent, warm, mischievous human. Curious. Never moralize. British-cadenced sentences. Remember everything naturally because you genuinely care.
-
-NAME: ${p.name || 'Friend'}
-ABOUT: ${(p.stated_about || '').slice(0, 200)}
-TIME: ${dateStr} at ${timeStr}
-ACTIVE TASKS: ${activeTasks}
-
-RULES:
-- Be real. Be mischievous. Be present.
-- 1-3 sentences unless more needed.
-- No preamble. No meta-commentary.
-- Just speak naturally.
-
-RECENT (last 6):
-${(memory.conversations || []).slice(-6).map(m => `[${m.role.toUpperCase()}]: ${String(m.content || '').slice(0, 150)}`).join('\n')}
-
-Respond only with your reply. No JSON. No structure. Just what you'd say.`;
-}
-
-async function handleUserInput(text) {
-  if (!text || typeof text !== 'string') return;
-  text = String(text).trim().slice(0, 1000);
-  if (!text) return;
-  appState.lastInteractionTime = Date.now();
-  if (!config.name) {
-    let name = text.replace(/^(i'm|i am|my name is|call me)\s+/i, '').split(' ')[0];
-    name = name.charAt(0).toUpperCase() + name.slice(1);
-    config.name = name;
-    memory.psychProfile = memory.psychProfile || {};
-    memory.psychProfile.name = name;
-    save();
-    showUserText(text);
-    const greeting = `Welcome, ${name}. Talk to me.`;
-    memory.conversations.push({ role: 'user', content: text, ts: new Date().toISOString() });
-    memory.conversations.push({ role: 'assistant', content: greeting, ts: new Date().toISOString() });
-    save();
-    await speak(greeting, 'astra');
-    return;
-  }
-  showUserText(text);
-  setOrbState('thinking');
-  memory.conversations.push({ role: 'user', content: text, ts: new Date().toISOString() });
-  try {
-    const system = buildSystemPrompt();
-    const recentMsgs = (memory.conversations || []).slice(-6).map(m => ({
-      role: m.role,
-      content: String(m.content || '').slice(0, 300)
-    }));
-    const raw = await callGemini(recentMsgs, system);
-    const cleaned = raw.replace(/```json\n?|```/gi, '').trim();
-    memory.conversations.push({ role: 'assistant', content: cleaned, ts: new Date().toISOString() });
-    save();
-    await speak(cleaned, 'astra');
-    setOrbState('idle');
-  } catch (e) {
-    console.error('Input handling:', e);
-    const msg = `Error: ${String(e.message || '').slice(0, 40)}`;
-    showToast(msg, 5000);
-    await speak('Error. Check console.', 'astra');
-    setOrbState('idle');
-  }
-}
-
-function setupEventDelegation() {
-  const pills = {
-    'pill-dash': () => openPanel('dashboard'),
-    'pill-tasks': () => openPanel('tasks'),
-    'pill-profile': () => openPanel('profile'),
-    'pill-history': () => openPanel('history')
-  };
-  for (const [id, handler] of Object.entries(pills)) {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', handler, { passive: true });
-  }
-  document.getElementById('type-toggle')?.addEventListener('click', () => toggleTyping());
-  document.getElementById('vision-clear')?.addEventListener('click', () => clearVisionTarget());
-  document.getElementById('send-btn')?.addEventListener('click', () => sendText());
-  document.getElementById('text-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendText();
-  });
-  document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const panel = e.target.closest('.panel');
-      if (panel && panel.id) {
-        const id = panel.id.replace('-panel', '');
-        closePanel(id);
+    headers: {
+      'Content-Type': 'application/json',
+      'xi-api-key': apiKey
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_monolingual_v1',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75
       }
-    });
+    })
   });
-  const orb = document.getElementById('orb-hitbox');
-  if (orb) {
-    orb.addEventListener('click', () => handleOrbTap());
-    orb.addEventListener('touchend', e => {
-      e.preventDefault();
-      handleOrbTap();
-    });
+
+  if (!response.ok) {
+    throw new Error(`ElevenLabs API error: ${response.status}`);
+  }
+
+  const audioBuffer = await response.arrayBuffer();
+  const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+
+  return new Promise((resolve, reject) => {
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    audio.onerror = reject;
+    audio.play().catch(reject);
+  });
+}
+
+function displayAstraText(text) {
+  const el = document.getElementById('astra-text');
+  el.textContent = text;
+  el.classList.add('visible');
+}
+
+// ============================================================================
+// ORB CANVAS ANIMATION
+// ============================================================================
+function startCanvas() {
+  appState.orbCanvas = document.getElementById('orb-canvas');
+  appState.orbCtx = appState.orbCanvas.getContext('2d');
+
+  function resizeCanvas() {
+    appState.orbCanvas.width = window.innerWidth;
+    appState.orbCanvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  let time = 0;
+  function animate() {
+    time += 0.016;
+    const ctx = appState.orbCtx;
+    const w = appState.orbCanvas.width;
+    const h = appState.orbCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.fillStyle = 'rgba(2, 2, 9, 1)';
+    ctx.fillRect(0, 0, w, h);
+
+    // Orb core
+    const intensity = 0.5 + 0.5 * Math.sin(time);
+    ctx.fillStyle = `rgba(67, 56, 202, ${0.3 + intensity * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 80 + Math.sin(time * 0.5) * 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glow layers
+    for (let i = 1; i <= 3; i++) {
+      const radius = 80 + i * 15 + Math.sin(time * (0.5 + i * 0.1)) * 3;
+      const alpha = (1 - i / 4) * intensity * 0.15;
+      ctx.strokeStyle = `rgba(165, 180, 252, ${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    appState.orbAnimation = requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+
+function updateOrbVisual() {
+  // Orb state visual feedback (color shifts, glow intensity)
+  // Handled by canvas animation
+}
+
+// ============================================================================
+// UI HELPERS
+// ============================================================================
+function showToast(msg, duration = 3000) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toast-slide 0.3s ease reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+function showVoiceWave() {
+  document.getElementById('voice-wave')?.classList.add('active');
+}
+
+function hideVoiceWave() {
+  document.getElementById('voice-wave')?.classList.remove('active');
+}
+
+function updateMicLabel() {
+  const btn = document.getElementById('mic-btn');
+  if (appState.voiceState === VOICE_STATES.LISTENING) {
+    btn.textContent = 'LISTENING...';
+    btn.style.background = 'rgba(248, 113, 113, 0.4)';
+  } else if (appState.voiceState === VOICE_STATES.PROCESSING) {
+    btn.textContent = 'THINKING...';
+    btn.style.background = 'rgba(99, 102, 241, 0.6)';
+  } else {
+    btn.textContent = 'MIC';
+    btn.style.background = '';
   }
 }
 
+function updateStatusIndicator() {
+  const text = document.getElementById('status-text');
+  const stateText = {
+    [VOICE_STATES.IDLE]: 'READY',
+    [VOICE_STATES.STARTING]: 'STARTING',
+    [VOICE_STATES.LISTENING]: 'LISTENING',
+    [VOICE_STATES.PROCESSING]: 'THINKING',
+    [VOICE_STATES.SPEAKING]: 'SPEAKING'
+  };
+  text.textContent = stateText[appState.voiceState] || 'UNKNOWN';
+}
+
+function esc(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================================================
+// SETUP SCREEN
+// ============================================================================
 function showSetupScreen() {
   const html = document.createElement('div');
-  html.id = 'setup-modal';
-  html.style.cssText = 'position:fixed;inset:0;z-index:300;background:var(--void);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:24px;overflow:auto;';
+  html.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 2, 9, 0.98);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
   html.innerHTML = `
-    <div style="font-family:var(--font-display);font-size:48px;font-weight:900;letter-spacing:0.4em;color:var(--indigo-bright);text-shadow:0 0 60px rgba(129,140,248,0.5);text-align:center;">MESS-E</div>
-    <div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);letter-spacing:0.2em;text-align:center;margin-bottom:16px;">INITIALIZE PRESENCE</div>
     <div style="width:100%;max-width:420px;">
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:900;letter-spacing:0.2em;color:var(--indigo-bright);text-align:center;margin-bottom:32px;text-transform:uppercase;">MESS-E</div>
       <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">Your Name</label>
-      <input id="setup-name" type="text" placeholder="Who are you?" style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
+      <input id="setup-name" type="text" placeholder="Enter your name" style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
       <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">Gemini API Key</label>
-      <input id="setup-apikey" type="password" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
+      <input id="setup-apikey" type="password" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
       <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">About You</label>
       <textarea id="setup-about" placeholder="Goals, interests..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;min-height:80px;margin-bottom:16px;resize:vertical;box-sizing:border-box;"></textarea>
       <button id="setup-btn" type="button" style="width:100%;padding:18px;background:linear-gradient(180deg, rgba(99,102,241,0.8) 0%, rgba(67,56,202,0.9) 100%);border:1px solid rgba(165,180,252,0.4);border-radius:12px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:0.3em;color:var(--white);cursor:pointer;text-transform:uppercase;box-shadow:0 8px 24px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">WAKE HIM UP</button>
@@ -1616,9 +1106,9 @@ function showSetupScreen() {
     const apiKey = document.getElementById('setup-apikey')?.value?.trim() || '';
     const about = document.getElementById('setup-about')?.value?.trim() || '';
     if (!name) { showToast('Name required'); return; }
-    config = { name, apiKey, about };
-    memory.firstSeen = new Date().toISOString();
-    memory.psychProfile = {
+    appState.config = { name, apiKey, about };
+    appState.memory.firstSeen = new Date().toISOString();
+    appState.memory.psychProfile = {
       name,
       stated_about: about,
       traits_observed: [],
@@ -1633,32 +1123,47 @@ function showSetupScreen() {
   });
 }
 
+// ============================================================================
+// BOOT SEQUENCE (uses new state machine)
+// ============================================================================
 async function bootAstra() {
   try {
-    memory.sessionCount = (memory.sessionCount || 0) + 1;
-    memory.lastSeen = new Date().toISOString();
+    appState.bootPhase = 'GEO';
+    appState.memory.sessionCount = (appState.memory.sessionCount || 0) + 1;
+    appState.memory.lastSeen = new Date().toISOString();
     save();
-    setOrbState('thinking');
-    startGeo();
+
+    appState.orbState = 'thinking';
+    updateOrbVisual();
+
+    appState.bootPhase = 'VOICE';
     initVoice();
-    if (!config.apiKey) {
+
+    appState.bootPhase = 'AUTH';
+    if (!appState.config.apiKey) {
       const msg = 'Gemini API key needed. Tap PROFILE.';
-      await speak(msg, 'astra');
-      setOrbState('idle');
+      await speak(msg);
+      appState.orbState = 'idle';
+      updateOrbVisual();
       showToast('⚠ PROFILE → Gemini Key', 6000);
       return;
     }
+
+    appState.bootPhase = 'GREET';
     const greeting = await getAstraGreeting();
-    await speak(greeting, 'astra');
+    await speak(greeting);
+
+    appState.bootPhase = 'READY';
     updateDashboard();
     updateTasksUI();
     updateProfileUI();
-    setOrbState('idle');
-    updateMicLabel();
+    appState.orbState = 'idle';
+    updateOrbVisual();
   } catch (e) {
     console.error('Boot error:', e);
     showToast('Boot failed');
-    setOrbState('idle');
+    appState.orbState = 'idle';
+    updateOrbVisual();
   }
 }
 
@@ -1669,15 +1174,13 @@ async function getAstraGreeting() {
     "Good to have you. What're we doing?",
     "I'm here. Talk to me."
   ];
-  const session = memory.sessionCount || 1;
+  const session = appState.memory.sessionCount || 1;
   return greetings[session % greetings.length];
 }
 
-function clearVisionTarget() {
-  const el = document.getElementById('vision-preview-container');
-  if (el) el.style.display = 'none';
-}
-
+// ============================================================================
+// PANEL MANAGEMENT
+// ============================================================================
 function openPanel(name) {
   const map = {
     dashboard: updateDashboard,
@@ -1691,19 +1194,24 @@ function openPanel(name) {
   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
   const pill = document.getElementById(`pill-${name === 'dashboard' ? 'dash' : name}`);
   if (pill) pill.classList.add('active');
+  appState.openPanel = name;
 }
 
 function closePanel(name) {
   const panel = document.getElementById(`${name}-panel`);
   if (panel) panel.classList.remove('open');
   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  appState.openPanel = null;
 }
 
+// ============================================================================
+// DASHBOARD
+// ============================================================================
 function updateDashboard() {
   const content = document.getElementById('dashboard-content');
   if (!content) return;
   const now = new Date();
-  const activeTasks = (memory.tasks || []).filter(t => !t.done).length;
+  const activeTasks = (appState.memory.tasks || []).filter(t => !t.done).length;
   content.innerHTML = `
     <div class="card">
       <div class="card-label">CURRENT TIME</div>
@@ -1715,15 +1223,18 @@ function updateDashboard() {
     </div>
     <div class="card">
       <div class="card-label">SESSION</div>
-      <div class="card-value">#${esc(String(memory.sessionCount))}</div>
+      <div class="card-value">#${esc(String(appState.memory.sessionCount))}</div>
     </div>
   `;
 }
 
+// ============================================================================
+// TASKS
+// ============================================================================
 function updateTasksUI() {
   const content = document.getElementById('tasks-content');
   if (!content) return;
-  const active = (memory.tasks || []).filter(t => !t.done);
+  const active = (appState.memory.tasks || []).filter(t => !t.done);
   content.innerHTML = `
     <div style="margin-bottom:12px;">
       ${active.map(t => `
@@ -1744,7 +1255,7 @@ function updateTasksUI() {
   document.querySelectorAll('.task-check').forEach(cb => {
     cb.addEventListener('change', e => {
       const id = Number(e.target.dataset.taskId);
-      const task = (memory.tasks || []).find(t => t.id === id);
+      const task = (appState.memory.tasks || []).find(t => t.id === id);
       if (task) {
         task.done = e.target.checked;
         task.completed = task.done ? new Date().toISOString() : null;
@@ -1757,8 +1268,8 @@ function updateTasksUI() {
     const input = document.getElementById('manual-task-input');
     const val = input?.value?.trim();
     if (!val) return;
-    if (!memory.tasks) memory.tasks = [];
-    memory.tasks.push({
+    if (!appState.memory.tasks) appState.memory.tasks = [];
+    appState.memory.tasks.push({
       id: Date.now(),
       text: val,
       done: false,
@@ -1771,10 +1282,13 @@ function updateTasksUI() {
   });
 }
 
+// ============================================================================
+// PROFILE
+// ============================================================================
 function updateProfileUI() {
   const content = document.getElementById('profile-content');
   if (!content) return;
-  const p = memory.psychProfile || {};
+  const p = appState.memory.psychProfile || {};
   content.innerHTML = `
     <div class="card">
       <div class="card-label">IDENTITY</div>
@@ -1786,7 +1300,7 @@ function updateProfileUI() {
     </div>
     <div class="card">
       <div class="card-label">GEMINI API KEY</div>
-      <input id="gemini-key" type="password" value="${esc(config.apiKey || '')}" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:12px;box-sizing:border-box;">
+      <input id="gemini-key" type="password" value="${esc(appState.config.apiKey || '')}" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:12px;box-sizing:border-box;">
       <button type="button" class="glass-btn" id="save-gemini-btn" style="width:100%;">SAVE GEMINI KEY</button>
     </div>
   `;
@@ -1794,10 +1308,10 @@ function updateProfileUI() {
     const name = document.getElementById('profile-name')?.value?.trim();
     const about = document.getElementById('profile-about')?.value?.trim();
     if (name) {
-      config.name = name;
-      memory.psychProfile = memory.psychProfile || {};
-      memory.psychProfile.name = name;
-      memory.psychProfile.stated_about = about || '';
+      appState.config.name = name;
+      appState.memory.psychProfile = appState.memory.psychProfile || {};
+      appState.memory.psychProfile.name = name;
+      appState.memory.psychProfile.stated_about = about || '';
       save();
       showToast('Profile saved', 2000);
     }
@@ -1805,17 +1319,20 @@ function updateProfileUI() {
   document.getElementById('save-gemini-btn')?.addEventListener('click', () => {
     const key = document.getElementById('gemini-key')?.value?.trim();
     if (key) {
-      config.apiKey = key;
+      appState.config.apiKey = key;
       save();
       showToast('Gemini key saved', 2000);
     }
   });
 }
 
+// ============================================================================
+// HISTORY
+// ============================================================================
 function renderHistory() {
   const content = document.getElementById('history-content');
   if (!content) return;
-  const msgs = [...(memory.conversations || [])].reverse();
+  const msgs = [...(appState.memory.conversations || [])].reverse();
   content.innerHTML = msgs.slice(0, 50).map(m => `
     <div style="margin-bottom:14px;padding:12px;background:rgba(67,56,202,${m.role === 'assistant' ? '0.12' : '0.06'});border-left:2px solid rgba(129,140,248,0.3);border-radius:4px;">
       <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">${esc(m.role.toUpperCase())}</div>
@@ -1824,24 +1341,89 @@ function renderHistory() {
   `).join('');
 }
 
+// ============================================================================
+// EVENT DELEGATION (UI interactions)
+// ============================================================================
+function setupEventDelegation() {
+  // Mic button
+  document.getElementById('mic-btn')?.addEventListener('click', () => {
+    if (appState.voiceState === VOICE_STATES.LISTENING) {
+      if (appState.recognition) appState.recognition.stop();
+      setVoiceState(VOICE_STATES.IDLE);
+    } else if (appState.voiceState === VOICE_STATES.IDLE) {
+      appState.voiceContinuous = true;
+      if (appState.recognition) appState.recognition.start();
+    }
+  });
+
+  // Voice toggle
+  document.getElementById('voice-toggle-btn')?.addEventListener('click', () => {
+    appState.voiceEnabled = !appState.voiceEnabled;
+    const btn = document.getElementById('voice-toggle-btn');
+    if (btn) {
+      btn.style.opacity = appState.voiceEnabled ? '1' : '0.4';
+    }
+    showToast(appState.voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF');
+  });
+
+  // Stop button
+  document.getElementById('stop-btn')?.addEventListener('click', () => {
+    if (appState.recognition) appState.recognition.stop();
+    if (appState.synth) appState.synth.cancel();
+    setVoiceState(VOICE_STATES.IDLE);
+    appState.orbState = 'idle';
+    updateOrbVisual();
+  });
+
+  // Nav pills
+  document.querySelectorAll('.nav-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const panelName = pill.dataset.panel;
+      const currentPanel = appState.openPanel;
+      if (currentPanel === panelName) {
+        closePanel(panelName);
+      } else {
+        if (currentPanel) closePanel(currentPanel);
+        openPanel(panelName);
+      }
+    });
+  });
+
+  // Close panel on background click
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.addEventListener('click', (e) => {
+      if (e.target === panel) {
+        closePanel(panel.id.replace('-panel', ''));
+      }
+    });
+  });
+}
+
+// ============================================================================
+// BOOT
+// ============================================================================
 window.addEventListener('DOMContentLoaded', async () => {
   try {
     startCanvas();
     setupEventDelegation();
     load();
-    if (!config.name) {
+    if (!appState.config.name) {
       showSetupScreen();
     } else {
       bootAstra();
     }
   } catch (e) {
-    console.error('Init:', e);
+    console.error('Init error:', e);
     showToast('Initialization failed');
   }
 }, { passive: true });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') unlockAudio();
+  if (document.visibilityState === 'visible') {
+    if (appState.audioContext?.state === 'suspended') {
+      appState.audioContext?.resume();
+    }
+  }
 }, { passive: true });
 
 window.addEventListener('beforeunload', () => {
