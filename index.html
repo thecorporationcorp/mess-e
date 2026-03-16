@@ -1881,13 +1881,6 @@ function clearVisionTarget() {
 }
 
 function showEnterSplash() {
-  // Pre-fill setup fields with defaults
-  const apiField = document.getElementById('setup-apikey');
-  const elField  = document.getElementById('setup-elevenlabs');
-  const vidField = document.getElementById('setup-voiceid');
-  if (apiField && !apiField.value) apiField.value = DEFAULT_GEMINI_KEY;
-  if (elField  && !elField.value)  elField.value  = DEFAULT_EL_KEY;
-  if (vidField && !vidField.value) vidField.value = DEFAULT_VOICE_ID;
   const splash = document.createElement('div');
   splash.id = 'enter-splash';
   splash.innerHTML = `
@@ -1910,8 +1903,33 @@ function showEnterSplash() {
     setTimeout(() => {
       splash.remove();
       if (!config.name) {
-        document.getElementById('setup-screen').classList.remove('hidden');
+        // First run — auto-init with defaults, MESS-E asks name via voice
+        config = {
+          name: '',  // MESS-E will ask
+          apiKey: DEFAULT_GEMINI_KEY,
+          elevenlabs: DEFAULT_EL_KEY,
+          voiceId: DEFAULT_VOICE_ID,
+          demoVoiceId: DEFAULT_VOICE_ID,
+          about: ''
+        };
+        memory.firstSeen = new Date().toISOString();
+        memory.psychProfile = {
+          name: '',
+          stated_about: '',
+          traits_observed: [], goals_stated: [],
+          patterns_negative: [], patterns_positive: [],
+          strengths: [], avoidances: [], challenges: [],
+          harm_reduction: [], last_updated: new Date().toISOString()
+        };
+        save();
+        bootAstra();
       } else {
+        // Returning user — ensure defaults filled
+        if (!config.apiKey)     config.apiKey     = DEFAULT_GEMINI_KEY;
+        if (!config.elevenlabs) config.elevenlabs  = DEFAULT_EL_KEY;
+        if (!config.voiceId)    config.voiceId     = DEFAULT_VOICE_ID;
+        if (!config.demoVoiceId) config.demoVoiceId = DEFAULT_VOICE_ID;
+        save();
         bootAstra();
       }
     }, 600);
@@ -3857,6 +3875,37 @@ async function handleUserInput(text) {
 
   const lowerText = text.toLowerCase();
 
+  // FIRST RUN: no name yet — treat first response as their name
+  if (!config.name && text.trim().length > 0) {
+    // Extract just the name from things like "I'm Michael" or "Michael" or "My name is Michael"
+    let name = text.trim();
+    name = name.replace(/^(i'm|i am|my name is|call me|it's|its)\s+/i, '').trim();
+    name = name.split(' ')[0]; // first word
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    config.name = name;
+    if (memory.psychProfile) memory.psychProfile.name = name;
+    addCoreFact(`User's name is ${name}`);
+    save();
+    showUserText(text);
+    const welcomePrompt = `The user just told you their name: ${name}. Welcome them warmly. One sentence. Mischievous, British, genuinely pleased to meet them. Tell them to just talk to you naturally.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+    try {
+      setOrbState('thinking');
+      const raw = await callGemini([{ role: 'user', content: welcomePrompt }], buildSystemPrompt());
+      const clean = await processCognitiveState(raw);
+      memory.conversations.push({ role: 'user', content: text, ts: new Date().toISOString() });
+      memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+      save();
+      await speak(clean, 'astra');
+      setOrbState('idle');
+      if (typeof window._startRecGlobal === 'function') setTimeout(() => window._startRecGlobal(), 700);
+    } catch(e) {
+      await speak(`Lovely to meet you, ${name}. Right then — what are we doing?`, 'astra');
+      setOrbState('idle');
+    }
+    return;
+  }
+
   if (taskPendingConfirm) {
     if (lowerText.includes('confirm') || lowerText === 'yes' || lowerText.includes('done') || lowerText.includes('do it')) {
       const t = taskPendingConfirm;
@@ -5137,6 +5186,21 @@ async function getAstraGreeting() {
   const activeTasks = memory.tasks.filter(t => !t.done);
   const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < new Date());
   const loc = currentLocation?.label || '';
+
+  // First run — no name yet, ask who they are
+  if (!config.name) {
+    const firstRunPrompt = `You are MESS-E coming online for the very first time. 
+You don't know who you're talking to yet. 
+Introduce yourself in one warm, mischievous, British sentence — then ask their name.
+Make it feel like a genuine first meeting, not a form.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+    try {
+      const raw = await callGemini([{ role: 'user', content: firstRunPrompt }], buildSystemPrompt());
+      return await processCognitiveState(raw);
+    } catch(e) {
+      return "Well, hello there. I'm MESS-E — and you are?";
+    }
+  }
 
   const modes = ['warm', 'playful', 'focused', 'quiet', 'curious'];
   const modeToday = modes[session % modes.length];
