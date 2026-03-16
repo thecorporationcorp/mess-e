@@ -73,7 +73,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 48px 24px 40px;
+  padding: 20px 20px 36px;
   pointer-events: none;
 }
 
@@ -129,11 +129,11 @@ html, body {
 
 #speech-output {
   position: fixed;
-  bottom: 200px;
+  bottom: 230px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(560px, 88vw);
-  max-height: 40vh;
+  width: min(540px, 86vw);
+  max-height: 28vh;
   overflow-y: auto;
   overflow-x: hidden;
   text-align: center;
@@ -175,11 +175,11 @@ html, body {
   display: flex;
   align-items: center;
   gap: 3px;
-  height: 32px;
+  height: 28px;
   opacity: 0;
   transition: opacity 0.3s ease;
   position: fixed;
-  bottom: 160px;
+  bottom: 190px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -800,7 +800,7 @@ html, body {
 
 #toast {
   position: fixed;
-  bottom: 120px;
+  bottom: 110px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: rgba(13,15,42,0.95);
@@ -1223,14 +1223,14 @@ html, body {
 /* ─── COUNTDOWN DISPLAY ─── */
 #silence-countdown {
   position: fixed;
-  bottom: 320px;
+  bottom: 330px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-display);
-  font-size: 18px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   font-weight: 400;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.3em;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.4em;
   z-index: 30;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -1241,24 +1241,22 @@ html, body {
 /* ─── WEATHER PILL ─── */
 #weather-pill {
   position: fixed;
-  top: 52px;
+  top: 56px;
   right: 20px;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid rgba(34,211,238,0.2);
-  background: rgba(6,182,212,0.06);
+  background: rgba(2,2,9,0.7);
   font-family: var(--font-mono);
   font-size: 9px;
-  color: rgba(6,182,212,0.55);
-  letter-spacing: 0.1em;
+  color: rgba(34,211,238,0.6);
+  letter-spacing: 0.08em;
   z-index: 25;
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
   white-space: nowrap;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 44vw;
 }
 #weather-pill.visible { opacity: 1; }
 
@@ -1275,8 +1273,8 @@ html, body {
 #tour-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2,2,9,0.82);
-  backdrop-filter: blur(4px);
+  background: rgba(2,2,9,0.75);
+  backdrop-filter: blur(3px);
 }
 
 #tour-card {
@@ -1375,17 +1373,19 @@ html, body {
   transform: translateY(-1px);
 }
 #tour-highlight {
-  position: absolute;
+  position: fixed;
   border-radius: 50%;
-  border: 2px solid rgba(165,180,252,0.6);
-  box-shadow: 0 0 0 4px rgba(67,56,202,0.3), 0 0 30px rgba(129,140,248,0.4);
+  border: 2px solid rgba(165,180,252,0.8);
+  /* Giant box-shadow creates the dark overlay — element itself stays bright */
+  box-shadow: 0 0 0 9999px rgba(2,2,9,0.78), 0 0 0 4px rgba(67,56,202,0.5), 0 0 30px rgba(129,140,248,0.6);
   animation: tour-pulse 1.5s ease-in-out infinite;
   pointer-events: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 8001;
 }
 @keyframes tour-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(67,56,202,0.3), 0 0 20px rgba(129,140,248,0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(67,56,202,0.15), 0 0 40px rgba(129,140,248,0.5); }
+  0%, 100% { box-shadow: 0 0 0 9999px rgba(2,2,9,0.78), 0 0 0 4px rgba(67,56,202,0.4), 0 0 20px rgba(129,140,248,0.4); }
+  50% { box-shadow: 0 0 0 9999px rgba(2,2,9,0.78), 0 0 0 8px rgba(67,56,202,0.3), 0 0 40px rgba(129,140,248,0.7); }
 }
 
 /* ─── MAGIC LINK MODAL ─── */
@@ -4916,7 +4916,7 @@ function renderTourStep() {
     d.className = 'tour-dot' + (i === tourStep ? ' active' : '');
   });
 
-  // Position highlight
+  // Position highlight — use fixed positioning to match element on screen
   const hl = document.getElementById('tour-highlight');
   try {
     const pos = step.highlight();
@@ -4925,7 +4925,28 @@ function renderTourStep() {
     hl.style.width = pos.w + 'px';
     hl.style.height = pos.h + 'px';
     hl.style.borderRadius = pos.radius || '50%';
+    hl.style.opacity = '1';
   } catch(e) { hl.style.opacity = '0'; }
+
+  // Speak the tour step — use browser TTS directly (reliable, no API needed)
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    setTimeout(() => {
+      const narration = step.title + '. ' + step.body;
+      const utter = new SpeechSynthesisUtterance(narration);
+      utter.rate = 0.88;
+      utter.pitch = 0.9;
+      utter.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.name.includes('Samantha') || v.name.includes('Google UK English Female') ||
+        v.name.includes('Karen') || v.name.includes('Moira') ||
+        (v.lang === 'en-GB') || (v.lang === 'en-US' && v.localService)
+      );
+      if (preferred) utter.voice = preferred;
+      window.speechSynthesis.speak(utter);
+    }, 300);
+  }
 }
 
 // ─── ALWAYS-ON RING MANAGEMENT ───
@@ -5610,7 +5631,7 @@ function renderCalendar(selectedDate) {
 
 <!-- TOUR OVERLAY -->
 <div id="tour-overlay">
-  <div id="tour-backdrop"></div>
+  <div id="tour-backdrop" style="opacity:0;pointer-events:none;"></div>
   <div id="tour-highlight"></div>
   <div id="tour-card">
     <div id="tour-step-label">STEP 1 OF 5</div>
