@@ -2965,38 +2965,61 @@ async function speakBrowser(text) {
 
 async function speakElevenLabs(text, role) {
   try {
-    // Use demo voice during tour if configured
     const voiceId = (config.demoVoiceId && (tourActive || role === 'system'))
       ? config.demoVoiceId
       : config.voiceId;
 
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
-      method: 'POST',
-      headers: { 'xi-api-key': config.elevenlabs, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_turbo_v2_5',
-        voice_settings: { stability: 0.5, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
-      })
-    });
-    if (!res.ok) {
-      showToast('ElevenLabs error ' + res.status + ' — falling back to Gemini TTS.', 4000);
+    if (!voiceId || !config.elevenlabs) {
       await speakGemini(text);
       return;
     }
+
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': config.elevenlabs,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error('ElevenLabs error', res.status, errBody.slice(0, 200));
+      showToast(`Voice error ${res.status} — using Gemini TTS`, 3000);
+      await speakGemini(text);
+      return;
+    }
+
     const blob = await res.blob();
+    if (!blob || blob.size < 100) {
+      await speakGemini(text);
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.volume = 1.0;
     window._currentAudio = audio;
-    await new Promise(r => { 
-      audio.onended = () => setTimeout(r, 120); // small buffer prevents cutoff
-      audio.onerror = r; 
-      audio.play().catch(r); 
+    await new Promise(r => {
+      audio.onended = () => setTimeout(r, 120);
+      audio.onerror = (e) => { console.error('Audio play error', e); r(); };
+      audio.play().catch(async (e) => {
+        console.error('audio.play() failed:', e);
+        URL.revokeObjectURL(url);
+        await speakGemini(text);
+        r();
+      });
     });
     URL.revokeObjectURL(url);
     window._currentAudio = null;
   } catch(e) {
+    console.error('speakElevenLabs exception:', e);
     await speakGemini(text);
   }
 }
