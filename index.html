@@ -3006,6 +3006,12 @@ async function callGemini(messages, system, attempt, useSearch) {
     showToast('⚠ No Gemini key — tap PROFILE → 🧠 GEMINI API KEY', 6000);
     throw new Error('No Gemini API key configured.');
   }
+
+  // If a proactive call (attempt=0 from background) and already in flight, skip it
+  if (_geminiInFlight && attempt === 0) {
+    throw new Error('rate_limit');
+  }
+  _geminiInFlight = true;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${actualApiKey}`;
 
   const contents = messages.map(function(m, i) {
@@ -3042,49 +3048,55 @@ async function callGemini(messages, system, attempt, useSearch) {
     const err = await res.json().catch(function() { return {}; });
     const msg = err.error ? (err.error.message || 'API error') : ('HTTP ' + res.status);
 
-    if ((res.status === 429 || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('limit')) && attempt < 3) {
-      const wait = (attempt + 1) * 4000;
-      showToast('Rate limit — retrying in ' + (wait/1000) + 's...', wait);
-      await delay(wait);
-      return callGemini(messages, system, attempt + 1);
+    if (res.status === 429 || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate limit')) {
+      if (attempt < 2) {
+        _geminiInFlight = false; // release before wait so user messages can still go through
+        const wait = Math.pow(2, attempt + 1) * 3000; // 6s, 12s
+        showToast('Rate limit — retrying in ' + (wait/1000) + 's…', wait);
+        await delay(wait);
+        return callGemini(messages, system, attempt + 1);
+      }
+      _geminiInFlight = false;
+      throw new Error('rate_limit');
     }
 
     if (res.status === 404 || msg.includes('not found') || msg.includes('deprecated')) {
       const idx = GEMINI_MODELS.indexOf(activeModel);
       if (idx < GEMINI_MODELS.length - 1) {
         activeModel = GEMINI_MODELS[idx + 1];
+        _geminiInFlight = false;
         return callGemini(messages, system, attempt);
       }
       activeModel = null;
     }
 
+    _geminiInFlight = false;
     throw new Error(msg);
   }
 
-  const data = await res.json();
-  console.log('Gemini raw response:', JSON.stringify(data).slice(0, 600));
+  try {
+    const data = await res.json();
 
-  const candidate = data.candidates && data.candidates[0];
+    const candidate = data.candidates && data.candidates[0];
 
-  // Blocked by safety filters
-  if (data.promptFeedback && data.promptFeedback.blockReason) {
-    throw new Error('Gemini blocked: ' + data.promptFeedback.blockReason);
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      throw new Error('Gemini blocked: ' + data.promptFeedback.blockReason);
+    }
+
+    if (candidate && !candidate.content) {
+      const reason = candidate.finishReason || 'UNKNOWN';
+      throw new Error('Gemini returned no content. finishReason: ' + reason);
+    }
+
+    if (candidate && candidate.content && candidate.content.parts) {
+      const textPart = candidate.content.parts.find(p => p.text && p.text.trim().length > 0);
+      if (textPart) return textPart.text;
+    }
+
+    throw new Error('Gemini returned empty response.');
+  } finally {
+    _geminiInFlight = false;
   }
-
-  // Candidate exists but no content (recitation, safety, other finish reason)
-  if (candidate && !candidate.content) {
-    const reason = candidate.finishReason || 'UNKNOWN';
-    throw new Error('Gemini returned no content. finishReason: ' + reason);
-  }
-
-  // Scan ALL parts for text
-  if (candidate && candidate.content && candidate.content.parts) {
-    const textPart = candidate.content.parts.find(p => p.text && p.text.trim().length > 0);
-    if (textPart) return textPart.text;
-  }
-
-  // Nothing usable — throw so the caller shows a real error
-  throw new Error('Gemini returned empty response. Full response: ' + JSON.stringify(data).slice(0, 300));
 }
 
 
@@ -3976,6 +3988,7 @@ const NAG_SCHEDULE_MINS = [3, 3, 3, 6, 9, 30]; // notify-then-persist: rapid 3x,
 
 let taskNagInterval = null;
 let _nagFiring = false;
+let _geminiInFlight = false; // global lock — prevents proactive systems piling up
 
 function getIntervalMins(count) {
   return count < NAG_SCHEDULE_MINS.length ? NAG_SCHEDULE_MINS[count] : 30;
