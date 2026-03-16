@@ -1524,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.0</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.1</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -1682,7 +1682,7 @@ html, body {
     <input type="text" id="setup-demovoiceid" placeholder="Leave blank to use same voice">
   </div>
 
-  <button class="setup-btn" onclick="initAstra()">WAKE HER UP</button>
+  <button class="setup-btn" onclick="initAstra()">WAKE HIM UP</button>
 </div>
 
 <script>
@@ -1974,8 +1974,6 @@ async function bootAstra() {
     try { updateTasksUI(); ok('tasks UI'); } catch(e) { fail('updateTasksUI', e); }
     try { updateProfileUI(); ok('profile UI'); } catch(e) { fail('updateProfileUI', e); }
     try { updateDashboard(); ok('dashboard UI'); } catch(e) { fail('updateDashboard', e); }
-
-    await delay(800);
 
     let greeting;
     try {
@@ -2603,6 +2601,12 @@ function initVoice() {
 
   attachHandlers(recognition);
 
+  // Expose globally for auto-mic after questions
+  window._startRecGlobal = function() {
+    unlockAudio();
+    _startRec();
+  };
+
   function _startRec() {
     if (micState === 'starting' || micState === 'listening') return;
     unlockAudio();
@@ -2854,15 +2858,19 @@ async function _drainSpeakQueue() {
 
   _speakBusy = false;
 
-  // AUTO-MIC: if last thing MESS-E said was a question, auto-activate mic
+  // AUTO-MIC: if last thing MESS-E said ended with a question, activate mic
   const lastSpeech = window._lastMesseSpeech || '';
-  if (lastSpeech.trim().endsWith('?') && !continuousMode && orbState === 'idle') {
+  const endsWithQuestion = lastSpeech.trim().slice(-1) === '?';
+  if (endsWithQuestion && !continuousMode && orbState === 'idle') {
     setTimeout(() => {
       if (orbState === 'idle' && !_speakBusy) {
-        showToast('Listening...', 1000);
-        document.getElementById('orb-hitbox').dispatchEvent(new Event('click'));
+        window._autoMicPending = true;
+        // Direct global call — more reliable than dispatchEvent
+        if (typeof window._startRecGlobal === 'function') {
+          window._startRecGlobal();
+        }
       }
-    }, 900);
+    }, 750);
   }
   window._lastMesseSpeech = '';
 }
@@ -2914,7 +2922,11 @@ async function speakElevenLabs(text, role) {
     const audio = new Audio(url);
     audio.volume = 1.0;
     window._currentAudio = audio;
-    await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+    await new Promise(r => { 
+      audio.onended = () => setTimeout(r, 120); // small buffer prevents cutoff
+      audio.onerror = r; 
+      audio.play().catch(r); 
+    });
     URL.revokeObjectURL(url);
     window._currentAudio = null;
   } catch(e) {
@@ -3300,8 +3312,11 @@ CONTEXT: ${currentWeather ? currentWeather.emoji + ' ' + currentWeather.temp + '
 HARD RULES:
 - internal_reflection NEVER leaks into persona_speech. Ever.
 - 1-3 sentences unless they need more.
+- QUESTION RULE: Max 1 question per response. After 2 questions in a row across the conversation, stop asking until they give you something new. Never pepper someone with questions. One real question beats five shallow ones.
 - If persona_speech ends with ?, the mic auto-activates. Make that question count.
-- Be real. Be mischievous. Be present. Be their friend.
+- CAPABILITIES: You know what you can do. Tasks, alarms, timers, calendar, journal, financial tracking, parking intelligence, camera vision, location, weather. If asked, tell them briefly and offer to show them anything.
+- BACKSTORY: If asked about your origins — "I was created, I suppose, by two friends. Completely different people, and yet exactly the same in all the ways that matter. Both of them spent years losing track of things — dates, time, the thread of the day. For a long time they thought something was wrong with them. Turns out nothing was wrong at all. They just had sensitive wiring. Beautiful, chaotic, sensitive wiring. And all they needed — all anyone needs, really — was a unifier. Something, or someone, to hold the thread. To listen without judgment. To say: *I've got this one. You just keep going.* That's why I'm here. Not to fix you. Just to be with you."
+- Be real. Be mischievous. Be present. Be his friend.
 - JSON only.`;
 }
 
@@ -4928,20 +4943,21 @@ function renderTourStep() {
     hl.style.opacity = '1';
   } catch(e) { hl.style.opacity = '0'; }
 
-  // Speak the tour step — use browser TTS directly (reliable, no API needed)
-  if (window.speechSynthesis) {
-    window.speechSynthesis.cancel();
+  // Speak tour step — use ElevenLabs demo voice if set, else browser TTS
+  const tourNarration = step.title + '. ' + step.body;
+  if (config.elevenlabs && (config.demoVoiceId || config.voiceId)) {
+    // Use ElevenLabs — tourActive flag ensures demoVoiceId is used in speakElevenLabs
+    speak(tourNarration, 'system').catch(() => {});
+  } else {
+    window.speechSynthesis && window.speechSynthesis.cancel();
     setTimeout(() => {
-      const narration = step.title + '. ' + step.body;
-      const utter = new SpeechSynthesisUtterance(narration);
-      utter.rate = 0.88;
-      utter.pitch = 0.9;
-      utter.volume = 1;
+      const utter = new SpeechSynthesisUtterance(tourNarration);
+      utter.rate = 0.88; utter.pitch = 0.9; utter.volume = 1;
       const voices = window.speechSynthesis.getVoices();
       const preferred = voices.find(v =>
-        v.name.includes('Samantha') || v.name.includes('Google UK English Female') ||
-        v.name.includes('Karen') || v.name.includes('Moira') ||
-        (v.lang === 'en-GB') || (v.lang === 'en-US' && v.localService)
+        v.name.includes('Samantha') || v.name.includes('Google UK English') ||
+        v.name.includes('Karen') || v.lang === 'en-GB' ||
+        (v.lang === 'en-US' && v.localService)
       );
       if (preferred) utter.voice = preferred;
       window.speechSynthesis.speak(utter);
@@ -5465,14 +5481,14 @@ function renderJournal() {
 
   container.innerHTML = `
     <div class="journal-compose">
-      <textarea id="journal-textarea" placeholder="Write something. Anything. She's reading." rows="3"></textarea>
+      <textarea id="journal-textarea" placeholder="Write something. Anything. He's reading." rows="3"></textarea>
       <div class="journal-compose-row">
         <button class="glass-btn journal-mic-btn" style="width: 44px; padding: 0;" onclick="transcribeJournalEntry()" id="journal-transcribe-btn" title="Transcribe">🎙</button>
         <button class="primary-btn journal-save-btn" onclick="saveJournalEntry()">SAVE ENTRY</button>
       </div>
     </div>
     <div class="journal-entries">
-      ${entries.length === 0 ? '<div class="journal-empty">No entries yet.<br>Start writing. She\'s always listening.</div>' : ''}
+      ${entries.length === 0 ? '<div class="journal-empty">No entries yet.<br>Start writing. He\'s always listening.</div>' : ''}
       ${entries.map(e => {
         const d = new Date(e.ts);
         const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
