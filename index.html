@@ -1524,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.0</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.1</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -1695,7 +1695,7 @@ html, body {
 const DB_KEY = 'messe_core_v1';
 
 // ─── DEFAULT CREDENTIALS — pre-loaded so you never type them again ───
-const DEFAULT_GEMINI_KEY   = 'AIzaSyDRicFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
+const DEFAULT_GEMINI_KEY   = ''; // Enter your Gemini API key in Profile settings
 const DEFAULT_EL_KEY       = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
 const DEFAULT_VOICE_ID     = 'gCfJIk5vRqA6fyQnsmIi';  // Bowie
 
@@ -2966,71 +2966,12 @@ async function speakElevenLabs(text, role) {
   }
 }
 
-// ─── GEMINI TTS ENGINE (free — uses your existing Gemini API key) ───
-function _writeString(view, offset, string) {
-  for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
-}
 
-function _pcmBase64ToWavUrl(base64, sampleRate) {
-  const raw = atob(base64);
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  const buf = new ArrayBuffer(44 + bytes.length);
-  const view = new DataView(buf);
-  _writeString(view, 0, 'RIFF');
-  view.setUint32(4, 36 + bytes.length, true);
-  _writeString(view, 8, 'WAVE');
-  _writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  _writeString(view, 36, 'data');
-  view.setUint32(40, bytes.length, true);
-  new Uint8Array(buf, 44).set(bytes);
-  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-}
-
-async function speakGemini(text) {
-  try {
-    const key = config.apiKey || DEFAULT_GEMINI_KEY;
-    if (!key) { await speakBrowser(text); return; }
-    // Use flash model for TTS - preview TTS requires special access
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${key}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
-        }
-      })
-    });
-    if (!res.ok) throw new Error('TTS ' + res.status);
-    const data = await res.json();
-    const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-    if (!inlineData) throw new Error('No audio data');
-    const wavUrl = _pcmBase64ToWavUrl(inlineData.data, 24000);
-    const audio = new Audio(wavUrl);
-    window._currentAudio = audio;
-    await new Promise((res, rej) => { audio.onended = res; audio.onerror = rej; audio.play().catch(rej); });
-    window._currentAudio = null;
-    URL.revokeObjectURL(wavUrl);
-  } catch(e) {
-    await speakBrowser(text);
-  }
-}
 
 const GEMINI_MODELS = [
   'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro',
-  'gemini-2.5-flash'
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest'
 ];
 let activeModel = 'gemini-1.5-flash';
 
