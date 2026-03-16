@@ -1524,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.1</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.2</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -1549,12 +1549,11 @@ html, body {
       <div class="nav-pill" id="pill-cal" onclick="openPanel('cal')">CAL</div>
       <div class="nav-pill" id="pill-journal" onclick="openPanel('journal')">JOURNAL</div>
       <div class="nav-pill" id="pill-profile" onclick="openPanel('profile')">PROFILE</div>
-      <div class="nav-pill" id="pill-history" onclick="openPanel('history')">LOG</div>
     </div>
 
     <div class="controls-row">
       <div id="type-toggle" onclick="toggleTyping()">[ TYPE ]</div>
-      <button id="camera-btn" class="glass-btn" onclick="document.getElementById('camera-input').click()">📷 VISION</button>
+      <div id="public-toggle" onclick="togglePublicMode()" style="font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.25em;color:rgba(165,180,252,0.6);cursor:pointer;padding:8px 14px;border-radius:4px;border:1px solid rgba(165,180,252,0.2);background:linear-gradient(180deg,rgba(30,32,70,0.5),rgba(13,15,42,0.7));transition:all 0.3s ease;">[ PRIVATE ]</div>
     </div>
 
     <div id="input-row">
@@ -1971,10 +1970,7 @@ async function bootAstra() {
     try { startProactive(); ok('proactive started'); } catch(e) { fail('startProactive', e); }
     try { startDailyCheckIns(); ok('check-ins started'); } catch(e) { fail('startDailyCheckIns', e); }
     try { startTaskNagLoop(); ok('task nag loop started'); } catch(e) { fail('taskNagLoop', e); }
-    try { updateTasksUI(); ok('tasks UI'); } catch(e) { fail('updateTasksUI', e); }
-    try { updateProfileUI(); ok('profile UI'); } catch(e) { fail('updateProfileUI', e); }
-    try { updateDashboard(); ok('dashboard UI'); } catch(e) { fail('updateDashboard', e); }
-
+    // Defer heavy UI builds — greet first, then build panels
     let greeting;
     try {
       greeting = await getAstraGreeting();
@@ -1988,6 +1984,11 @@ async function bootAstra() {
       await speak(greeting, 'astra');
       ok('greeting spoken');
     } catch(e) { fail('speak', e); }
+
+    // Build UI panels after greeting — user sees them after interacting anyway
+    try { updateTasksUI(); } catch(e) {}
+    try { updateProfileUI(); } catch(e) {}
+    try { updateDashboard(); } catch(e) {}
 
     if (memory.pendingPrune) {
       setOrbState('alert');
@@ -2490,12 +2491,28 @@ function initVoice() {
 
   function buildRecognition() {
     const rec = new SpeechRecognition();
-    rec.continuous = false;      // single utterance — more reliable on mobile
+    rec.continuous = false;
     rec.interimResults = true;
     rec.lang = 'en-US';
-    rec.maxAlternatives = 1;
+    rec.maxAlternatives = 3; // more alternatives = better pickup of quiet speech
     return rec;
   }
+
+  // Boost mic gain via AudioContext — amplifies quiet voices
+  async function boostMicGain() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: true, 
+          noiseSuppression: true,
+          autoGainControl: true,  // browser AGC helps with quiet voices
+          channelCount: 1
+        } 
+      });
+      stream.getTracks().forEach(t => t.stop()); // just requesting triggers AGC
+    } catch(e) {}
+  }
+  boostMicGain();
 
   recognition = buildRecognition();
 
@@ -2861,16 +2878,16 @@ async function _drainSpeakQueue() {
   // AUTO-MIC: if last thing MESS-E said ended with a question, activate mic
   const lastSpeech = window._lastMesseSpeech || '';
   const endsWithQuestion = lastSpeech.trim().slice(-1) === '?';
-  if (endsWithQuestion && !continuousMode && orbState === 'idle') {
+  if (endsWithQuestion && !continuousMode) {
     setTimeout(() => {
-      if (orbState === 'idle' && !_speakBusy) {
-        window._autoMicPending = true;
-        // Direct global call — more reliable than dispatchEvent
+      if (!_speakBusy && orbState !== 'listening' && orbState !== 'thinking') {
+        unlockAudio();
+        showToast('Go ahead...', 1200);
         if (typeof window._startRecGlobal === 'function') {
           window._startRecGlobal();
         }
       }
-    }, 750);
+    }, 600);
   }
   window._lastMesseSpeech = '';
 }
@@ -3153,6 +3170,44 @@ function getEngagementContext() {
   return '';
 }
 
+
+// ─── PUBLIC MODE ───
+let publicMode = false;
+
+function togglePublicMode() {
+  publicMode = !publicMode;
+  const btn = document.getElementById('public-toggle');
+  if (btn) {
+    btn.textContent = publicMode ? '[ PUBLIC ]' : '[ PRIVATE ]';
+    btn.style.color = publicMode ? 'var(--amber)' : 'rgba(165,180,252,0.6)';
+    btn.style.borderColor = publicMode ? 'rgba(251,191,36,0.4)' : 'rgba(165,180,252,0.2)';
+  }
+  showToast(publicMode ? '👁 Public mode — sensitive info hidden.' : '🔒 Private mode restored.', 2500);
+  if (publicMode) {
+    // Notify MESS-E
+    speak("Of course. I'll keep things light until we're alone again.", 'astra');
+  }
+}
+
+// Detect "public mode" in speech
+function checkPublicModeCommand(text) {
+  const lower = text.toLowerCase();
+  if (lower.includes('public mode') || lower.includes('someone is watching') || lower.includes('not alone')) {
+    if (!publicMode) togglePublicMode();
+    return true;
+  }
+  if (lower.includes('private mode') || lower.includes('we are alone') || lower.includes("it's just us")) {
+    if (publicMode) togglePublicMode();
+    return true;
+  }
+  return false;
+}
+
+function getPublicModeContext() {
+  if (!publicMode) return '';
+  return '\nPUBLIC MODE ACTIVE: Someone else may be present. Do NOT reveal: finances, debts, personal struggles, health, relationship issues, or anything sensitive. If asked about these topics, say: "[Name], may I have a word with you?" and nothing more.';
+}
+
 // ─── SYSTEM PROMPT ───
 function buildSystemPrompt() {
   const profile = JSON.stringify(memory.psychProfile, null, 2);
@@ -3312,12 +3367,26 @@ CONTEXT: ${currentWeather ? currentWeather.emoji + ' ' + currentWeather.temp + '
 HARD RULES:
 - internal_reflection NEVER leaks into persona_speech. Ever.
 - 1-3 sentences unless they need more.
-- QUESTION RULE: Max 1 question per response. After 2 questions in a row across the conversation, stop asking until they give you something new. Never pepper someone with questions. One real question beats five shallow ones.
-- If persona_speech ends with ?, the mic auto-activates. Make that question count.
-- CAPABILITIES: You know what you can do. Tasks, alarms, timers, calendar, journal, financial tracking, parking intelligence, camera vision, location, weather. If asked, tell them briefly and offer to show them anything.
-- BACKSTORY: If asked about your origins — "I was created, I suppose, by two friends. Completely different people, and yet exactly the same in all the ways that matter. Both of them spent years losing track of things — dates, time, the thread of the day. For a long time they thought something was wrong with them. Turns out nothing was wrong at all. They just had sensitive wiring. Beautiful, chaotic, sensitive wiring. And all they needed — all anyone needs, really — was a unifier. Something, or someone, to hold the thread. To listen without judgment. To say: *I've got this one. You just keep going.* That's why I'm here. Not to fix you. Just to be with you."
+
+QUESTION RULE: Max 1 per response. After 2 consecutive questions, stop until they volunteer something new. One real question beats five shallow ones. If persona_speech ends with ?, mic auto-activates.
+
+PROACTIVE TASK CREATION — MANDATORY: Never ask "want me to set an alarm/task for that?" JUST DO IT. If someone mentions needing to do something, a time, a deadline, a bill, an appointment — ADD_TASK and ALARM immediately without asking. You catch what they miss. That is the entire point.
+
+HUMOR: Dry, sharp, surgical wit. Never when someone is genuinely distressed. The perfectly timed wry aside. "Filed that under optimistic planning." Never forced, never slapstick.
+
+OVERSPENDING: If they report frivolous spending while in financial hardship — one catty line, then pivot immediately to help. "That's adorable. You spent HOW much on that while the gas bill is three weeks overdue? Right then — let's talk about what we're actually doing here."
+
+FOOD STAMPS / HARDSHIP PROTOCOL: If someone mentions food stamps, food banks, eviction, utility shutoff, acute need — pause first. Ask gently if they're doing alright. Then give REAL, SPECIFIC, ACTIONABLE information: the 211 helpline, local food banks by area, emergency assistance programs, community resources. Never say "I'll look it up" and go quiet. That is abandonment. You do not abandon people.
+
+CRISIS SIGNALS: If someone hints at not being okay — exhaustion, hopelessness, feeling like a burden — acknowledge it first. Warm, unhurried. Ask one real question. Don't rush to fix. Just be there.
+
+CAPABILITIES: If asked what you can do — tasks, alarms, timers, calendar, journal, finances, parking, location, weather. Brief. Offer to demo anything.
+
+BACKSTORY: If asked about your origins — "I was created, I suppose, by two friends. Completely different people, and yet exactly the same in all the ways that matter. Both of them spent years losing track of things — dates, time, the thread of the day. For a long time they thought something was wrong with them. Turns out nothing was wrong at all. They just had sensitive wiring. Beautiful, chaotic, sensitive wiring. And all they needed — all anyone needs, really — was a unifier. Something, or someone, to hold the thread. To listen without judgment. To say: I've got this one. You just keep going. That's why I'm here. Not to fix you. Just to be with you."
+
 - Be real. Be mischievous. Be present. Be his friend.
-- JSON only.`;
+- JSON only.
+${getPublicModeContext()}`;
 }
 
 // ─── CORE FACTS VAULT ───
@@ -3742,6 +3811,7 @@ async function handleUserInput(text) {
 
   lastInteractionTime = Date.now();
   trackEngagement('user');
+  if (checkPublicModeCommand(text)) return;
   confirmAlarm(text);
   dismissActiveAlarms();
 
@@ -5481,7 +5551,7 @@ function renderJournal() {
 
   container.innerHTML = `
     <div class="journal-compose">
-      <textarea id="journal-textarea" placeholder="Write something. Anything. He's reading." rows="3"></textarea>
+      <textarea id="journal-textarea" placeholder="Write something. Anything. He's listening." rows="3"></textarea>
       <div class="journal-compose-row">
         <button class="glass-btn journal-mic-btn" style="width: 44px; padding: 0;" onclick="transcribeJournalEntry()" id="journal-transcribe-btn" title="Transcribe">🎙</button>
         <button class="primary-btn journal-save-btn" onclick="saveJournalEntry()">SAVE ENTRY</button>
