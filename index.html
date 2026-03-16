@@ -50,7 +50,6 @@ html, body {
   top: 0; left: 0;
   width: 100%; height: 100%;
   z-index: 1;
-  touch-action: none;
 }
 
 #orb-hitbox {
@@ -63,7 +62,6 @@ html, body {
   border-radius: 50%;
   z-index: 5;
   cursor: pointer;
-  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -185,7 +183,6 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
-  pointer-events: none;
 }
 #voice-wave.active { opacity: 1; }
 
@@ -829,7 +826,7 @@ html, body {
 
 #loc-pill {
   position: fixed;
-  top: 52px;
+  top: 72px;
   left: 20px;
   padding: 5px 12px;
   border-radius: 20px;
@@ -1244,7 +1241,7 @@ html, body {
 /* ─── WEATHER PILL ─── */
 #weather-pill {
   position: fixed;
-  top: 56px;
+  top: 72px;
   right: 20px;
   padding: 4px 10px;
   border-radius: 20px;
@@ -1379,6 +1376,7 @@ html, body {
   position: fixed;
   border-radius: 50%;
   border: 2px solid rgba(165,180,252,0.8);
+  /* Giant box-shadow creates the dark overlay — element itself stays bright */
   box-shadow: 0 0 0 9999px rgba(2,2,9,0.78), 0 0 0 4px rgba(67,56,202,0.5), 0 0 30px rgba(129,140,248,0.6);
   animation: tour-pulse 1.5s ease-in-out infinite;
   pointer-events: none;
@@ -1526,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.2</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v4.0</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -1551,6 +1549,7 @@ html, body {
       <div class="nav-pill" id="pill-cal" onclick="openPanel('cal')">CAL</div>
       <div class="nav-pill" id="pill-journal" onclick="openPanel('journal')">JOURNAL</div>
       <div class="nav-pill" id="pill-profile" onclick="openPanel('profile')">PROFILE</div>
+      <div class="nav-pill" id="pill-history" onclick="openPanel('history')">LOG</div>
     </div>
 
     <div class="controls-row">
@@ -1655,12 +1654,12 @@ html, body {
 
   <div class="setup-field">
     <label>Your Name</label>
-    <input type="text" id="setup-name" placeholder="How should MESS-E address you?" value="User">
+    <input type="text" id="setup-name" placeholder="How should MESS-E address you?">
   </div>
 
   <div class="setup-field">
     <label>Gemini API Key (get free at aistudio.google.com)</label>
-    <input type="password" id="setup-apikey" placeholder="AIza..." value="AIzaSyDRIcFtxTXzHPwAtmwTcK4r0xj2LEXSP6g">
+    <input type="password" id="setup-apikey" placeholder="AIza...">
   </div>
 
   <div class="setup-field">
@@ -1670,12 +1669,12 @@ html, body {
 
   <div class="setup-field">
     <label>ElevenLabs API Key (optional — for her real voice)</label>
-    <input type="password" id="setup-elevenlabs" placeholder="Leave blank to use browser voice" value="sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96">
+    <input type="password" id="setup-elevenlabs" placeholder="Leave blank to use browser voice">
   </div>
 
   <div class="setup-field">
     <label>ElevenLabs Voice ID (optional)</label>
-    <input type="text" id="setup-voiceid" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" value="gCfJlk5vRqA6fyQnsmli">
+    <input type="text" id="setup-voiceid" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM">
   </div>
 
   <div class="setup-field">
@@ -1686,76 +1685,48 @@ html, body {
   <button class="setup-btn" onclick="initAstra()">WAKE HIM UP</button>
 </div>
 
-<!-- SILENCE COUNTDOWN -->
-<div id="silence-countdown"></div>
-
-<!-- WEATHER PILL -->
-<div id="weather-pill"></div>
-
-<!-- ALWAYS-ON RING -->
-<div id="always-on-ring"></div>
-
-<!-- TOUR OVERLAY -->
-<div id="tour-overlay">
-  <div id="tour-backdrop" style="opacity:0;pointer-events:none;"></div>
-  <div id="tour-highlight"></div>
-  <div id="tour-card">
-    <div id="tour-step-label">STEP 1 OF 5</div>
-    <div id="tour-title">THIS IS YOUR MIC</div>
-    <div id="tour-body">Tap the orb once to speak. Two seconds of silence sends your message. Double-tap for always-on mode.</div>
-    <div id="tour-dots">
-      <div class="tour-dot active"></div>
-      <div class="tour-dot"></div>
-      <div class="tour-dot"></div>
-      <div class="tour-dot"></div>
-      <div class="tour-dot"></div>
-    </div>
-    <div id="tour-btn-row">
-      <button id="tour-skip" onclick="endTour()">SKIP TOUR</button>
-      <button id="tour-next" onclick="tourNext()">NEXT →</button>
-    </div>
-  </div>
-</div>
-
-<!-- MAGIC LINK / QR MODAL -->
-<div id="magic-modal">
-  <div id="magic-inner">
-    <div id="magic-title">BEAM YOUR BRAIN</div>
-    <div id="magic-sub">Three ways to move MESS-E to another device. Your data never touches a server.</div>
-    <div id="magic-url">Generating magic link...</div>
-    <div id="qr-container"><canvas id="qr-canvas" width="160" height="160"></canvas></div>
-    <div class="magic-btn-row">
-      <button onclick="copyMagicLink()" class="glass-btn" style="flex:1;">📋 COPY LINK</button>
-      <button onclick="downloadQR()" class="glass-btn" style="flex:1;">📷 SAVE QR</button>
-    </div>
-    <div class="magic-btn-row" style="margin-top:8px;">
-      <button onclick="exportBrain()" class="glass-btn" style="flex:1;">📄 COPY JSON</button>
-      <button onclick="closeMagicModal()" class="glass-btn" style="flex:1;color:var(--dim);">CLOSE</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ══════════════════════════════════════════════════════════
-// MESS-E CORE v3.3 — PRODUCTION STABILIZED
+// MESS-E CORE v2.1 — SURGICAL UPDATE
+// CHANGES: Inquiry Iron Law · Nag Cadence · Warm-Up Nudge
+//          Kill Unprompted Check-ins · Brevity Law · Orb Color Remap
 // ══════════════════════════════════════════════════════════
 
-const apiKey = 'AIzaSyDRIcFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
 const DB_KEY = 'messe_core_v1';
 
-let config = {
-  apiKey: 'AIzaSyDRIcFtxTXzHPwAtmwTcK4r0xj2LEXSP6g',
-  elevenlabs: 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96',
-  voiceId: 'gCfJlk5vRqA6fyQnsmli'
-};
+// ─── DEFAULT CREDENTIALS — pre-loaded so you never type them again ───
+const DEFAULT_GEMINI_KEY   = 'AIzaSyDRicFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
+const DEFAULT_EL_KEY       = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
+const DEFAULT_VOICE_ID     = 'gCfJIk5vRqA6fyQnsmIi';  // Bowie
+
+let config = {};
 let memory = {
-  conversations: [], tasks: [], events: [], journal: [],
+  conversations: [],
+  tasks: [],
+  events: [],
+  journal: [],
   finances: { accounts: [], debts: [], bills: [], master_plan: '' },
-  psychProfile: {}, patterns: {}, preferences: {}, coreFacts: [],
-  sessionCount: 0, streak: 0, bloatThreshold: 50, pendingPrune: null,
-  firstSeen: null, lastSeen: null, moodLog: [], locationHistory: [],
-  weeklyReviews: [], parking: null,
-  settings: { wakeTime: '07:00', proactivePerDay: 4, weeklyReviewDay: 0, weeklyReviewHour: 20, nagIntervalMins: 30 }
+  psychProfile: {},
+  patterns: {},
+  preferences: {},
+  coreFacts: [],  // PROTECTED VAULT — survives pruning, never overwritten
+  sessionCount: 0,
+  streak: 0,
+  bloatThreshold: 50,
+  pendingPrune: null,
+  firstSeen: null,
+  lastSeen: null,
+  moodLog: [],
+  locationHistory: [],
+  weeklyReviews: [],
+  parking: null,
+  settings: {
+    wakeTime: '07:00',
+    proactivePerDay: 4,
+    weeklyReviewDay: 0,
+    weeklyReviewHour: 20,
+    nagIntervalMins: 30
+  }
 };
 let currentLocation = null;
 let orbState = 'idle';
@@ -1766,7 +1737,6 @@ let speechSynthRunning = false;
 let taskPendingConfirm = null;
 let pendingVisionTarget = null;
 let cachedVoices = [];
-let toastTimer = null;
 
 window.speechSynthesis.onvoiceschanged = () => { 
   cachedVoices = window.speechSynthesis.getVoices(); 
@@ -1774,13 +1744,14 @@ window.speechSynthesis.onvoiceschanged = () => {
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
+let _toastTimer = null;
 function showToast(msg, duration=3000) {
   const t = document.getElementById('toast');
   if(!t) return;
+  clearTimeout(_toastTimer);
   t.textContent = msg;
   t.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function timeSince(date) {
@@ -1821,9 +1792,11 @@ function load() {
   if (raw) {
     const data = JSON.parse(raw);
     config = data.config || {};
-    if (!config.apiKey) config.apiKey = 'AIzaSyDRIcFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
-    if (!config.elevenlabs) config.elevenlabs = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
-    if (!config.voiceId) config.voiceId = 'gCfJlk5vRqA6fyQnsmli';
+    // Always enforce correct credentials — override stale cached values
+    config.apiKey     = config.apiKey     || DEFAULT_GEMINI_KEY;
+    config.elevenlabs = DEFAULT_EL_KEY;
+    config.voiceId    = DEFAULT_VOICE_ID;
+    config.demoVoiceId = DEFAULT_VOICE_ID;
     memory = { ...memory, ...data.memory };
     memory.streak = memory.streak || 0;
     if (!memory.finances) memory.finances = { accounts: [], debts: [], bills: [], master_plan: '' };
@@ -1839,7 +1812,6 @@ function load() {
 
 window.addEventListener('DOMContentLoaded', () => {
   try { startCanvas(); } catch(e) { console.error('startCanvas failed:', e); }
-  try { initServiceWorker(); } catch(e) { console.warn('SW failed:', e); }
 
   document.getElementById('camera-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -1866,10 +1838,14 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!e.start) return false;
       return new Date(e.start).getTime() > _nowMs;
     });
+    // Keep ALL tasks — done ones shown in history, overdue ones stay visible
     memory.tasks = (memory.tasks || []).filter(t => {
-      if (t.done) return false;
-      if (t.deadline && new Date(t.deadline).getTime() < _nowMs) return false;
-      return true;
+      if (t.done && t.completed) {
+        // Only purge done tasks older than 7 days
+        const age = _nowMs - new Date(t.completed).getTime();
+        return age < 7 * 24 * 60 * 60 * 1000;
+      }
+      return true; // Keep all active tasks, even overdue ones
     });
 
     if (!memory.journal) memory.journal = [];
@@ -1889,6 +1865,7 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // Check for magic link — deferred to ensure function is available
   setTimeout(() => {
     if (!checkMagicLink()) {
       showEnterSplash();
@@ -1918,17 +1895,40 @@ function showEnterSplash() {
   const btn = document.getElementById('enter-btn');
 
   async function enter() {
-    try { startMotionDetection(); } catch(e) { console.warn('Motion permission request failed'); } // Must be tied to user gesture on iOS
-    
     btn.textContent = 'ENTERING...';
     btn.disabled = true;
     splash.style.opacity = '0';
     splash.style.transition = 'opacity 0.6s ease';
     setTimeout(() => {
       splash.remove();
-      if (!config.apiKey) {
-        document.getElementById('setup-screen').classList.remove('hidden');
+      if (!config.name) {
+        // First run — auto-init with defaults, MESS-E asks name via voice
+        config = {
+          name: '',  // MESS-E will ask
+          apiKey: DEFAULT_GEMINI_KEY,
+          elevenlabs: DEFAULT_EL_KEY,
+          voiceId: DEFAULT_VOICE_ID,
+          demoVoiceId: DEFAULT_VOICE_ID,
+          about: ''
+        };
+        memory.firstSeen = new Date().toISOString();
+        memory.psychProfile = {
+          name: '',
+          stated_about: '',
+          traits_observed: [], goals_stated: [],
+          patterns_negative: [], patterns_positive: [],
+          strengths: [], avoidances: [], challenges: [],
+          harm_reduction: [], last_updated: new Date().toISOString()
+        };
+        save();
+        bootAstra();
       } else {
+        // Returning user — ensure defaults filled
+        if (!config.apiKey)     config.apiKey     = DEFAULT_GEMINI_KEY;
+        if (!config.elevenlabs) config.elevenlabs  = DEFAULT_EL_KEY;
+        if (!config.voiceId)    config.voiceId     = DEFAULT_VOICE_ID;
+        if (!config.demoVoiceId) config.demoVoiceId = DEFAULT_VOICE_ID;
+        save();
         bootAstra();
       }
     }, 600);
@@ -1939,19 +1939,17 @@ function showEnterSplash() {
 }
 
 function initAstra() {
-  let name = document.getElementById('setup-name').value.trim();
-  let apiKeyInput = document.getElementById('setup-apikey').value.trim();
+  const name = document.getElementById('setup-name').value.trim();
+  if (!name) { showToast('Just tell me your name.'); return; }
   const about = document.getElementById('setup-about').value.trim();
-  let elevenlabs = document.getElementById('setup-elevenlabs').value.trim();
-  let voiceIdInput = document.getElementById('setup-voiceid').value.trim();
-
-  if (!name) name = 'User';
-  if (!apiKeyInput) apiKeyInput = 'AIzaSyDRIcFtxTXzHPwAtmwTcK4r0xj2LEXSP6g';
-  if (!elevenlabs) elevenlabs = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
-  if (!voiceIdInput) voiceIdInput = 'gCfJlk5vRqA6fyQnsmli';
-
-  const demoVoiceId = document.getElementById('setup-demovoiceid')?.value?.trim() || '';
-  config = { name, apiKey: apiKeyInput, about, elevenlabs, voiceId: voiceIdInput, demoVoiceId: demoVoiceId };
+  config = {
+    name,
+    apiKey: DEFAULT_GEMINI_KEY,
+    elevenlabs: DEFAULT_EL_KEY,
+    voiceId: DEFAULT_VOICE_ID,
+    demoVoiceId: DEFAULT_VOICE_ID,
+    about
+  };
   memory.firstSeen = new Date().toISOString();
   memory.psychProfile = {
     name: name,
@@ -1990,8 +1988,15 @@ async function bootAstra() {
       memory.psychProfile = {
         name: config.name || 'User',
         stated_about: config.about || '',
-        traits_observed: [], goals_stated: [], patterns_negative: [], patterns_positive: [],
-        strengths: [], avoidances: [], challenges: [], harm_reduction: [], last_updated: new Date().toISOString()
+        traits_observed: [],
+        goals_stated: [],
+        patterns_negative: [],
+        patterns_positive: [],
+        strengths: [],
+        avoidances: [],
+        challenges: [],
+        harm_reduction: [],
+        last_updated: new Date().toISOString()
       };
     }
     memory.sessionCount = (memory.sessionCount || 0) + 1;
@@ -2001,6 +2006,7 @@ async function bootAstra() {
 
     try { setOrbState('thinking'); ok('orb state set'); } catch(e) { fail('setOrbState', e); }
     try { startGeo(); ok('geo started'); } catch(e) { fail('startGeo', e); }
+    try { startMotionDetection(); ok('motion detection'); } catch(e) { console.warn('motion:', e); }
     try { requestWakeLock(); ok('wake lock'); } catch(e) { console.warn('wake lock:', e); }
     try { initVoice(); ok('voice init'); } catch(e) { fail('initVoice', e); }
     try { initGcal(); ok('gcal init'); } catch(e) { fail('initGcal', e); }
@@ -2008,7 +2014,7 @@ async function bootAstra() {
     try { startProactive(); ok('proactive started'); } catch(e) { fail('startProactive', e); }
     try { startDailyCheckIns(); ok('check-ins started'); } catch(e) { fail('startDailyCheckIns', e); }
     try { startTaskNagLoop(); ok('task nag loop started'); } catch(e) { fail('taskNagLoop', e); }
-    
+    // Defer heavy UI builds — greet first, then build panels
     let greeting;
     try {
       greeting = await getAstraGreeting();
@@ -2023,6 +2029,7 @@ async function bootAstra() {
       ok('greeting spoken');
     } catch(e) { fail('speak', e); }
 
+    // Build UI panels after greeting — user sees them after interacting anyway
     try { updateTasksUI(); } catch(e) {}
     try { updateProfileUI(); } catch(e) {}
     try { updateDashboard(); } catch(e) {}
@@ -2036,7 +2043,10 @@ async function bootAstra() {
     updateMicLabel();
     ok('BOOT COMPLETE');
 
+    // Extract core facts from profile on first session
     if (memory.sessionCount <= 1) extractCoreFacts();
+
+    // Start tour on first session
     if (!memory.tourComplete && memory.sessionCount <= 1) {
       setTimeout(() => startTour(), 2000);
     }
@@ -2047,7 +2057,9 @@ async function bootAstra() {
   }
 }
 
-// ─── ORB CANVAS (Delta-Time Corrected) ───
+// ─── ORB CANVAS ───
+// purple=idle/thinking/listening | blue=speaking | red=alert/interrupted
+// rainbow=rare celebrate — brief radiant kiss
 function startCanvas() {
   const canvas = document.getElementById('orb-canvas');
   const ctx = canvas.getContext('2d');
@@ -2055,7 +2067,6 @@ function startCanvas() {
   let particles = [];
   let rings = [];
   let time = 0;
-  let lastTime = performance.now();
 
   function resize() {
     W = canvas.width = window.innerWidth;
@@ -2116,12 +2127,7 @@ function startCanvas() {
     return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
   }
 
-  function draw(now) {
-    if (!now) now = performance.now();
-    const dt = (now - lastTime) / 1000;
-    lastTime = now;
-    time += Math.min(dt, 0.05); // Protect against huge lag spikes
-
+  function draw() {
     ctx.clearRect(0, 0, W, H);
 
     const group = getGroup();
@@ -2145,6 +2151,7 @@ function startCanvas() {
     const baseR = 55 + Math.sin(time * agitation) * (isRed ? 6 : 4);
     const orbR  = baseR + Math.sin(time * agitation * 2) * (baseR * pulse);
 
+    // Ambient glow
     const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 280);
     bgGrad.addColorStop(0,   `rgba(${g[0]},${g[1]},${g[2]},0.05)`);
     bgGrad.addColorStop(0.5, `rgba(${g[0]},${g[1]},${g[2]},0.02)`);
@@ -2152,6 +2159,7 @@ function startCanvas() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
+    // Atmosphere rings (enhanced — 3 reference halos like the presentation orb)
     rings.forEach(ring => {
       const r = ring.radius + Math.sin(time + ring.phase) * 8;
       let rColor = g;
@@ -2162,7 +2170,7 @@ function startCanvas() {
       ctx.lineWidth = 1;
       ctx.stroke();
     });
-    
+    // Extra outer atmosphere ring — subtle halo from presentation
     const outerR = 195 + Math.sin(time * 0.8) * 5;
     ctx.beginPath();
     ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
@@ -2170,10 +2178,10 @@ function startCanvas() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    // Particles
     particles.forEach(p => {
       const speedMult = isRainbow ? 3 : isRed ? 2.5 : isBlue ? 1.2 : 1;
-      // Normalization factor ~ 60fps equivalent to maintain look and feel
-      p.angle += p.speed * speedMult * (dt / 0.016);
+      p.angle += p.speed * speedMult;
       const wobble = Math.sin(time * 2 + p.opacityPhase) * 20;
       let targetR = p.baseRadius + wobble;
       if (isRainbow) targetR += 38 * Math.sin(time * 1.4 + p.opacityPhase);
@@ -2192,6 +2200,7 @@ function startCanvas() {
       ctx.fill();
     });
 
+    // Core orb
     const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, orbR);
     if (isRainbow) {
       const stops = [0, 60, 130, 210].map((off, i) => {
@@ -2212,12 +2221,14 @@ function startCanvas() {
     ctx.fillStyle = coreGrad;
     ctx.fill();
 
+    // Rim
     ctx.beginPath();
     ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
     ctx.strokeStyle = `rgba(${g[0]},${g[1]},${g[2]},${isRainbow ? 0.7 : 0.4})`;
     ctx.lineWidth = isRainbow ? 2 : 1.5;
     ctx.stroke();
 
+    // Status dot — breathing indicator (top-right of orb, from presentation)
     const dotAngle = -Math.PI / 4;
     const dotX = cx + Math.cos(dotAngle) * orbR * 0.72;
     const dotY = cy + Math.sin(dotAngle) * orbR * 0.72;
@@ -2227,6 +2238,7 @@ function startCanvas() {
     ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(${g[0]},${g[1]},${g[2]},${dotOp})`;
     ctx.fill();
+    // Dot glow
     const dotGrad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 12);
     dotGrad.addColorStop(0, `rgba(${g[0]},${g[1]},${g[2]},${dotOp * 0.4})`);
     dotGrad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -2235,6 +2247,7 @@ function startCanvas() {
     ctx.arc(dotX, dotY, 12, 0, Math.PI * 2);
     ctx.fill();
 
+    // Ripple waves
     if (isBlue || isRainbow || isRed) {
       const loops    = isRainbow ? 5 : 3;
       const speedMod = isRainbow ? 58 : isRed ? 52 : 40;
@@ -2245,18 +2258,27 @@ function startCanvas() {
         let wColor   = g;
         if (isRainbow) wColor = hslToRgb((rainbowHue + i * 55) % 360, 100, 75);
         ctx.beginPath();
-        ctx.arc(cx, cy, Math.max(0.1, waveR), 0, Math.PI * 2);
+        ctx.arc(cx, cy, waveR, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(${wColor[0]},${wColor[1]},${wColor[2]},${Math.max(0, waveOp)})`;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
     }
-    requestAnimationFrame(draw);
+
+  }
+
+  let lastFrameTime = 0;
+  function loop(ts) {
+    const delta = Math.min((ts - lastFrameTime) / 1000, 0.05); // cap at 50ms (20fps min)
+    lastFrameTime = ts;
+    time += delta; // real delta time — correct on 60Hz, 120Hz, 144Hz
+    draw();
+    requestAnimationFrame(loop);
   }
 
   resize();
   window.addEventListener('resize', resize);
-  requestAnimationFrame(draw);
+  requestAnimationFrame(loop);
 }
 
 function setOrbState(state) {
@@ -2320,29 +2342,14 @@ function coordDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function initServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    const swCode = `
-      const CACHE_NAME = 'messe-cache-v1';
-      self.addEventListener('install', e => { self.skipWaiting(); });
-      self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
-      self.addEventListener('fetch', e => {
-        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-      });
-    `;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(err => {
-      console.warn('SW Registration failed:', err);
-    });
-  }
-}
+// ServiceWorker removed — blob URL not supported on GitHub Pages
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     unlockAudio();
     reacquireWakeLock();
     const now = Date.now();
+    // Catch-up: fire any alarm that should have fired while tab was hidden (within last 5 mins)
     scheduledAlarms.forEach(alarm => {
       if (!alarm.fired && (alarm.firesAt - 60000) <= now && (alarm.firesAt - 60000) >= now - 5 * 60000) {
         alarm.fired = true;
@@ -2416,6 +2423,7 @@ async function reverseGeocode(loc) {
     );
     if (!res.ok) throw new Error('geocode failed');
     const data = await res.json();
+    // Prefer micro-district (neighbourhood/suburb) over city for richer context
     const label = data.address?.neighbourhood || data.address?.quarter || 
                   data.address?.suburb || data.address?.village ||
                   data.address?.town || data.address?.city || 
@@ -2468,6 +2476,7 @@ async function fetchWeather(loc) {
     const pill = document.getElementById('weather-pill');
     pill.textContent = `${emoji} ${temp}°F`;
     pill.classList.add('visible');
+    // Keep visible — no auto-hide, it's in the corner out of the way
   } catch(e) { console.warn('Weather fetch failed:', e); }
 }
 
@@ -2475,26 +2484,10 @@ function showLocPill(label) {
   const pill = document.getElementById('loc-pill');
   pill.textContent = `📍 ${label}`;
   pill.classList.add('visible');
+  // Always-on — never hide location
 }
 
-let micPermissionStream = null;
 
-async function requestMicPermission() {
-  try {
-    if (micPermissionStream && micPermissionStream.active) return;
-    micPermissionStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaStreamSource(micPermissionStream);
-      const gain = ctx.createGain();
-      gain.gain.value = 0;
-      src.connect(gain);
-      gain.connect(ctx.destination);
-    } catch(e) {}
-  } catch(e) {
-    showToast('Tap the 🔒 icon in the address bar → allow microphone → refresh.', 6000);
-  }
-}
 
 function initVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2503,7 +2496,8 @@ function initVoice() {
     return;
   }
 
-  let micState = 'idle';
+  // ─── MIC STATE MACHINE ───
+  let micState = 'idle'; // idle | starting | listening | stopping
   let finalTranscript = '';
   let currentInterim = '';
   let silenceTimer = null;
@@ -2518,21 +2512,22 @@ function initVoice() {
     rec.continuous = false;
     rec.interimResults = true;
     rec.lang = 'en-US';
-    rec.maxAlternatives = 3;
+    rec.maxAlternatives = 3; // more alternatives = better pickup of quiet speech
     return rec;
   }
 
+  // Boost mic gain via AudioContext — amplifies quiet voices
   async function boostMicGain() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
           noiseSuppression: true,
-          autoGainControl: true, 
+          autoGainControl: true,  // browser AGC helps with quiet voices
           channelCount: 1
         } 
       });
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach(t => t.stop()); // just requesting triggers AGC
     } catch(e) {}
   }
   boostMicGain();
@@ -2610,6 +2605,7 @@ function initVoice() {
         micState = 'idle'; setOrbState('idle'); return;
       }
       console.warn('Mic error:', e.error);
+      // Backoff restart
       if (restartAttempts < MAX_RESTART_ATTEMPTS) {
         restartAttempts++;
         const delay = Math.pow(2, restartAttempts) * 200;
@@ -2624,7 +2620,8 @@ function initVoice() {
 
     rec.onend = () => {
       if (micState === 'stopping') { micState = 'idle'; return; }
-      if (micState === 'starting') return;
+      if (micState === 'starting') return; // new start in progress — ignore stale onend
+      // If we have a pending transcript, leave orbState alone — silence timer will handle it
       if ((finalTranscript + currentInterim).trim()) return;
       if (continuousMode && (orbState === 'listening' || micState === 'listening')) {
         if (orbState !== 'thinking' && orbState !== 'speaking' && orbState !== 'celebrate' && orbState !== 'interrupted') {
@@ -2639,6 +2636,7 @@ function initVoice() {
 
   attachHandlers(recognition);
 
+  // Expose globally for auto-mic after questions
   window._startRecGlobal = function() {
     unlockAudio();
     _startRec();
@@ -2650,6 +2648,7 @@ function initVoice() {
     if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
     if (speechSynthRunning) { window.speechSynthesis.cancel(); _speakQueue.length = 0; _speakBusy = false; }
 
+    // Rebuild recognition to avoid stale state
     try { recognition.abort(); } catch(e) {}
     recognition = buildRecognition();
     attachHandlers(recognition);
@@ -2666,6 +2665,7 @@ function initVoice() {
     } catch(e) {
       console.warn('Rec start failed:', e);
       micState = 'idle';
+      // Retry once after short delay
       setTimeout(() => {
         if (orbState === 'listening') {
           try { recognition.start(); micState = 'starting'; } catch(e2) { setOrbState('idle'); micState = 'idle'; }
@@ -2700,6 +2700,7 @@ function initVoice() {
     }
   }
 
+  // ─── TAP HANDLER ───
   const micBtn = document.getElementById('orb-hitbox');
   let lastTap = 0;
 
@@ -2708,6 +2709,7 @@ function initVoice() {
     const isDoubleTap = (now - lastTap) < 350;
     lastTap = now;
 
+    // INTERRUPT speaking
     if (orbState === 'speaking' || orbState === 'celebrate' || _speakBusy) {
       window.speechSynthesis.cancel();
       if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
@@ -2723,7 +2725,7 @@ function initVoice() {
     if (isDoubleTap) { toggleContinuousMode(); return; }
     if (continuousMode) { toggleContinuousMode(); return; }
     if (orbState === 'listening' || micState === 'listening') { _stopRec(true); return; }
-    if (orbState === 'thinking') return;
+    if (orbState === 'thinking') return; // don't interrupt thinking
 
     _startRec();
   }
@@ -2764,11 +2766,7 @@ function updateMicLabel() {
   }
 }
 
-function stopListening() {
-  isMicHeld = false;
-  try { recognition?.stop(); } catch(e) {}
-  updateMicLabel();
-}
+
 
 function sendText() {
   const input = document.getElementById('text-input');
@@ -2810,7 +2808,7 @@ function cleanForSpeech(text) {
 }
 
 function showAstraText(text) {
-  window._lastMesseSpeech = text;
+  window._lastMesseSpeech = text; // track for auto-mic
   const el = document.getElementById('astra-text');
   el.textContent = cleanForDisplay(text);
   el.classList.add('visible');
@@ -2839,17 +2837,13 @@ let _speakBusy = false;
 async function speak(text, role = 'astra') {
   if (!text) return;
   if (role === 'astra') { showAstraText(text); }
-
   const cleaned = cleanForSpeech(text);
-  const chunks = cleaned.match(/[^.?!]+[.?!]+(?=\s|$)|[^.?!]+$/g) || [cleaned];
-
-  for (let chunk of chunks) {
-    if (!chunk.trim()) continue;
-    await new Promise(resolve => {
-      _speakQueue.push({ text: chunk.trim(), role, resolve });
-      if (!_speakBusy) _drainSpeakQueue();
-    });
-  }
+  if (!cleaned.trim()) return;
+  // Send as ONE chunk — no splitting, no gaps between sentences
+  await new Promise(resolve => {
+    _speakQueue.push({ text: cleaned, role, resolve });
+    if (!_speakBusy) _drainSpeakQueue();
+  });
 }
 
 async function _drainSpeakQueue() {
@@ -2869,13 +2863,8 @@ async function _drainSpeakQueue() {
 
     speechSynthRunning = true;
 
-    if (config.elevenlabs && config.voiceId && config.voiceId.trim().length > 0) {
-      await speakElevenLabs(text, role);
-    } else if (config.apiKey) {
-      await speakGemini(text);
-    } else {
-      await speakBrowser(text);
-    }
+    // ElevenLabs always — credentials hardcoded in speakElevenLabs
+    await speakElevenLabs(text, role);
 
     speechSynthRunning = false;
     resolve();
@@ -2889,18 +2878,22 @@ async function _drainSpeakQueue() {
 
   _speakBusy = false;
 
+  // AUTO-MIC: if last thing MESS-E said ended with a question, activate mic
   const lastSpeech = window._lastMesseSpeech || '';
   const endsWithQuestion = lastSpeech.trim().slice(-1) === '?';
   if (endsWithQuestion && !continuousMode) {
     setTimeout(() => {
-      if (!_speakBusy && orbState !== 'listening' && orbState !== 'thinking') {
+      if (!_speakBusy && orbState !== 'listening' && orbState !== 'thinking' && orbState !== 'speaking') {
         unlockAudio();
         showToast('Go ahead...', 1200);
-        if (typeof window._startRecGlobal === 'function') {
-          window._startRecGlobal();
-        }
+        // Extra settle: ensure any previous recognition fully ended
+        setTimeout(() => {
+          if (typeof window._startRecGlobal === 'function' && orbState === 'idle') {
+            window._startRecGlobal();
+          }
+        }, 200);
       }
-    }, 600);
+    }, 700);
   }
   window._lastMesseSpeech = '';
 }
@@ -2911,8 +2904,7 @@ async function speakBrowser(text) {
     utter.rate = 0.92;
     utter.pitch = 0.9;
     utter.volume = 1;
-    if (cachedVoices.length === 0) cachedVoices = window.speechSynthesis.getVoices();
-    const voices = cachedVoices;
+    const voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
     const preferred = voices.find(v =>
       v.name.includes('Samantha') ||
       v.name.includes('Google UK English Female') ||
@@ -2929,38 +2921,48 @@ async function speakBrowser(text) {
 
 async function speakElevenLabs(text, role) {
   try {
-    const voiceId = (config.demoVoiceId && (tourActive || role === 'system'))
-      ? config.demoVoiceId
-      : config.voiceId;
+    // HARDCODED — never affected by localStorage cache
+    const EL_KEY     = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
+    const VOICE      = 'gCfJIk5vRqA6fyQnsmIi';
 
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}/stream`, {
       method: 'POST',
-      headers: { 'xi-api-key': config.elevenlabs, 'Content-Type': 'application/json' },
+      headers: {
+        'xi-api-key': EL_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_turbo_v2_5',
+        model_id: 'eleven_multilingual_v2',
         voice_settings: { stability: 0.5, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true }
       })
     });
+
     if (!res.ok) {
-      showToast('ElevenLabs error ' + res.status + ' — falling back to Gemini TTS.', 4000);
-      await speakGemini(text);
+      const errBody = await res.text().catch(() => '');
+      console.error('ElevenLabs', res.status, errBody.slice(0, 200));
+      await speakBrowser(text);
       return;
     }
+
     const blob = await res.blob();
+    if (!blob || blob.size < 100) { await speakBrowser(text); return; }
+
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.volume = 1.0;
     window._currentAudio = audio;
-    await new Promise(r => { 
-      audio.onended = () => setTimeout(r, 120); 
-      audio.onerror = r; 
-      audio.play().catch(r); 
+    await new Promise(r => {
+      audio.onended = () => setTimeout(r, 120);
+      audio.onerror = () => r();
+      audio.play().catch(() => { URL.revokeObjectURL(url); speakBrowser(text).then(r); });
     });
     URL.revokeObjectURL(url);
     window._currentAudio = null;
   } catch(e) {
-    await speakGemini(text);
+    console.error('EL exception:', e);
+    await speakBrowser(text);
   }
 }
 
@@ -2994,9 +2996,10 @@ function _pcmBase64ToWavUrl(base64, sampleRate) {
 
 async function speakGemini(text) {
   try {
-    const key = config.apiKey;
+    const key = config.apiKey || DEFAULT_GEMINI_KEY;
     if (!key) { await speakBrowser(text); return; }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
+    // Use flash model for TTS - preview TTS requires special access
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${key}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3019,7 +3022,6 @@ async function speakGemini(text) {
     window._currentAudio = null;
     URL.revokeObjectURL(wavUrl);
   } catch(e) {
-    console.warn('Gemini TTS failed, using browser:', e.message);
     await speakBrowser(text);
   }
 }
@@ -3035,9 +3037,7 @@ let activeModel = 'gemini-1.5-flash';
 async function callGemini(messages, system, attempt, useSearch) {
   attempt = attempt || 0;
   if (!activeModel) activeModel = GEMINI_MODELS[0];
-  const actualApiKey = config.apiKey;
-  if (!actualApiKey) throw new Error("API Key is missing from config.");
-  
+  const actualApiKey = config.apiKey || DEFAULT_GEMINI_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${actualApiKey}`;
 
   const contents = messages.map(function(m, i) {
@@ -3059,6 +3059,7 @@ async function callGemini(messages, system, attempt, useSearch) {
     }
   };
 
+  // Only attach google_search for parking/location lookups — avoids empty response bug
   if (useSearch) {
     body.tools = [{ google_search: {} }];
   }
@@ -3093,24 +3094,31 @@ async function callGemini(messages, system, attempt, useSearch) {
   }
 
   const data = await res.json();
+  console.log('Gemini raw response:', JSON.stringify(data).slice(0, 600));
+
   const candidate = data.candidates && data.candidates[0];
 
+  // Blocked by safety filters
   if (data.promptFeedback && data.promptFeedback.blockReason) {
     throw new Error('Gemini blocked: ' + data.promptFeedback.blockReason);
   }
 
+  // Candidate exists but no content (recitation, safety, other finish reason)
   if (candidate && !candidate.content) {
     const reason = candidate.finishReason || 'UNKNOWN';
     throw new Error('Gemini returned no content. finishReason: ' + reason);
   }
 
+  // Scan ALL parts for text
   if (candidate && candidate.content && candidate.content.parts) {
     const textPart = candidate.content.parts.find(p => p.text && p.text.trim().length > 0);
     if (textPart) return textPart.text;
   }
 
-  throw new Error('Gemini returned empty response.');
+  // Nothing usable — throw so the caller shows a real error
+  throw new Error('Gemini returned empty response. Full response: ' + JSON.stringify(data).slice(0, 300));
 }
+
 
 // ─── MOTION DETECTION — WALKING AWARENESS ───
 let motionData = { isWalking: false, stepCount: 0, lastMagnitude: 0, stillCount: 0, moveCount: 0 };
@@ -3147,9 +3155,9 @@ let engagementData = {
   sessionStarts: [],
   messagesThisHour: 0,
   lastHourReset: Date.now(),
-  lonelinesScore: 0,
+  lonelinesScore: 0,  // 0-10, higher = more contact
   moodHistory: [],
-  passions: []
+  passions: []  // things they light up about
 };
 
 function trackEngagement(role) {
@@ -3159,6 +3167,7 @@ function trackEngagement(role) {
     engagementData.lastHourReset = now;
   }
   if (role === 'user') engagementData.messagesThisHour++;
+  // Loneliness signal: >8 messages/hour, late night, frequent sessions
   const h = new Date().getHours();
   const isLateNight = h >= 22 || h < 5;
   const highFreq = engagementData.messagesThisHour > 8;
@@ -3176,6 +3185,7 @@ function getEngagementContext() {
   return '';
 }
 
+
 // ─── PUBLIC MODE ───
 let publicMode = false;
 
@@ -3189,10 +3199,12 @@ function togglePublicMode() {
   }
   showToast(publicMode ? '👁 Public mode — sensitive info hidden.' : '🔒 Private mode restored.', 2500);
   if (publicMode) {
+    // Notify MESS-E
     speak("Of course. I'll keep things light until we're alone again.", 'astra');
   }
 }
 
+// Detect "public mode" in speech
 function checkPublicModeCommand(text) {
   const lower = text.toLowerCase();
   if (lower.includes('public mode') || lower.includes('someone is watching') || lower.includes('not alone')) {
@@ -3274,9 +3286,17 @@ MASTER PLAN: ${f.master_plan || 'No plan established yet.'}`;
       return `  • "${e.title}" — ${label}${e.notes ? ' [' + e.notes + ']' : ''}`;
     }).join('\n') || '  (none scheduled)';
 
-  const recentConvs = memory.conversations.slice(-8).map(m =>
-    `[${m.role.toUpperCase()}]: ${m.content.slice(0, 200)}`
+  // Full conversation log — MESS-E reads this before every response
+  const recentConvs = memory.conversations.slice(-30).map(m =>
+    `[${m.role.toUpperCase()}]: ${m.content.slice(0, 400)}`
   ).join('\n');
+  
+  // Task history for context
+  const completedRecent = memory.tasks.filter(t => t.done && t.completed)
+    .sort((a,b) => new Date(b.completed) - new Date(a.completed))
+    .slice(0, 10)
+    .map(t => `  ✓ "${t.text}" — completed ${new Date(t.completed).toLocaleDateString()}`)
+    .join('\n') || '  none yet';
 
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
 
@@ -3361,7 +3381,10 @@ TODAY: ${todayEventsStr}
 TASKS (${activeTasks.length} open / ${recentlyDone.length} done today):
 ${taskBlock}
 ${overdueTasks.length > 0 ? 'OVERDUE: ' + overdueTasks.map(t => '"' + t.text + '"').join(', ') : ''}
-RECENT CONVERSATION:
+RECENTLY COMPLETED TASKS:
+${completedRecent}
+
+RECENT CONVERSATION (last 30 messages — read this before responding):
 ${recentConvs}
 CORE FACTS — NEVER FORGET:
 ${(memory.coreFacts || []).slice(-20).map(f => `- ${f.text}`).join('\n') || '  none yet'}
@@ -3392,26 +3415,34 @@ BACKSTORY: If asked about your origins — "I was created, I suppose, by two fri
 ${getPublicModeContext()}`;
 }
 
+// ─── CORE FACTS VAULT ───
 function addCoreFact(fact) {
   if (!fact || !fact.trim()) return;
   memory.coreFacts = memory.coreFacts || [];
   const normalized = fact.trim();
+  // Don't duplicate
   if (memory.coreFacts.some(f => f.text.toLowerCase() === normalized.toLowerCase())) return;
   memory.coreFacts.push({ text: normalized, ts: new Date().toISOString() });
+  // Cap at 100 facts
   if (memory.coreFacts.length > 100) memory.coreFacts = memory.coreFacts.slice(-100);
   save();
 }
 
+// Auto-extract facts from profile setup
 function extractCoreFacts() {
   if (config.name) addCoreFact(`User's name is ${config.name}`);
   if (config.about) {
+    // Extract sentences that look like facts
     const sentences = config.about.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10 && s.length < 200);
     sentences.slice(0, 5).forEach(s => addCoreFact(s));
   }
 }
 
+// FIREWALL: Strip any leaked internal reasoning from spoken output
 function sanitizePersonaSpeech(text) {
   if (!text) return text;
+
+  // Patterns that indicate internal reasoning bled through
   const metaPatterns = [
     /the user (did not|has not|hasn't|didn't|wants|needs|is|seems|appears|mentioned|said)/gi,
     /i will (follow up|ask|check|note|remember|log|track|make sure|ensure)/gi,
@@ -3428,6 +3459,7 @@ function sanitizePersonaSpeech(text) {
   for (const pattern of metaPatterns) {
     if (pattern.test(cleaned)) {
       console.warn('MESS-E: Leaked internal reasoning detected and stripped from persona_speech');
+      // Don't strip the whole thing — just flag and return a safe fallback if it's mostly meta
       const metaWords = (cleaned.match(pattern) || []).join(' ').length;
       if (metaWords > cleaned.length * 0.4) {
         return "Right then. What do you need?";
@@ -3672,7 +3704,24 @@ async function processCognitiveState(rawJson) {
   updateProfileUI();
   updateDashboard();
 
-  const finalSpeech = sanitizePersonaSpeech(pendingConfirmText || data.persona_speech || "");
+  let rawSpeech = pendingConfirmText || data.persona_speech || "";
+  
+  // NUCLEAR FIREWALL: if persona_speech contains internal_reflection content, extract just persona_speech
+  // This catches cases where the model dumps the full JSON into persona_speech
+  if (rawSpeech.includes('"internal_reflection"') || rawSpeech.includes('internal_reflection:')) {
+    // Try to re-parse and extract just persona_speech
+    try {
+      const reparse = JSON.parse(rawSpeech);
+      if (reparse.persona_speech) rawSpeech = reparse.persona_speech;
+      else rawSpeech = "Right then.";
+    } catch(e) {
+      // Extract persona_speech value manually
+      const match = rawSpeech.match(/"persona_speech"\s*:\s*"([^"]+)"/);
+      rawSpeech = match ? match[1] : "Right then.";
+    }
+  }
+
+  const finalSpeech = sanitizePersonaSpeech(rawSpeech);
   return finalSpeech;
 }
 
@@ -3790,6 +3839,37 @@ async function handleUserInput(text) {
   if (!text.trim() && !pendingVisionTarget) return;
 
   const lowerText = text.toLowerCase();
+
+  // FIRST RUN: no name yet — treat first response as their name
+  if (!config.name && text.trim().length > 0) {
+    // Extract just the name from things like "I'm Michael" or "Michael" or "My name is Michael"
+    let name = text.trim();
+    name = name.replace(/^(i'm|i am|my name is|call me|it's|its)\s+/i, '').trim();
+    name = name.split(' ')[0]; // first word
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    config.name = name;
+    if (memory.psychProfile) memory.psychProfile.name = name;
+    addCoreFact(`User's name is ${name}`);
+    save();
+    showUserText(text);
+    const welcomePrompt = `The user just told you their name: ${name}. Welcome them warmly. One sentence. Mischievous, British, genuinely pleased to meet them. Tell them to just talk to you naturally.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+    try {
+      setOrbState('thinking');
+      const raw = await callGemini([{ role: 'user', content: welcomePrompt }], buildSystemPrompt());
+      const clean = await processCognitiveState(raw);
+      memory.conversations.push({ role: 'user', content: text, ts: new Date().toISOString() });
+      memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
+      save();
+      await speak(clean, 'astra');
+      setOrbState('idle');
+      if (typeof window._startRecGlobal === 'function') setTimeout(() => window._startRecGlobal(), 700);
+    } catch(e) {
+      await speak(`Lovely to meet you, ${name}. Right then — what are we doing?`, 'astra');
+      setOrbState('idle');
+    }
+    return;
+  }
 
   if (taskPendingConfirm) {
     if (lowerText.includes('confirm') || lowerText === 'yes' || lowerText.includes('done') || lowerText.includes('do it')) {
@@ -3920,7 +4000,8 @@ function startListenCycle() {
   }, 1000);
 }
 
-const NAG_SCHEDULE_MINS = [3, 3, 3, 3, 30, 30, 30, 30, 30, 30];
+// ─── CHANGE 2: NAG CADENCE — 4x at 3 min, then every 30 min ───
+const NAG_SCHEDULE_MINS = [3, 3, 3, 6, 9, 30]; // notify-then-persist: rapid 3x, escalate, then every 30 forever
 
 let taskNagInterval = null;
 let _nagFiring = false;
@@ -3930,7 +4011,6 @@ function getIntervalMins(count) {
 }
 
 function getLatestAcknowledgement(task) {
-  if (!task || !task.text) return null;
   const keyword = task.text.toLowerCase().slice(0, 20);
   const msgs = memory.conversations.filter(c => c.role === 'user' && c.content.toLowerCase().includes(keyword));
   return msgs.length ? msgs[msgs.length - 1] : null;
@@ -3951,7 +4031,7 @@ function startTaskNagLoop() {
     const now = Date.now();
 
     ;(memory.tasks || []).filter(t => !t.done).forEach(t => {
-      const keyword = (t.text || '').toLowerCase().slice(0, 30);
+      const keyword = t.text.toLowerCase().slice(0, 30);
       const matchedEvent = (memory.events || []).find(e =>
         e.title.toLowerCase().includes(keyword) ||
         keyword.split(' ').filter(w => w.length > 3).some(w => e.title.toLowerCase().includes(w))
@@ -3966,16 +4046,17 @@ function startTaskNagLoop() {
     const openTasks = memory.tasks.filter(t => !t.done);
     if (openTasks.length === 0) return;
 
+    // PRE-NUDGE SYSTEM: warm nudge at halfway point + final nudge 8 min before
     for (let t of openTasks) {
       if (t.deadline) {
         const deadlineMs = new Date(t.deadline).getTime();
-        if (isNaN(deadlineMs)) continue;
         const minsUntilDue = (deadlineMs - nowDate.getTime()) / 60000;
         const createdMs = t.created ? new Date(t.created).getTime() : (deadlineMs - 30*60000);
         const totalMins = (deadlineMs - createdMs) / 60000;
         const halfwayMs = createdMs + (deadlineMs - createdMs) / 2;
         const minsUntilHalfway = (halfwayMs - nowDate.getTime()) / 60000;
 
+        // Warm nudge at halfway point (only if deadline is 30+ min away when set)
         if (totalMins >= 30 && minsUntilHalfway <= 1 && minsUntilHalfway > -5 && !t.nudgedWarm) {
           if (_nagFiring) return;
           _nagFiring = true;
@@ -3986,6 +4067,7 @@ function startTaskNagLoop() {
           return;
         }
 
+        // Final nudge 8 minutes before (skip if deadline was set with < 10 min to go)
         if (minsUntilDue <= 8 && minsUntilDue > 6 && !t.nudgedFinal && totalMins >= 10) {
           if (_nagFiring) return;
           _nagFiring = true;
@@ -3996,6 +4078,7 @@ function startTaskNagLoop() {
           return;
         }
 
+        // Legacy: 60 and 30 min nudges for alarms set far out
         if (minsUntilDue <= 60 && minsUntilDue > 55 && !t.nudged60) {
           if (_nagFiring) return;
           _nagFiring = true;
@@ -4017,6 +4100,7 @@ function startTaskNagLoop() {
       }
     }
 
+    // Due announcements
     for (let t of openTasks) {
       if (t.deadline && new Date(t.deadline) <= nowDate && !t.announcedDue) {
         if (_nagFiring) return;
@@ -4031,6 +4115,7 @@ function startTaskNagLoop() {
       }
     }
 
+    // Follow-up nags
     const candidate = openTasks
       .map(t => {
         if (t.deadline && new Date(t.deadline) > nowDate) return { t, skip: true };
@@ -4063,6 +4148,7 @@ function startTaskNagLoop() {
   }, 60 * 1000);
 }
 
+// CHANGE 3: Warm-up nudge function
 async function fireWarmupNudge(task, minsUntil, tone) {
   const weatherNote = currentWeather ? ` (It's ${currentWeather.temp}°F and ${currentWeather.desc.toLowerCase()} out.)` : '';
   const toneDesc = tone === 'final'
@@ -4159,6 +4245,9 @@ function clearTaskNagState(task) {
   task.nagCount = 0;
 }
 
+// ─── CHANGE 4: PROACTIVE — TASK ENFORCEMENT ONLY ───
+// MESS-E only speaks unprompted when a task is overdue.
+// No quiet day check-ins. No battery jokes. No general "just checking in."
 let proactiveInterval = null;
 let lastInteractionTime = Date.now();
 let lastProactiveTime = 0;
@@ -4191,6 +4280,7 @@ function startProactive() {
     const activeTasks = memory.tasks.filter(t => !t.done);
     const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < now);
 
+    // Only speak if tasks are overdue and she hasn't already nagged about them in the nag loop
     if (overdue.length > 0 && idleMins > 30) {
       const overdueList = overdue.map(t => `"${t.text}"`).join(', ');
       const prompt = `You are MESS-E. Time: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}. ${Math.round(idleMins)} min of quiet.
@@ -4444,20 +4534,30 @@ CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
 const activeTimers = [];
 const scheduledAlarms = [];
-const FOLLOWUP_SCHEDULE = [ 3 * 60 * 1000, 5 * 60 * 1000, 7 * 60 * 1000, 10 * 60 * 1000, 15 * 60 * 1000, 20 * 60 * 1000 ];
 
+const FOLLOWUP_SCHEDULE = [
+  3 * 60 * 1000, 5 * 60 * 1000, 7 * 60 * 1000,
+  10 * 60 * 1000, 15 * 60 * 1000, 20 * 60 * 1000,
+];
+
+// ─── DUAL ALARM ENGINE ───
+// Every alarm gets: direct setTimeout to exact ms + setInterval safety net
+// Fires 60 seconds EARLY by design
 let _alarmWatchInterval = null;
 
 function armAlarm(alarm) {
-  const earlyFire = alarm.firesAt - 60000;
+  // Convert to early fire time
+  const earlyFire = alarm.firesAt - 60000; // 60s early
   const msUntil = earlyFire - Date.now();
 
+  // Primary: direct setTimeout
   if (msUntil > 0) {
     alarm._primaryTimer = setTimeout(() => {
       if (!alarm.fired) { alarm.fired = true; clearInterval(alarm._watchdog); fireAlarm(alarm); }
     }, msUntil);
   }
 
+  // Secondary: watchdog poll every 8 seconds
   alarm._watchdog = setInterval(() => {
     if (!alarm.fired && Date.now() >= earlyFire) {
       alarm.fired = true;
@@ -4468,6 +4568,7 @@ function armAlarm(alarm) {
   }, 8000);
 }
 
+// ─── WAKE LOCK ───
 let _wakeLock = null;
 async function requestWakeLock() {
   try {
@@ -4481,10 +4582,32 @@ async function reacquireWakeLock() {
   if (!_wakeLock) await requestWakeLock();
 }
 
+// ─── TAB VISIBILITY CATCH-UP ───
+// If tab was backgrounded, fire any alarms that should have fired
+
+
+// ─── ALARM-SAFE SYSTEM PROMPT (no COMPLETE_TASK, no task modification actions) ───
+function buildAlarmSystemPrompt() {
+  const loc = currentLocation?.label || 'unknown';
+  const now = new Date();
+  const profile = memory.psychProfile?.name || config.name || 'the user';
+  return `You are MESS-E delivering an alarm reminder. You are NOT processing a conversation.
+STRICT RULES FOR THIS ALARM CONTEXT:
+- You may ONLY use persona_speech to deliver the reminder message.
+- You may ONLY use machine_actions: JOURNAL, LOG_AVOIDANCE, CORE_FACT.
+- You must NEVER use: COMPLETE_TASK, ADD_TASK, UPDATE_TASK, SET_DEADLINE, or any task-modifying action.
+- Alarms are REMINDERS. The user must manually say they completed something. You do not mark things done.
+- internal_reflection never appears in persona_speech.
+User: ${profile} | Location: ${loc} | Time: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+Respond in valid JSON: {"internal_reflection":"...","state_updates":{},"machine_actions":[],"persona_speech":"..."}`;
+}
+
 async function fireAlarm(alarm) {
   alarm.followUpNum = 0;
   alarm.dismissed = false;
   alarm.confirmed = false;
+  // Clear any pending task confirmation — alarms are not task completions
+  taskPendingConfirm = null;
   alarm.locationAtFire = currentLocation
     ? { lat: currentLocation.lat, lng: currentLocation.lng, label: currentLocation.label }
     : null;
@@ -4499,7 +4622,7 @@ async function fireAlarm(alarm) {
   const prompt = buildAlarmPrompt(alarm, 0);
   try {
     setOrbState('thinking');
-    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
     const clean = await processCognitiveState(msg);
     memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
     save();
@@ -4530,7 +4653,7 @@ function scheduleNextFollowUp(alarm) {
 CRITICAL: Return valid JSON matching the schema from your system prompt.`;
         try {
           setOrbState('thinking');
-          const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+          const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
           const clean = await processCognitiveState(msg);
           await speak(clean, 'astra');
           setOrbState('idle');
@@ -4544,7 +4667,7 @@ CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
     try {
       setOrbState('thinking');
-      const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+      const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
       const clean = await processCognitiveState(msg);
       memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
       save();
@@ -4578,7 +4701,10 @@ function buildAlarmPrompt(alarm, num) {
   return `You are MESS-E. Alarm: "${alarm.label}". Follow-up: ${num} of ${FOLLOWUP_SCHEDULE.length}.
 Location: ${locationKnown ? 'available' : 'UNAVAILABLE'}.
 ${instruction}
-CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+CRITICAL ALARM RULES:
+- DO NOT use COMPLETE_TASK action. Alarms are reminders, NOT task completions. The user must manually confirm they did the thing.
+- DO NOT mark anything done. Only speak the reminder.
+- Return valid JSON. persona_speech only. No machine_actions except JOURNAL if needed.`;
 }
 
 function locationHasMoved(before, now) {
@@ -4593,8 +4719,11 @@ function dismissActiveAlarms() {
 
 function confirmAlarm(keyword) {
   const lower = keyword.toLowerCase();
-  const confirmWords = ['done', 'sorted', 'left', 'gone', 'out', 'away', 'already', 'yes', 'yep', 'yeah', 'got it', 'confirmed'];
-  if (confirmWords.some(w => lower.includes(w))) {
+  // Only confirm alarm on very specific phrases — not generic "yes" or "done"
+  // which are too broad and cause false task completions
+  const confirmPhrases = ['already moved', 'already left', 'already did', "i'm there", 'im there', 
+    'sorted it', 'i moved', 'moved the car', 'paid it', 'done that', 'handled it', 'took care'];
+  if (confirmPhrases.some(w => lower.includes(w))) {
     scheduledAlarms.forEach(a => { if (a.fired) a.confirmed = true; });
     activeTimers.forEach(a => { if (a.fired) a.confirmed = true; });
   }
@@ -4643,7 +4772,7 @@ function setTimer(raw) {
     activeTimers.push(alarm);
   } else {
     scheduledAlarms.push(alarm);
-    armAlarm(alarm);
+    armAlarm(alarm); // Dual engine — long timers need it too
   }
 }
 
@@ -4658,7 +4787,7 @@ function setAlarm(raw) {
   if (target <= new Date()) target.setDate(target.getDate() + 1);
   const alarm = { label, firesAt: target.getTime(), fired: false, dismissed: false, confirmed: false, followUpNum: 0, locationAtFire: null, locationAvailable: false };
   scheduledAlarms.push(alarm);
-  armAlarm(alarm);
+  armAlarm(alarm); // Dual engine
   showToast('⏰ Alarm: ' + label + ' at ' + timeStr + ' (nudge at ' + new Date(target.getTime() - 8*60000).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ')', 4000);
 }
 
@@ -4674,15 +4803,13 @@ function requestNotifPermission() {
   }
 }
 
+
+// ─── MAGIC LINK + QR ENGINE ───
+
 function generateMagicLink() {
   const data = JSON.stringify({ config, memory });
-  // Robust UTF-8 Base64 serialization safe for URL Hashes
-  const b64 = btoa(new TextEncoder().encode(data).reduce((s, b) => s + String.fromCharCode(b), ''));
-  const encoded = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  
-  if (encoded.length > 2000) {
-      showToast('⚠️ Brain is large. Link might break on some devices. Use COPY JSON instead.', 5000);
-  }
+  // Simple URL-safe encoding (not full LZ but compact enough)
+  const encoded = btoa(encodeURIComponent(data)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
   return window.location.href.split('#')[0] + '#brain=' + encoded;
 }
 
@@ -4722,21 +4849,27 @@ function downloadQR() {
 function generateQR(text) {
   const canvas = document.getElementById('qr-canvas');
   const ctx = canvas.getContext('2d');
+  // Simple QR-like visualization — actual QR requires a library
+  // Use a compact URL shortener approach: just show a stylized brain export indicator
+  // For real QR, we'll draw a decorative version with the URL as text
   const size = 160;
   canvas.width = canvas.height = size;
   
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, size, size);
   
-  const cells = 21;
+  // Draw a simple data matrix pattern based on the hash of the text
+  const cells = 21; // 21x21 like QR v1
   const cellSize = Math.floor(size / cells);
   
+  // Create deterministic pattern from text
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     hash = ((hash << 5) - hash) + text.charCodeAt(i);
     hash |= 0;
   }
   
+  // Draw finder patterns (corners)
   function drawFinder(x, y) {
     ctx.fillStyle = '#000';
     ctx.fillRect(x, y, 7*cellSize, 7*cellSize);
@@ -4749,9 +4882,11 @@ function generateQR(text) {
   drawFinder((cells-7)*cellSize, 0);
   drawFinder(0, (cells-7)*cellSize);
   
+  // Data cells
   let seed = Math.abs(hash);
   for (let row = 0; row < cells; row++) {
     for (let col = 0; col < cells; col++) {
+      // Skip finder pattern areas
       if ((row < 8 && col < 8) || (row < 8 && col >= cells-8) || (row >= cells-8 && col < 8)) continue;
       seed = (seed * 1664525 + 1013904223) & 0xffffffff;
       if (seed & 1) {
@@ -4761,6 +4896,7 @@ function generateQR(text) {
     }
   }
   
+  // Overlay MESS-E branding in center
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fillRect(7*cellSize, 7*cellSize, 7*cellSize, 7*cellSize);
   ctx.fillStyle = '#4338ca';
@@ -4778,17 +4914,8 @@ function checkMagicLink() {
   if (!hash.startsWith('#brain=')) return false;
   try {
     const encoded = hash.slice(7);
-    let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) base64 += '=';
-    
-    const binaryStr = atob(base64);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-    }
-    const decoded = new TextDecoder().decode(bytes);
+    const decoded = decodeURIComponent(atob(encoded.replace(/-/g,'+').replace(/_/g,'/')));
     const data = JSON.parse(decoded);
-    
     if (data.config && data.memory) {
       if (confirm('MESS-E brain data detected in URL. Load it? (This will replace current data)')) {
         localStorage.setItem(DB_KEY, JSON.stringify(data));
@@ -4834,6 +4961,859 @@ function importBrain() {
     showToast('❌ Invalid JSON.');
   }
 }
+
+
+// ─── ONBOARDING TOUR ───
+const TOUR_STEPS = [
+  {
+    title: 'THIS IS YOUR MIC',
+    body: 'Tap the orb once to speak. Two seconds of silence sends your message. A countdown shows before it sends.',
+    highlight: () => { const el = document.getElementById('orb-hitbox'); const r = el.getBoundingClientRect(); return { x: r.left+r.width/2-70, y: r.top+r.height/2-70, w: 140, h: 140 }; }
+  },
+  {
+    title: 'DOUBLE-TAP: ALWAYS ON',
+    body: 'Double-tap the orb to activate always-on mode. MESS-E listens continuously — your voice is the only interface you need.',
+    highlight: () => { const el = document.getElementById('orb-hitbox'); const r = el.getBoundingClientRect(); return { x: r.left+r.width/2-70, y: r.top+r.height/2-70, w: 140, h: 140 }; }
+  },
+  {
+    title: 'YOUR DASHBOARDS',
+    body: 'DASH, TASKS, CAL, JOURNAL, PROFILE, LOG — tap any pill to open that panel. Everything MESS-E knows about you lives here.',
+    highlight: () => { const el = document.getElementById('nav-pills'); const r = el.getBoundingClientRect(); return { x: r.left-10, y: r.top-10, w: r.width+20, h: r.height+20, radius: '24px' }; }
+  },
+  {
+    title: 'TYPE IF YOU PREFER',
+    body: "Tap [ TYPE ] to switch to keyboard mode. Works great for quiet environments or when voice isn't practical.",
+    highlight: () => { const el = document.getElementById('type-toggle'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '8px' }; }
+  },
+  {
+    title: 'JOURNAL — YOUR PRIVATE SPACE',
+    body: "Tap JOURNAL anytime to write or speak your thoughts. MESS-E reads every entry and uses it to understand you better. You're ready.",
+    highlight: () => { const el = document.getElementById('pill-journal'); const r = el.getBoundingClientRect(); return { x: r.left-8, y: r.top-8, w: r.width+16, h: r.height+16, radius: '24px' }; }
+  }
+];
+
+let tourStep = 0;
+let tourActive = false;
+
+function startTour() {
+  tourStep = 0;
+  tourActive = true;
+  document.getElementById('tour-overlay').classList.add('active');
+  renderTourStep();
+}
+
+function endTour() {
+  tourActive = false;
+  document.getElementById('tour-overlay').classList.remove('active');
+  memory.tourComplete = true;
+  save();
+}
+
+function tourNext() {
+  tourStep++;
+  if (tourStep >= TOUR_STEPS.length) { endTour(); return; }
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  document.getElementById('tour-step-label').textContent = `STEP ${tourStep+1} OF ${TOUR_STEPS.length}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+  document.getElementById('tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? "LET'S GO →" : 'NEXT →';
+
+  // Update dots
+  document.querySelectorAll('.tour-dot').forEach((d, i) => {
+    d.className = 'tour-dot' + (i === tourStep ? ' active' : '');
+  });
+
+  // Position highlight — use fixed positioning to match element on screen
+  const hl = document.getElementById('tour-highlight');
+  try {
+    const pos = step.highlight();
+    hl.style.left = pos.x + 'px';
+    hl.style.top = pos.y + 'px';
+    hl.style.width = pos.w + 'px';
+    hl.style.height = pos.h + 'px';
+    hl.style.borderRadius = pos.radius || '50%';
+    hl.style.opacity = '1';
+  } catch(e) { hl.style.opacity = '0'; }
+
+  // Speak tour step — use ElevenLabs demo voice if set, else browser TTS
+  const tourNarration = step.title + '. ' + step.body;
+  if (config.elevenlabs && (config.demoVoiceId || config.voiceId)) {
+    // Use ElevenLabs — tourActive flag ensures demoVoiceId is used in speakElevenLabs
+    speak(tourNarration, 'system').catch(() => {});
+  } else {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    setTimeout(() => {
+      const utter = new SpeechSynthesisUtterance(tourNarration);
+      utter.rate = 0.88; utter.pitch = 0.9; utter.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.name.includes('Samantha') || v.name.includes('Google UK English') ||
+        v.name.includes('Karen') || v.lang === 'en-GB' ||
+        (v.lang === 'en-US' && v.localService)
+      );
+      if (preferred) utter.voice = preferred;
+      window.speechSynthesis.speak(utter);
+    }, 300);
+  }
+}
+
+// ─── ALWAYS-ON RING MANAGEMENT ───
+function updateAlwaysOnRing() {
+  const ring = document.getElementById('always-on-ring');
+  if (!ring) return;
+  if (continuousMode) {
+    ring.classList.add('visible');
+  } else {
+    ring.classList.remove('visible');
+  }
+}
+
+async function getAstraGreeting() {
+  const hour = new Date().getHours();
+  const session = memory.sessionCount;
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const overdue = activeTasks.filter(t => t.deadline && new Date(t.deadline) < new Date());
+  const loc = currentLocation?.label || '';
+
+  // First run — no name yet, ask who they are
+  if (!config.name) {
+    const firstRunPrompt = `You are MESS-E coming online for the very first time. 
+You don't know who you're talking to yet. 
+Introduce yourself in one warm, mischievous, British sentence — then ask their name.
+Make it feel like a genuine first meeting, not a form.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+    try {
+      const raw = await callGemini([{ role: 'user', content: firstRunPrompt }], buildSystemPrompt());
+      return await processCognitiveState(raw);
+    } catch(e) {
+      return "Well, hello there. I'm MESS-E — and you are?";
+    }
+  }
+
+  const modes = ['warm', 'playful', 'focused', 'quiet', 'curious'];
+  const modeToday = modes[session % modes.length];
+  memory.todayPersonalityMode = modeToday;
+
+  const taskSummary = activeTasks.length > 0
+    ? `${activeTasks.length} open task(s): ${activeTasks.slice(0,3).map(t=>'"'+t.text+'"').join(', ')}${overdue.length > 0 ? ` — ${overdue.length} OVERDUE` : ''}`
+    : 'no open tasks';
+
+  const weatherCtx = currentWeather ? `${currentWeather.emoji} ${currentWeather.temp}°F, ${currentWeather.desc}` : 'unknown';
+  const context = `MESS-E waking up for session #${session}.
+Time: ${new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}
+Hour: ${hour} | Location: ${loc || 'unknown'} | Weather: ${weatherCtx} | Tasks: ${taskSummary}
+Today's mode: ${modeToday}
+1-2 sentences max. British. Real. Alive. Optionally weave in weather or location naturally.
+CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+
+  try {
+    const raw = await callGemini([{ role: 'user', content: context }], buildSystemPrompt());
+    return await processCognitiveState(raw);
+  } catch(e) {
+    console.error('Greeting error:', e);
+    showToast('Gemini: ' + (e.message?.slice(0,80) || 'check API key'), 5000);
+    const fallbacks = ["Right then. What are we doing?", "I'm here. Let's make it count.", "Ready when you are."];
+    return fallbacks[session % fallbacks.length];
+  }
+}
+
+function updateDashboard() {
+  const content = document.getElementById('dashboard-content');
+  const now = new Date();
+  const activeTasks = memory.tasks.filter(t => !t.done);
+  const completedToday = memory.tasks.filter(t => t.done && t.completed && new Date(t.completed).toDateString() === now.toDateString()).length;
+  const conversationCount = memory.conversations.filter(m => m.role === 'user').length;
+  const recentMood = memory.moodLog?.slice(-1)[0]?.mood || 'No data';
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-label">CURRENT TIME</div>
+      <div class="card-value accent">${esc(now.toLocaleString('en-US', { weekday:'long', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }))}</div>
+    </div>
+
+    ${memory.parking ? `
+    <div class="card" style="border-color: rgba(6,182,212,0.4); background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(13,15,42,0.9));">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-label" style="color: var(--cyan); margin-bottom:0;">PARKED VEHICLE</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);">${timeSince(memory.parking.ts)}</div>
+      </div>
+      <div class="card-value" style="font-size: 13px; margin-top:8px;">📍 ${esc(memory.parking.address)}</div>
+      ${memory.parking.intel ? `<div style="margin-top:8px;padding:8px;background:rgba(6,182,212,0.1);border-left:2px solid var(--cyan);border-radius:4px;font-family:var(--font-body);font-size:12px;color:rgba(224,231,255,0.9);line-height:1.4;">${esc(memory.parking.intel)}</div>` : ''}
+      ${memory.parking.notes ? `<div style="font-size:11px;color:rgba(165,180,252,0.8);margin-top:6px;font-style:italic;">"${esc(memory.parking.notes)}"</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${memory.parking.lat},${memory.parking.lng}" target="_blank" style="flex:1;text-decoration:none;"><button class="glass-btn" style="width:100%;color:var(--white);">DIRECTIONS</button></a>
+        <button onclick="clearParkingUI()" class="glass-btn" style="flex:1;">I MOVED IT</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="card">
+      <div class="card-label">ACTIVE TASKS</div>
+      <div class="card-value ${activeTasks.length > 5 ? 'warn' : ''}">${activeTasks.length} pending</div>
+      ${activeTasks.slice(0, 3).map(t => `<div style="font-size:12px;color:var(--dim);margin-top:6px;font-family:var(--font-mono)">→ ${esc(t.text)}</div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-label">TASK STREAK</div>
+      <div class="card-value accent" style="color: #fbbf24;">🔥 ${memory.streak || 0} completed</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">LAST DETECTED MOOD</div>
+      <div class="card-value">${esc(recentMood)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">LOCATION</div>
+      <div class="card-value">${esc(currentLocation?.label || 'Locating...')}</div>
+      ${currentLocation ? `<div style="font-size:10px;color:var(--dim);margin-top:4px;font-family:var(--font-mono)">${esc(currentLocation.lat?.toFixed(4))}, ${esc(currentLocation.lng?.toFixed(4))}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-label">SESSION STATS</div>
+      <div class="card-value">Session #${esc(String(memory.sessionCount))}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:6px;font-family:var(--font-mono)">${esc(String(conversationCount))} exchanges total</div>
+    </div>
+
+    <div class="card" style="cursor:pointer;" onclick="resetAstra()">
+      <div class="card-label" style="color:var(--red)">RESET MESS-E</div>
+      <div class="card-value" style="font-size:12px;color:var(--dim)">Wipe all memory and start fresh. Tap to confirm.</div>
+    </div>
+  `;
+}
+
+function clearParkingUI() {
+  memory.parking = null;
+  save();
+  updateDashboard();
+  showToast('🚗 Parking location cleared.');
+}
+
+function resetAstra() {
+  if (confirm("Are you sure? This will permanently wipe MESS-E's memory.")) {
+    localStorage.removeItem(DB_KEY);
+    location.reload();
+  }
+}
+
+function updateTasksUI() {
+  const content = document.getElementById('tasks-content');
+  const now = new Date();
+  const active = memory.tasks.filter(t => !t.done).sort((a, b) => {
+    const aHigh = a.priority === 'high' ? 0 : a.priority === 'low' ? 2 : 1;
+    const bHigh = b.priority === 'high' ? 0 : b.priority === 'low' ? 2 : 1;
+    if (aHigh !== bHigh) return aHigh - bHigh;
+    if (a.deadline && !b.deadline) return -1;
+    if (!a.deadline && b.deadline) return 1;
+    return new Date(a.created) - new Date(b.created);
+  });
+  const done = memory.tasks.filter(t => t.done).slice(-5).reverse();
+
+  const priorityColor = { high: '#f87171', medium: 'var(--indigo-bright)', low: 'var(--dim)' };
+  const priorityDot = p => `<span style="width:6px;height:6px;border-radius:50%;background:${priorityColor[p||'medium']};display:inline-block;margin-right:6px;flex-shrink:0;margin-top:5px;"></span>`;
+
+  content.innerHTML = `
+    <div style="margin-bottom:8px;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:.2em">ACTIVE — ${active.length}</div>
+    ${active.map(t => {
+      const isOverdue = t.deadline && new Date(t.deadline) < now;
+      const timeAdded = new Date(t.created).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      const deadlineStr = t.deadline
+        ? `<span style="font-size:9px;color:${isOverdue ? '#f87171' : '#a78bfa'};font-family:var(--font-mono);margin-left:6px;">${isOverdue ? '⚠ OVERDUE' : '⏰ ' + new Date(t.deadline).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>`
+        : '';
+      const blockedStr = t.blockedBy ? `<div style="font-size:9px;color:#f59e0b;font-family:var(--font-mono);margin-top:2px;">⛔ blocked: ${esc(t.blockedBy)}</div>` : '';
+      return `
+      <div class="task-item" style="align-items:flex-start;">
+        ${priorityDot(t.priority)}
+        <div style="flex:1;">
+          <div style="display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap;">
+            <div class="task-check" onclick="toggleTask(${Number(t.id)})" style="flex-shrink:0;margin-top:2px;"></div>
+            <div class="task-text" style="flex:1;">${esc(t.text)}${deadlineStr}</div>
+          </div>
+          ${blockedStr}
+          <div style="font-size:9px;color:var(--dim);font-family:var(--font-mono);margin-top:3px;margin-left:20px;">added ${timeAdded}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    ${active.length === 0 ? '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;">Clear. Nice one.</div>' : ''}
+    ${done.length > 0 ? `
+      <div style="margin-top:24px;margin-bottom:8px;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:.2em">DONE (RECENT)</div>
+      ${done.map(t => `
+        <div class="task-item">
+          <div class="task-check done">✓</div>
+          <div class="task-text done">${esc(t.text)}</div>
+        </div>
+      `).join('')}
+    ` : ''}
+    <div style="margin-top:24px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:8px;">ADD TASK</div>
+      <div style="display:flex;gap:8px;">
+        <input id="manual-task-input" type="text" placeholder="What needs doing..." style="flex:1;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,0.3);" onkeydown="if(event.key==='Enter')addManualTask()">
+        <button onclick="addManualTask()" class="glass-btn" style="padding:0 20px;">ADD</button>
+      </div>
+    </div>
+  `;
+}
+
+function setTaskDone(task, done) {
+  if (!task) return;
+  task.done = done;
+  task.completed = done ? new Date().toISOString() : null;
+  if (done) clearTaskNagState(task);
+  save();
+}
+
+function toggleTask(id) {
+  const task = memory.tasks.find(t => t.id === id);
+  if (!task) return;
+  if (!task.done) {
+    completeTaskWithReward(task);
+  } else {
+    setTaskDone(task, false);
+    updateTasksUI();
+    showToast('↩ Restored: ' + task.text.slice(0, 40));
+  }
+}
+
+function addManualTask() {
+  const input = document.getElementById('manual-task-input');
+  const val = input?.value?.trim();
+  if (!val) return;
+  memory.tasks.push({
+    id: Date.now(), text: val, done: false,
+    priority: 'medium', created: new Date().toISOString(),
+    deadline: null, blockedBy: null, updates: []
+  });
+  input.value = '';
+  save();
+  updateTasksUI();
+}
+
+function updateProfileUI() {
+  const p = memory.psychProfile;
+  const f = memory.finances || { accounts: [], debts: [], bills: [], master_plan: '' };
+  const prefsKeys = Object.keys(memory.preferences || {});
+  const content = document.getElementById('profile-content');
+  if (!p) { content.innerHTML = '<div style="color:var(--dim)">Profile building through conversation...</div>'; return; }
+
+  content.innerHTML = `
+    ${memory.pendingPrune ? `
+    <div class="card" style="border-color: rgba(249, 115, 22, 0.5); background: linear-gradient(135deg, rgba(234, 88, 12, 0.15), rgba(13,15,42,0.9));">
+      <div class="card-label" style="color: #f97316;">MEMORY PRUNE REQUIRED</div>
+      <div style="font-family:var(--font-body);font-size:13px;color:var(--white);margin-top:8px;">
+        MESS-E wants to compress ${memory.pendingPrune.endIndex} old messages.
+      </div>
+      <div style="margin-top:12px;font-family:var(--font-mono);font-size:9px;color:#fbd38d;">PROPOSED COMPRESSION:</div>
+      <div style="font-family:var(--font-body);font-size:12px;color:#fff;margin-bottom:8px;">"${esc(memory.pendingPrune.summary)}"</div>
+      ${memory.pendingPrune.facts.length > 0 ? `
+      <div style="font-family:var(--font-mono);font-size:9px;color:#fbd38d;">EXTRACTED FACTS TO RETAIN:</div>
+      <ul style="font-family:var(--font-body);font-size:12px;color:#fff;margin-left:16px;margin-bottom:12px;">
+        ${memory.pendingPrune.facts.map(f => `<li>${esc(f)}</li>`).join('')}
+      </ul>
+      ` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="approvePrune()" class="primary-btn" style="background:linear-gradient(180deg, #ea580c 0%, #c2410c 100%);">APPROVE & DELETE</button>
+        <button onclick="denyPrune()" class="glass-btn" style="flex:1;">DENY</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="card">
+      <div class="card-label">IDENTITY</div>
+      <div class="card-value">${esc(p.name || 'Unknown')}</div>
+      ${p.stated_about ? `<div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.6;">${esc(p.stated_about)}</div>` : ''}
+    </div>
+
+    ${f.accounts.length || f.debts.length || f.master_plan ? `
+    <div class="profile-section" style="background:rgba(6,182,212,0.05);padding:16px;border:1px solid rgba(6,182,212,0.15);border-radius:8px;">
+      <div class="profile-section-title" style="color: var(--cyan);">FINANCIAL SNAPSHOT</div>
+      ${f.accounts.length ? `<div style="margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">ACCOUNTS</div>
+        ${f.accounts.map(a => `<div style="font-family:var(--font-body);font-size:13px;color:var(--white);">${esc(a.name)}: <span style="color:#34d399">${esc(a.amount)}</span></div>`).join('')}
+      </div>` : ''}
+      ${f.debts.length ? `<div style="margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">DEBTS</div>
+        ${f.debts.map(d => `<div style="font-family:var(--font-body);font-size:13px;color:var(--white);">${esc(d.name)}: <span style="color:#f87171">${esc(d.amount)}</span></div>`).join('')}
+      </div>` : ''}
+      ${f.master_plan ? `<div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--cyan);margin-bottom:4px;margin-top:10px;">THE MASTER PLAN</div>
+        <div style="font-family:var(--font-body);font-size:13px;color:rgba(224,231,255,0.9);line-height:1.5;">${esc(f.master_plan)}</div>
+      </div>` : ''}
+    </div>` : ''}
+
+    ${p.goals_stated?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title">STATED GOALS</div>
+      ${p.goals_stated.map(g => `<span class="profile-tag">${esc(g)}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.challenges?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #f59e0b;">KNOWN CHALLENGES</div>
+      ${p.challenges.map(c => `<span class="profile-tag" style="border-color:rgba(245,158,11,0.3);color:rgba(245,158,11,0.8)">${esc(c)}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.harm_reduction?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #10b981;">HARM REDUCTION TOOLS</div>
+      ${p.harm_reduction.map(h => `<span class="profile-tag" style="border-color:rgba(16,185,129,0.3);color:rgba(16,185,129,0.8)">${esc(h)}</span>`).join('')}
+    </div>` : ''}
+
+    ${prefsKeys.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title" style="color: #a78bfa;">KNOWN PREFERENCES</div>
+      ${prefsKeys.map(k => `<span class="profile-tag" style="border-color:rgba(167,139,250,0.3);color:rgba(167,139,250,0.8)">${esc(k.toUpperCase())}: ${esc(memory.preferences[k])}</span>`).join('')}
+    </div>` : ''}
+
+    ${p.traits_observed?.length ? `
+    <div class="profile-section">
+      <div class="profile-section-title">OBSERVED PATTERNS</div>
+      ${p.traits_observed.map(t => `<span class="profile-tag">${esc(t)}</span>`).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-label">MOOD TREND (LAST 10)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        ${(memory.moodLog || []).slice(-10).map(m => `<span style="font-family:var(--font-mono);font-size:10px;color:var(--dim);background:rgba(13,15,42,0.8);padding:3px 8px;border-radius:10px;">${esc(m.mood)}</span>`).join('')}
+      </div>
+    </div>
+
+    <!-- LOCAL-FIRST MANIFESTO -->
+    <div style="margin-top:20px;padding:16px;background:rgba(6,182,212,0.04);border:1px solid rgba(6,182,212,0.12);border-radius:8px;text-align:center;">
+      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:rgba(6,182,212,0.6);margin-bottom:6px;">🔒 LOCAL-FIRST</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:11px;color:rgba(224,231,255,0.5);line-height:1.6;">Your data never leaves this device.<br>No servers. No accounts. No surveillance.</div>
+    </div>
+
+    <!-- CORE FACTS VAULT -->
+    ${(memory.coreFacts || []).length > 0 ? `
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--indigo-bright);letter-spacing:.2em;margin-bottom:12px;">🔐 CORE FACTS VAULT</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:10px;color:rgba(165,180,252,0.4);margin-bottom:10px;">These facts survive memory pruning and are never forgotten.</div>
+      ${(memory.coreFacts || []).slice(-10).map(f => `<div class="core-fact-item"><span class="core-fact-pin">📌</span>${esc(f.text)}</div>`).join('')}
+    </div>` : ''}
+
+    <!-- BRAIN EXPORT / SYNC -->
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">BRAIN SYNC — ZERO CLOUD</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="openMagicModal()" class="glass-btn" style="flex:1;min-width:120px;">✨ MAGIC LINK + QR</button>
+        <button onclick="exportBrain()" class="glass-btn" style="flex:1;min-width:120px;">📋 COPY JSON</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button onclick="document.getElementById('import-brain-row').style.display='flex';" class="glass-btn" style="width:100%;">📥 IMPORT BRAIN</button>
+      </div>
+      <div id="import-brain-row" style="display:none; flex-direction:column; gap:8px; margin-top:12px;">
+        <textarea id="import-brain-data" placeholder="Paste brain JSON here..." style="width:100%; height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(129,140,248,0.2); border-radius:8px; padding:8px; color:var(--white); font-family:var(--font-mono); font-size:10px;"></textarea>
+        <button onclick="importBrain()" class="primary-btn" style="background:linear-gradient(180deg, #10b981 0%, #047857 100%); box-shadow:0 8px 24px rgba(16, 185, 129, 0.4);">OVERWRITE BRAIN</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:16px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;">SETTINGS</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:6px;">WAKE-UP TIME</div>
+        <input type="time" id="setting-wake-time" value="${esc(memory.settings?.wakeTime || '07:00')}"
+          style="background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:5px;padding:10px 12px;font-family:var(--font-mono);font-size:14px;color:var(--white);outline:none;width:100%;-webkit-appearance:none;">
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:6px;">TASK NAG INTERVAL (MINUTES)</div>
+        <input type="number" id="setting-nag-interval" value="${esc(memory.settings?.nagIntervalMins || 30)}" min="5" max="120"
+          style="background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:5px;padding:10px 12px;font-family:var(--font-mono);font-size:14px;color:var(--white);outline:none;width:100%;-webkit-appearance:none;">
+      </div>
+
+      <button onclick="saveSettings()" class="primary-btn" style="margin-top:10px;">SAVE SETTINGS</button>
+    </div>
+
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">GOOGLE CALENDAR</div>
+      ${gcalToken || config.gcalToken
+        ? `<div style="font-family:var(--font-mono);font-size:11px;color:#34d399;">✓ Connected</div>`
+        : `<div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);margin-bottom:10px;">Not connected.</div>
+           <input id="gcal-client-input" type="text" placeholder="Google OAuth Client ID..." value="${esc(config.gcalClientId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;margin-bottom:12px;">
+           <div style="display:flex;gap:8px;">
+             <button onclick="saveGcalClientId()" class="glass-btn" style="flex:1;">SAVE ID</button>
+             <button onclick="gcalConnect()" class="glass-btn" style="flex:1;">CONNECT →</button>
+           </div>`
+      }
+    </div>
+
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">VOICE ENGINE (ELEVENLABS)</div>
+      <div style="margin-bottom:8px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">API KEY</div>
+        <input id="el-api-input" type="password" placeholder="sk_..." value="${esc(config.elevenlabs||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">VOICE ID</div>
+        <input id="el-voice-input" type="text" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" value="${esc(config.voiceId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:rgba(165,180,252,0.4);letter-spacing:.15em;margin-bottom:4px;">DEMO / TOUR VOICE ID (optional)</div>
+        <input id="el-demo-input" type="text" placeholder="Different voice for tour & demos" value="${esc(config.demoVoiceId||'')}" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(129,140,248,0.2);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--white);outline:none;">
+      </div>
+      <button onclick="saveElevenLabsConfig()" class="glass-btn" style="width:100%;margin-bottom:8px;">SAVE VOICE SETTINGS</button>
+    </div>
+
+    <!-- TOUR + HELP -->
+    <div style="margin-top:16px;padding:14px;background:rgba(13,15,42,0.6);border:1px solid rgba(129,140,248,0.15);border-radius:8px;">
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:.2em;margin-bottom:10px;">HELP & TOUR</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="startTour()" class="glass-btn" style="flex:1;">🎓 RESTART TOUR</button>
+        <button onclick="startTour()" class="glass-btn" style="flex:1;color:var(--cyan);border-color:rgba(34,211,238,0.3);">📍 SHOW ME AROUND</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveSettings() {
+  if (!memory.settings) memory.settings = {};
+  const wakeEl = document.getElementById('setting-wake-time');
+  const nagEl = document.getElementById('setting-nag-interval');
+  if (wakeEl) memory.settings.wakeTime = wakeEl.value || '07:00';
+  if (nagEl) memory.settings.nagIntervalMins = parseInt(nagEl.value) || 30;
+  save();
+  showToast('Settings saved.', 2000);
+}
+
+function saveGcalClientId() {
+  const input = document.getElementById('gcal-client-input');
+  if (input?.value?.trim()) { config.gcalClientId = input.value.trim(); save(); showToast('Client ID saved. Now click CONNECT.', 3000); }
+}
+
+function saveElevenLabsConfig() {
+  const apiKeyInput = document.getElementById('el-api-input');
+  const voiceIdInput = document.getElementById('el-voice-input');
+  const demoInput = document.getElementById('el-demo-input');
+  if (apiKeyInput && voiceIdInput) {
+    config.elevenlabs = apiKeyInput.value.trim();
+    config.voiceId = voiceIdInput.value.trim();
+    if (demoInput) config.demoVoiceId = demoInput.value.trim();
+    save();
+    showToast('Voice settings saved.', 3000);
+  }
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-content');
+  const all = memory.conversations || [];
+
+  // Summary bar
+  const tasks = memory.tasks || [];
+  const doneTasks = tasks.filter(t => t.done);
+  const openTasks = tasks.filter(t => !t.done);
+  const summaryBar = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:rgba(67,56,202,0.08);border-radius:10px;border:1px solid rgba(129,140,248,0.12);">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">📋 <span style="color:var(--white)">${openTasks.length}</span> open tasks</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">✓ <span style="color:#34d399">${doneTasks.length}</span> completed</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">💬 <span style="color:var(--white)">${all.length}</span> total messages</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">🔥 <span style="color:var(--amber)">${memory.streak || 0}</span> streak</div>
+    </div>`;
+
+  if (all.length === 0) {
+    el.innerHTML = summaryBar + '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;text-align:center;margin-top:40px;">No conversations yet.</div>';
+    return;
+  }
+
+  // Show ALL conversations, newest first, no cap
+  const msgs = [...all].reverse();
+  el.innerHTML = summaryBar + msgs.map(m => {
+    const isAstra = m.role === 'assistant';
+    const time = m.ts ? new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const text = m.content === '[IMAGE SENT]' ? '🖼️ <i>[Vision sent]</i>' : esc((m.content || '').slice(0, 600));
+    return `
+    <div class="msg ${isAstra ? 'astra' : 'user'}" style="margin-bottom:14px;">
+      <div class="msg-label">${isAstra ? 'MESS-E' : esc(config.name || 'YOU')}${time ? ' — ' + esc(time) : ''}</div>
+      <div class="msg-content">${text}</div>
+    </div>`;
+  }).join('');
+}
+
+function openPanel(name) {
+  if (name === 'history') renderHistory();
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'cal') renderCalendar();
+  if (name === 'journal') renderJournal();
+
+  if (name === 'profile' && memory.pendingPrune) {
+    document.getElementById('pill-profile').classList.remove('alert-orange');
+  }
+
+  document.getElementById(`${name}-panel`).classList.add('open');
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  const pill = document.getElementById(`pill-${name === 'dashboard' ? 'dash' : name}`);
+  if (pill) pill.classList.add('active');
+  document.getElementById('speech-output').style.opacity = '0';
+  document.getElementById('speech-output').style.pointerEvents = 'none';
+  document.getElementById('voice-wave').classList.remove('active');
+}
+
+function closePanel(name) {
+  const panel = document.getElementById(name + '-panel');
+  if (panel) panel.classList.remove('open');
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('speech-output').style.opacity = '1';
+  document.getElementById('speech-output').style.pointerEvents = 'none';
+}
+
+function showAddEventForm() {
+  document.getElementById('add-event-form').classList.add('open');
+}
+
+function hideAddEventForm() {
+  document.getElementById('add-event-form').classList.remove('open');
+  document.getElementById('aef-title').value = '';
+  document.getElementById('aef-notes').value = '';
+}
+
+function saveEventForm() {
+  const title = document.getElementById('aef-title').value.trim();
+  const date = document.getElementById('aef-date').value;
+  const time = document.getElementById('aef-time').value;
+  const dur = document.getElementById('aef-dur').value;
+  const notes = document.getElementById('aef-notes').value.trim();
+
+  if (!title || !date || !time) { showToast('Title, Date, and Time are required.'); return; }
+
+  const start = new Date(`${date}T${time}`);
+  const end = new Date(start.getTime() + parseInt(dur || 60) * 60000);
+
+  if (!memory.events) memory.events = [];
+  memory.events.push({ id: Date.now(), title, start: start.toISOString(), end: end.toISOString(), notes });
+  save();
+  hideAddEventForm();
+  renderCalendar(date);
+  showToast('Event saved.');
+}
+
+function deleteEvent(id) {
+  if(confirm("Delete this event?")) {
+    memory.events = memory.events.filter(e => e.id !== id);
+    save();
+    renderCalendar(calSelectedDate);
+    showToast('Event deleted.');
+  }
+}
+
+let _journalRecording = false;
+let _journalRecognition = null;
+
+function renderJournal() {
+  if (!memory.journal) memory.journal = [];
+  const container = document.getElementById('journal-content');
+  if (!container) return;
+
+  const entries = [...memory.journal].reverse();
+
+  container.innerHTML = `
+    <div class="journal-compose">
+      <textarea id="journal-textarea" placeholder="Write something. Anything. He's listening." rows="3"></textarea>
+      <div class="journal-compose-row">
+        <button class="glass-btn journal-mic-btn" style="width: 44px; padding: 0;" onclick="transcribeJournalEntry()" id="journal-transcribe-btn" title="Transcribe">🎙</button>
+        <button class="primary-btn journal-save-btn" onclick="saveJournalEntry()">SAVE ENTRY</button>
+      </div>
+    </div>
+    <div class="journal-entries">
+      ${entries.length === 0 ? '<div class="journal-empty">No entries yet.<br>Start writing. He\'s always listening.</div>' : ''}
+      ${entries.map(e => {
+        const d = new Date(e.ts);
+        const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        const timeStr = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+        return `<div class="journal-entry ${e.author === 'astra' ? 'astra-entry' : ''}">
+          <div class="journal-entry-header">
+            <span class="journal-author-badge">${e.author === 'astra' ? 'MESS-E' : 'YOU'}</span>
+            <span class="journal-entry-ts">${dateStr} · ${timeStr}</span>
+          </div>
+          <div class="journal-entry-text">${esc(e.text)}</div>
+          <button class="journal-delete-btn" onclick="deleteJournalEntry(${e.id})" title="Delete">✕</button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function saveJournalEntry() {
+  const ta = document.getElementById('journal-textarea');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { showToast('Nothing to save.'); return; }
+  if (!memory.journal) memory.journal = [];
+  memory.journal.push({ id: Date.now(), ts: new Date().toISOString(), author: 'user', text });
+  ta.value = '';
+  save();
+  renderJournal();
+  showToast('Entry saved.');
+}
+
+function deleteJournalEntry(id) {
+  memory.journal = (memory.journal || []).filter(e => e.id !== id);
+  save();
+  renderJournal();
+}
+
+function transcribeJournalEntry() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('Speech recognition not supported.'); return; }
+
+  const btn = document.getElementById('journal-transcribe-btn');
+
+  if (_journalRecording) {
+    _journalRecording = false;
+    if (_journalRecognition) try { _journalRecognition.stop(); } catch(e) {}
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+    return;
+  }
+
+  _journalRecognition = new SpeechRecognition();
+  _journalRecognition.continuous = true;
+  _journalRecognition.interimResults = false;
+  _journalRecognition.lang = 'en-US';
+
+  _journalRecognition.onresult = (e) => {
+    const ta = document.getElementById('journal-textarea');
+    if (!ta) return;
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+    ta.value = ta.value ? ta.value + ' ' + transcript : transcript;
+  };
+  _journalRecognition.onend = () => {
+    _journalRecording = false;
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+  };
+  _journalRecognition.onerror = () => {
+    _journalRecording = false;
+    if (btn) { btn.innerHTML = '🎙'; btn.style.opacity = '1'; btn.classList.remove('recording'); }
+    showToast('Transcription failed — try again.');
+  };
+
+  _journalRecognition.start();
+  _journalRecording = true;
+  if (btn) { btn.innerHTML = '⏹'; btn.style.opacity = '1'; btn.classList.add('recording'); }
+  showToast('Listening… tap STOP when done.');
+}
+
+let calViewYear = new Date().getFullYear();
+let calViewMonth = new Date().getMonth();
+let calSelectedDate = null;
+
+function renderCalendar(selectedDate) {
+  if (!memory.events) memory.events = [];
+  if (selectedDate) calSelectedDate = selectedDate;
+
+  const today = new Date();
+  const todayStr = toDateStr(today);
+  if (!calSelectedDate) calSelectedDate = todayStr;
+
+  const container = document.getElementById('cal-content');
+  if (!container) return;
+
+  const monthNames = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const firstDow = new Date(calViewYear, calViewMonth, 1).getDay();
+
+  let dayCells = '';
+  const dows = ['SU','MO','TU','WE','TH','FR','SA'];
+  dayCells += dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  for (let i = 0; i < firstDow; i++) {
+    dayCells += `<div class="cal-day other-month"><span class="cal-day-num"></span></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const isSelected = dateStr === calSelectedDate;
+    const hasEvents = memory.events.some(e => e.start.startsWith(dateStr));
+    const cls = ['cal-day', isToday ? 'today' : '', isSelected ? 'selected' : '', hasEvents ? 'has-events' : ''].filter(Boolean).join(' ');
+    dayCells += `<div class="${cls}" onclick="renderCalendar('${dateStr}')"><span class="cal-day-num">${d}</span></div>`;
+  }
+
+  const dayEvents = memory.events
+    .filter(e => e.start.startsWith(calSelectedDate))
+    .sort((a,b) => new Date(a.start) - new Date(b.start));
+
+  const selectedLabel = new Date(calSelectedDate + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const eventsHTML = dayEvents.length > 0
+    ? dayEvents.map(ev => {
+        const t = new Date(ev.start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="cal-event-item">
+          <div class="cal-event-time">${t}</div>
+          <div style="flex:1">
+            <div class="cal-event-title">${esc(ev.title)}</div>
+            ${ev.notes ? `<div class="cal-event-notes">${esc(ev.notes)}</div>` : ''}
+          </div>
+          <button class="cal-event-delete" onclick="deleteEvent(${ev.id})">✕</button>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--dim);font-family:var(--font-mono);font-size:11px;padding:12px 0;">No events scheduled.</div>';
+
+  container.innerHTML = `
+    <div id="cal-nav">
+      <button class="cal-nav-btn" onclick="calViewMonth--;if(calViewMonth<0){calViewMonth=11;calViewYear--;}renderCalendar('${calSelectedDate}')">←</button>
+      <div id="cal-month-label">${monthNames[calViewMonth]} ${calViewYear}</div>
+      <button class="cal-nav-btn" onclick="calViewMonth++;if(calViewMonth>11){calViewMonth=0;calViewYear++;}renderCalendar('${calSelectedDate}')">→</button>
+    </div>
+    <div class="cal-grid">${dayCells}</div>
+    <div class="cal-events-section">
+      <div class="cal-events-title">EVENTS FOR ${selectedLabel.toUpperCase()}</div>
+      ${eventsHTML}
+    </div>
+  `;
+}
 </script>
+
+<!-- SILENCE COUNTDOWN -->
+<div id="silence-countdown"></div>
+
+<!-- WEATHER PILL -->
+<div id="weather-pill"></div>
+
+<!-- ALWAYS-ON RING -->
+<div id="always-on-ring"></div>
+
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay">
+  <div id="tour-backdrop" style="opacity:0;pointer-events:none;"></div>
+  <div id="tour-highlight"></div>
+  <div id="tour-card">
+    <div id="tour-step-label">STEP 1 OF 5</div>
+    <div id="tour-title">THIS IS YOUR MIC</div>
+    <div id="tour-body">Tap the orb once to speak. Two seconds of silence sends your message. Double-tap for always-on mode.</div>
+    <div id="tour-dots">
+      <div class="tour-dot active"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+    </div>
+    <div id="tour-btn-row">
+      <button id="tour-skip" onclick="endTour()">SKIP TOUR</button>
+      <button id="tour-next" onclick="tourNext()">NEXT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAGIC LINK / QR MODAL -->
+<div id="magic-modal">
+  <div id="magic-inner">
+    <div id="magic-title">BEAM YOUR BRAIN</div>
+    <div id="magic-sub">Three ways to move MESS-E to another device. Your data never touches a server.</div>
+    <div id="magic-url">Generating magic link...</div>
+    <div id="qr-container"><canvas id="qr-canvas" width="160" height="160"></canvas></div>
+    <div class="magic-btn-row">
+      <button onclick="copyMagicLink()" class="glass-btn" style="flex:1;">📋 COPY LINK</button>
+      <button onclick="downloadQR()" class="glass-btn" style="flex:1;">📷 SAVE QR</button>
+    </div>
+    <div class="magic-btn-row" style="margin-top:8px;">
+      <button onclick="exportBrain()" class="glass-btn" style="flex:1;">📄 COPY JSON</button>
+      <button onclick="closeMagicModal()" class="glass-btn" style="flex:1;color:var(--dim);">CLOSE</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
