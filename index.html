@@ -137,7 +137,7 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   text-align: center;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 20;
   scroll-behavior: smooth;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
@@ -826,7 +826,7 @@ html, body {
 
 #loc-pill {
   position: fixed;
-  top: 52px;
+  top: 72px;
   left: 20px;
   padding: 5px 12px;
   border-radius: 20px;
@@ -1241,7 +1241,7 @@ html, body {
 /* ─── WEATHER PILL ─── */
 #weather-pill {
   position: fixed;
-  top: 56px;
+  top: 72px;
   right: 20px;
   padding: 4px 10px;
   border-radius: 20px;
@@ -1524,7 +1524,7 @@ html, body {
 
 <div id="ui-layer">
   <div id="header">
-    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.2</span></div>
+    <div id="astra-wordmark">MESS-E <span style="font-size:8px;opacity:0.4;letter-spacing:0.1em">v3.6</span></div>
     <div id="status-indicator">
       <div id="status-dot"></div>
       <span id="status-text">ONLINE</span>
@@ -1549,6 +1549,7 @@ html, body {
       <div class="nav-pill" id="pill-cal" onclick="openPanel('cal')">CAL</div>
       <div class="nav-pill" id="pill-journal" onclick="openPanel('journal')">JOURNAL</div>
       <div class="nav-pill" id="pill-profile" onclick="openPanel('profile')">PROFILE</div>
+      <div class="nav-pill" id="pill-history" onclick="openPanel('history')">LOG</div>
     </div>
 
     <div class="controls-row">
@@ -1692,6 +1693,7 @@ html, body {
 // ══════════════════════════════════════════════════════════
 
 const DB_KEY = 'messe_core_v1';
+const apiKey = ''; // global fallback — user key stored in config.apiKey
 
 let config = {};
 let memory = {
@@ -1738,12 +1740,14 @@ window.speechSynthesis.onvoiceschanged = () => {
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
+let _toastTimer = null;
 function showToast(msg, duration=3000) {
   const t = document.getElementById('toast');
   if(!t) return;
+  clearTimeout(_toastTimer);
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function timeSince(date) {
@@ -1826,10 +1830,14 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!e.start) return false;
       return new Date(e.start).getTime() > _nowMs;
     });
+    // Keep ALL tasks — done ones shown in history, overdue ones stay visible
     memory.tasks = (memory.tasks || []).filter(t => {
-      if (t.done) return false;
-      if (t.deadline && new Date(t.deadline).getTime() < _nowMs) return false;
-      return true;
+      if (t.done && t.completed) {
+        // Only purge done tasks older than 7 days
+        const age = _nowMs - new Date(t.completed).getTime();
+        return age < 7 * 24 * 60 * 60 * 1000;
+      }
+      return true; // Keep all active tasks, even overdue ones
     });
 
     if (!memory.journal) memory.journal = [];
@@ -1849,10 +1857,12 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Check for magic link brain import
-  if (!checkMagicLink()) {
-    showEnterSplash();
-  }
+  // Check for magic link — deferred to ensure function is available
+  setTimeout(() => {
+    if (!checkMagicLink()) {
+      showEnterSplash();
+    }
+  }, 0);
 });
 
 function clearVisionTarget() {
@@ -1883,7 +1893,7 @@ function showEnterSplash() {
     splash.style.transition = 'opacity 0.6s ease';
     setTimeout(() => {
       splash.remove();
-      if (!config.apiKey) {
+      if (!config.name) {
         document.getElementById('setup-screen').classList.remove('hidden');
       } else {
         bootAstra();
@@ -2221,13 +2231,20 @@ function startCanvas() {
       }
     }
 
-    time += 0.016;
-    requestAnimationFrame(draw);
+  }
+
+  let lastFrameTime = 0;
+  function loop(ts) {
+    const delta = Math.min((ts - lastFrameTime) / 1000, 0.05); // cap at 50ms (20fps min)
+    lastFrameTime = ts;
+    time += delta; // real delta time — correct on 60Hz, 120Hz, 144Hz
+    draw();
+    requestAnimationFrame(loop);
   }
 
   resize();
   window.addEventListener('resize', resize);
-  draw();
+  requestAnimationFrame(loop);
 }
 
 function setOrbState(state) {
@@ -2823,17 +2840,13 @@ let _speakBusy = false;
 async function speak(text, role = 'astra') {
   if (!text) return;
   if (role === 'astra') { showAstraText(text); }
-
   const cleaned = cleanForSpeech(text);
-  const chunks = cleaned.match(/[^.?!]+[.?!]+(?=\s|$)|[^.?!]+$/g) || [cleaned];
-
-  for (let chunk of chunks) {
-    if (!chunk.trim()) continue;
-    await new Promise(resolve => {
-      _speakQueue.push({ text: chunk.trim(), role, resolve });
-      if (!_speakBusy) _drainSpeakQueue();
-    });
-  }
+  if (!cleaned.trim()) return;
+  // Send as ONE chunk — no splitting, no gaps between sentences
+  await new Promise(resolve => {
+    _speakQueue.push({ text: cleaned, role, resolve });
+    if (!_speakBusy) _drainSpeakQueue();
+  });
 }
 
 async function _drainSpeakQueue() {
@@ -2880,14 +2893,17 @@ async function _drainSpeakQueue() {
   const endsWithQuestion = lastSpeech.trim().slice(-1) === '?';
   if (endsWithQuestion && !continuousMode) {
     setTimeout(() => {
-      if (!_speakBusy && orbState !== 'listening' && orbState !== 'thinking') {
+      if (!_speakBusy && orbState !== 'listening' && orbState !== 'thinking' && orbState !== 'speaking') {
         unlockAudio();
         showToast('Go ahead...', 1200);
-        if (typeof window._startRecGlobal === 'function') {
-          window._startRecGlobal();
-        }
+        // Extra settle: ensure any previous recognition fully ended
+        setTimeout(() => {
+          if (typeof window._startRecGlobal === 'function' && orbState === 'idle') {
+            window._startRecGlobal();
+          }
+        }, 200);
       }
-    }, 600);
+    }, 700);
   }
   window._lastMesseSpeech = '';
 }
@@ -3271,9 +3287,17 @@ MASTER PLAN: ${f.master_plan || 'No plan established yet.'}`;
       return `  • "${e.title}" — ${label}${e.notes ? ' [' + e.notes + ']' : ''}`;
     }).join('\n') || '  (none scheduled)';
 
-  const recentConvs = memory.conversations.slice(-8).map(m =>
-    `[${m.role.toUpperCase()}]: ${m.content.slice(0, 200)}`
+  // Full conversation log — MESS-E reads this before every response
+  const recentConvs = memory.conversations.slice(-30).map(m =>
+    `[${m.role.toUpperCase()}]: ${m.content.slice(0, 400)}`
   ).join('\n');
+  
+  // Task history for context
+  const completedRecent = memory.tasks.filter(t => t.done && t.completed)
+    .sort((a,b) => new Date(b.completed) - new Date(a.completed))
+    .slice(0, 10)
+    .map(t => `  ✓ "${t.text}" — completed ${new Date(t.completed).toLocaleDateString()}`)
+    .join('\n') || '  none yet';
 
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
 
@@ -3358,7 +3382,10 @@ TODAY: ${todayEventsStr}
 TASKS (${activeTasks.length} open / ${recentlyDone.length} done today):
 ${taskBlock}
 ${overdueTasks.length > 0 ? 'OVERDUE: ' + overdueTasks.map(t => '"' + t.text + '"').join(', ') : ''}
-RECENT CONVERSATION:
+RECENTLY COMPLETED TASKS:
+${completedRecent}
+
+RECENT CONVERSATION (last 30 messages — read this before responding):
 ${recentConvs}
 CORE FACTS — NEVER FORGET:
 ${(memory.coreFacts || []).slice(-20).map(f => `- ${f.text}`).join('\n') || '  none yet'}
@@ -3678,7 +3705,24 @@ async function processCognitiveState(rawJson) {
   updateProfileUI();
   updateDashboard();
 
-  const finalSpeech = sanitizePersonaSpeech(pendingConfirmText || data.persona_speech || "");
+  let rawSpeech = pendingConfirmText || data.persona_speech || "";
+  
+  // NUCLEAR FIREWALL: if persona_speech contains internal_reflection content, extract just persona_speech
+  // This catches cases where the model dumps the full JSON into persona_speech
+  if (rawSpeech.includes('"internal_reflection"') || rawSpeech.includes('internal_reflection:')) {
+    // Try to re-parse and extract just persona_speech
+    try {
+      const reparse = JSON.parse(rawSpeech);
+      if (reparse.persona_speech) rawSpeech = reparse.persona_speech;
+      else rawSpeech = "Right then.";
+    } catch(e) {
+      // Extract persona_speech value manually
+      const match = rawSpeech.match(/"persona_speech"\s*:\s*"([^"]+)"/);
+      rawSpeech = match ? match[1] : "Right then.";
+    }
+  }
+
+  const finalSpeech = sanitizePersonaSpeech(rawSpeech);
   return finalSpeech;
 }
 
@@ -3927,7 +3971,7 @@ function startListenCycle() {
 }
 
 // ─── CHANGE 2: NAG CADENCE — 4x at 3 min, then every 30 min ───
-const NAG_SCHEDULE_MINS = [3, 3, 3, 3, 30, 30, 30, 30, 30, 30];
+const NAG_SCHEDULE_MINS = [3, 3, 3, 6, 9, 30]; // notify-then-persist: rapid 3x, escalate, then every 30 forever
 
 let taskNagInterval = null;
 let _nagFiring = false;
@@ -4511,10 +4555,29 @@ async function reacquireWakeLock() {
 // ─── TAB VISIBILITY CATCH-UP ───
 // If tab was backgrounded, fire any alarms that should have fired
 
+
+// ─── ALARM-SAFE SYSTEM PROMPT (no COMPLETE_TASK, no task modification actions) ───
+function buildAlarmSystemPrompt() {
+  const loc = currentLocation?.label || 'unknown';
+  const now = new Date();
+  const profile = memory.psychProfile?.name || config.name || 'the user';
+  return `You are MESS-E delivering an alarm reminder. You are NOT processing a conversation.
+STRICT RULES FOR THIS ALARM CONTEXT:
+- You may ONLY use persona_speech to deliver the reminder message.
+- You may ONLY use machine_actions: JOURNAL, LOG_AVOIDANCE, CORE_FACT.
+- You must NEVER use: COMPLETE_TASK, ADD_TASK, UPDATE_TASK, SET_DEADLINE, or any task-modifying action.
+- Alarms are REMINDERS. The user must manually say they completed something. You do not mark things done.
+- internal_reflection never appears in persona_speech.
+User: ${profile} | Location: ${loc} | Time: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+Respond in valid JSON: {"internal_reflection":"...","state_updates":{},"machine_actions":[],"persona_speech":"..."}`;
+}
+
 async function fireAlarm(alarm) {
   alarm.followUpNum = 0;
   alarm.dismissed = false;
   alarm.confirmed = false;
+  // Clear any pending task confirmation — alarms are not task completions
+  taskPendingConfirm = null;
   alarm.locationAtFire = currentLocation
     ? { lat: currentLocation.lat, lng: currentLocation.lng, label: currentLocation.label }
     : null;
@@ -4529,7 +4592,7 @@ async function fireAlarm(alarm) {
   const prompt = buildAlarmPrompt(alarm, 0);
   try {
     setOrbState('thinking');
-    const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+    const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
     const clean = await processCognitiveState(msg);
     memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
     save();
@@ -4560,7 +4623,7 @@ function scheduleNextFollowUp(alarm) {
 CRITICAL: Return valid JSON matching the schema from your system prompt.`;
         try {
           setOrbState('thinking');
-          const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+          const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
           const clean = await processCognitiveState(msg);
           await speak(clean, 'astra');
           setOrbState('idle');
@@ -4574,7 +4637,7 @@ CRITICAL: Return valid JSON matching the schema from your system prompt.`;
 
     try {
       setOrbState('thinking');
-      const msg = await callGemini([{ role: 'user', content: prompt }], buildSystemPrompt());
+      const msg = await callGemini([{ role: 'user', content: prompt }], buildAlarmSystemPrompt());
       const clean = await processCognitiveState(msg);
       memory.conversations.push({ role: 'assistant', content: clean, ts: new Date().toISOString() });
       save();
@@ -4608,7 +4671,10 @@ function buildAlarmPrompt(alarm, num) {
   return `You are MESS-E. Alarm: "${alarm.label}". Follow-up: ${num} of ${FOLLOWUP_SCHEDULE.length}.
 Location: ${locationKnown ? 'available' : 'UNAVAILABLE'}.
 ${instruction}
-CRITICAL: Return valid JSON matching the schema from your system prompt.`;
+CRITICAL ALARM RULES:
+- DO NOT use COMPLETE_TASK action. Alarms are reminders, NOT task completions. The user must manually confirm they did the thing.
+- DO NOT mark anything done. Only speak the reminder.
+- Return valid JSON. persona_speech only. No machine_actions except JOURNAL if needed.`;
 }
 
 function locationHasMoved(before, now) {
@@ -4623,8 +4689,11 @@ function dismissActiveAlarms() {
 
 function confirmAlarm(keyword) {
   const lower = keyword.toLowerCase();
-  const confirmWords = ['done', 'sorted', 'left', 'gone', 'out', 'away', 'already', 'yes', 'yep', 'yeah', 'got it', 'confirmed'];
-  if (confirmWords.some(w => lower.includes(w))) {
+  // Only confirm alarm on very specific phrases — not generic "yes" or "done"
+  // which are too broad and cause false task completions
+  const confirmPhrases = ['already moved', 'already left', 'already did', "i'm there", 'im there', 
+    'sorted it', 'i moved', 'moved the car', 'paid it', 'done that', 'handled it', 'took care'];
+  if (confirmPhrases.some(w => lower.includes(w))) {
     scheduledAlarms.forEach(a => { if (a.fired) a.confirmed = true; });
     activeTimers.forEach(a => { if (a.fired) a.confirmed = true; });
   }
@@ -5458,19 +5527,38 @@ function saveElevenLabsConfig() {
 }
 
 function renderHistory() {
-  const content = document.getElementById('history-content');
+  const el = document.getElementById('history-content');
   const all = memory.conversations || [];
+
+  // Summary bar
+  const tasks = memory.tasks || [];
+  const doneTasks = tasks.filter(t => t.done);
+  const openTasks = tasks.filter(t => !t.done);
+  const summaryBar = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:rgba(67,56,202,0.08);border-radius:10px;border:1px solid rgba(129,140,248,0.12);">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">📋 <span style="color:var(--white)">${openTasks.length}</span> open tasks</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">✓ <span style="color:#34d399">${doneTasks.length}</span> completed</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">💬 <span style="color:var(--white)">${all.length}</span> total messages</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">🔥 <span style="color:var(--amber)">${memory.streak || 0}</span> streak</div>
+    </div>`;
+
   if (all.length === 0) {
-    content.innerHTML = '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;text-align:center;margin-top:40px;">No conversations yet.</div>';
+    el.innerHTML = summaryBar + '<div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;text-align:center;margin-top:40px;">No conversations yet.</div>';
     return;
   }
-  const recent = all.slice(-20).reverse();
-  content.innerHTML = recent.map(m => `
-    <div class="msg ${m.role === 'assistant' ? 'astra' : 'user'}">
-      <div class="msg-label">${m.role === 'assistant' ? 'MESS-E' : esc(config.name || 'YOU')}${m.ts ? ' — ' + esc(new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) : ''}</div>
-      <div class="msg-content">${m.content === '[IMAGE SENT]' ? '🖼️ <i>[Vision Target Uploaded]</i>' : esc((m.content || '').slice(0, 400))}</div>
-    </div>
-  `).join('');
+
+  // Show ALL conversations, newest first, no cap
+  const msgs = [...all].reverse();
+  el.innerHTML = summaryBar + msgs.map(m => {
+    const isAstra = m.role === 'assistant';
+    const time = m.ts ? new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const text = m.content === '[IMAGE SENT]' ? '🖼️ <i>[Vision sent]</i>' : esc((m.content || '').slice(0, 600));
+    return `
+    <div class="msg ${isAstra ? 'astra' : 'user'}" style="margin-bottom:14px;">
+      <div class="msg-label">${isAstra ? 'MESS-E' : esc(config.name || 'YOU')}${time ? ' — ' + esc(time) : ''}</div>
+      <div class="msg-content">${text}</div>
+    </div>`;
+  }).join('');
 }
 
 function openPanel(name) {
