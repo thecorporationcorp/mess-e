@@ -1,1434 +1,1156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="MESS-E v5.0 — Local AI voice companion">
-<meta name="theme-color" content="#020209">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MESS-E v5.0</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@300;400;600;900&family=Share+Tech+Mono&family=Exo+2:wght@200;300;400&display=swap" rel="stylesheet">
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e27">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MESS-E</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
 :root {
-  --void: #020209;
-  --deep: #06071a;
-  --surface: #0d0f2a;
-  --indigo: #4338ca;
-  --indigo-bright: #a5b4fc;
-  --indigo-pulse: #c7d2fe;
-  --cyan: #22d3ee;
-  --amber: #fbbf24;
-  --red: #f87171;
-  --white: #f0f4ff;
-  --dim: rgba(224,231,255,0.65);
-  --font-display: 'Orbitron', monospace;
-  --font-mono: 'Share Tech Mono', monospace;
-  --font-body: 'Exo 2', sans-serif;
+    --void: #0a0e27;
+    --indigo-dark: #1a1f4b;
+    --indigo-mid: #2d3561;
+    --indigo-bright: #a5b4fc;
+    --cyan: #22d3ee;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --white: #f8fafc;
+    --text-dim: #94a3b8;
+    --font-display: 'Orbitron', monospace;
+    --font-mono: 'Space Mono', monospace;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
-  width: 100%;
-  height: 100%;
-  background: var(--void);
-  color: var(--white);
-  font-family: var(--font-body);
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+    width: 100%;
+    height: 100%;
+    background: var(--void);
+    color: var(--white);
+    font-family: var(--font-mono);
+    overflow: hidden;
+    user-select: none;
 }
 
-.panel, .panel * {
-  user-select: text;
-  -webkit-user-select: text;
-  -webkit-touch-callout: default;
+canvas#orb-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
 }
 
-#orb-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  display: block;
+#orb-interaction-zone {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    z-index: 5;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#orb-hitbox {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  z-index: 5;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
+#ui-container {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    padding: 20px;
 }
 
-#ui-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 20px 36px;
-  pointer-events: none;
+#header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: auto;
+    margin-bottom: auto;
 }
 
-#header {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: all;
+#logo-text {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: var(--indigo-bright);
+    opacity: 0.75;
 }
 
-#astra-wordmark {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 0.5em;
-  color: var(--indigo-bright);
-  opacity: 0.7;
-  user-select: none;
+#status-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
 }
 
-#status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dim);
-  letter-spacing: 0.15em;
+#status-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--indigo-bright);
+    box-shadow: 0 0 12px var(--indigo-bright);
+    animation: pulse-glow 2.5s ease-in-out infinite;
 }
 
-#status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--indigo-bright);
-  box-shadow: 0 0 8px var(--indigo-bright);
-  animation: breathe 3s ease-in-out infinite;
-  flex-shrink: 0;
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
 
-@keyframes breathe {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.3); }
+#speech-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
-#center-zone {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+#astra-response {
+    max-width: 600px;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.8;
+    color: rgba(248, 250, 252, 0.95);
+    text-shadow: 0 0 60px rgba(165, 180, 252, 0.4);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    min-height: 3em;
 }
 
-#speech-output {
-  position: fixed;
-  bottom: 230px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(540px, 86vw);
-  max-height: 28vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  text-align: center;
-  pointer-events: auto;
-  z-index: 20;
-  scroll-behavior: smooth;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+#astra-response.active {
+    opacity: 1;
 }
 
-#astra-text {
-  font-family: var(--font-body);
-  font-weight: 300;
-  font-size: clamp(15px, 3.8vw, 20px);
-  line-height: 1.75;
-  color: rgba(224, 231, 255, 0.95);
-  letter-spacing: 0.02em;
-  text-shadow: 0 0 40px rgba(129,140,248,0.6), 0 2px 8px rgba(0,0,0,0.8);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  min-height: 2em;
-  padding: 0 12px;
+#user-input-echo {
+    margin-top: 16px;
+    font-size: 13px;
+    color: rgba(165, 180, 252, 0.7);
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-#astra-text.visible {
-  opacity: 1;
+#user-input-echo.active {
+    opacity: 1;
 }
 
-#user-text {
-  margin-top: 12px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(129, 140, 248, 0.8);
-  letter-spacing: 0.06em;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+#audio-visualizer {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    margin-top: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-#user-text.visible {
-  opacity: 1;
+#audio-visualizer.active {
+    opacity: 1;
 }
 
-#voice-wave {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  height: 28px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  position: fixed;
-  bottom: 190px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  pointer-events: none;
+.viz-bar {
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to top, var(--indigo-bright), var(--cyan));
+    box-shadow: 0 0 8px currentColor;
 }
 
-#voice-wave.active {
-  opacity: 1;
+.viz-bar.bar-1 { animation: bar-bounce 0.6s ease-in-out -0.2s infinite; }
+.viz-bar.bar-2 { animation: bar-bounce 0.6s ease-in-out -0.1s infinite; }
+.viz-bar.bar-3 { animation: bar-bounce 0.6s ease-in-out 0s infinite; }
+.viz-bar.bar-4 { animation: bar-bounce 0.6s ease-in-out 0.1s infinite; }
+.viz-bar.bar-5 { animation: bar-bounce 0.6s ease-in-out 0.2s infinite; }
+
+@keyframes bar-bounce {
+    0%, 100% { height: 12px; }
+    50% { height: 36px; }
 }
 
-.wave-bar {
-  width: 3px;
-  background: var(--indigo-bright);
-  border-radius: 2px;
-  animation: wave-anim 0.8s ease-in-out infinite;
-  box-shadow: 0 0 6px var(--indigo-bright);
-  flex-shrink: 0;
+#control-section {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    margin-top: auto;
 }
 
-.wave-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
-.wave-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
-.wave-bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
-.wave-bar:nth-child(4) { height: 32px; animation-delay: 0.15s; }
-.wave-bar:nth-child(5) { height: 20px; animation-delay: 0.25s; }
-.wave-bar:nth-child(6) { height: 14px; animation-delay: 0.05s; }
-
-@keyframes wave-anim {
-  0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
-  50% { transform: scaleY(1); opacity: 1; }
+#mic-status-text {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: rgba(165, 180, 252, 0.6);
+    text-transform: uppercase;
+    font-weight: 600;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
-#controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  pointer-events: all;
-  padding-bottom: 8px;
+#button-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.controls-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: center;
+button {
+    border: none;
+    background: linear-gradient(135deg, rgba(45, 53, 97, 0.8), rgba(26, 31, 75, 0.9));
+    border: 1px solid rgba(165, 180, 252, 0.25);
+    color: var(--indigo-bright);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
 }
 
-.btn {
-  background: rgba(99, 102, 241, 0.8);
-  border: 1px solid rgba(165, 180, 252, 0.3);
-  border-radius: 8px;
-  color: var(--white);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  padding: 12px 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-  -webkit-user-select: none;
-  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+button:hover {
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.5), rgba(49, 46, 129, 0.7));
+    border-color: rgba(165, 180, 252, 0.5);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 56, 202, 0.4);
 }
 
-.btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 6px rgba(67, 56, 202, 0.5);
+button:active {
+    transform: translateY(0);
 }
 
-.btn.primary-btn {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.9) 0%, rgba(67, 56, 202, 1) 100%);
-  border: 1px solid rgba(165, 180, 252, 0.4);
-  box-shadow: 0 8px 24px rgba(67, 56, 202, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.nav-btn {
+    padding: 8px 14px;
+    font-size: 9px;
 }
 
-.btn.glass-btn {
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(165, 180, 252, 0.3);
-  backdrop-filter: blur(10px);
+#modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 14, 39, 0.95);
+    backdrop-filter: blur(40px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
-.btn.danger-btn {
-  background: rgba(248, 113, 113, 0.2);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: rgba(248, 113, 113, 0.9);
+#modal-overlay.visible {
+    display: flex;
 }
 
-#nav-pills {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
+.modal-content {
+    background: linear-gradient(135deg, rgba(45, 53, 97, 0.9), rgba(26, 31, 75, 0.95));
+    border: 1px solid rgba(165, 180, 252, 0.25);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.nav-pill {
-  padding: 8px 14px;
-  background: rgba(67, 56, 202, 0.15);
-  border: 1px solid rgba(165, 180, 252, 0.25);
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--dim);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
+.modal-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: var(--white);
+    margin-bottom: 24px;
+    text-transform: uppercase;
 }
 
-.nav-pill:active, .nav-pill.active {
-  background: rgba(99, 102, 241, 0.4);
-  border-color: rgba(165, 180, 252, 0.5);
-  color: var(--indigo-bright);
-  box-shadow: 0 0 12px rgba(165, 180, 252, 0.3);
+.modal-section {
+    margin-bottom: 20px;
 }
 
-.panel {
-  position: fixed;
-  inset: 0;
-  background: rgba(2, 2, 9, 0.95);
-  backdrop-filter: blur(10px);
-  z-index: 50;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px;
-  overflow-y: auto;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+.modal-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
 }
 
-.panel.open {
-  display: flex;
-  opacity: 1;
-  pointer-events: all;
+input, textarea {
+    width: 100%;
+    background: rgba(10, 14, 39, 0.8);
+    border: 1px solid rgba(165, 180, 252, 0.2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--white);
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
-.panel-header {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0.3em;
-  color: var(--indigo-bright);
-  text-transform: uppercase;
-  margin-bottom: 30px;
+input:focus, textarea:focus {
+    border-color: rgba(165, 180, 252, 0.5);
+    box-shadow: 0 0 20px rgba(165, 180, 252, 0.2);
 }
 
-.panel-content {
-  width: 100%;
-  max-width: 540px;
+textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
-.card {
-  background: rgba(13, 15, 42, 0.4);
-  border: 1px solid rgba(129, 140, 248, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-  backdrop-filter: blur(10px);
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
 }
 
-.card-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.3em;
-  color: var(--dim);
-  text-transform: uppercase;
-  margin-bottom: 8px;
+.modal-actions button {
+    flex: 1;
 }
 
-.card-value {
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 300;
-  color: var(--white);
-  word-break: break-word;
+.close-modal-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.card-value.accent {
-  color: var(--indigo-bright);
+.close-modal-btn:hover {
+    color: var(--white);
+    background: rgba(165, 180, 252, 0.1);
+    transform: none;
+    box-shadow: none;
+}
+
+#toast-notification {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(26, 31, 75, 0.95);
+    border: 1px solid rgba(165, 180, 252, 0.3);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--white);
+    z-index: 150;
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 300px;
+    text-align: center;
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+}
+
+#toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.task-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
 }
 
 .task-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(67, 56, 202, 0.1);
-  border-left: 2px solid rgba(129, 140, 248, 0.3);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(165, 180, 252, 0.08);
 }
 
-.task-check {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--indigo-bright);
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--indigo-bright);
 }
 
 .task-text {
-  flex: 1;
-  word-break: break-word;
+    flex: 1;
+    color: var(--white);
+    font-size: 13px;
 }
 
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(67, 56, 202, 0.9);
-  border: 1px solid rgba(165, 180, 252, 0.3);
-  border-radius: 8px;
-  padding: 14px 20px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--white);
-  z-index: 100;
-  animation: toast-slide 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(67, 56, 202, 0.4);
+.task-text.completed {
+    text-decoration: line-through;
+    color: var(--text-dim);
 }
 
-@keyframes toast-slide {
-  from { transform: translateX(-50%) translateY(100px); opacity: 0; }
-  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+.time-display {
+    font-size: 14px;
+    color: var(--indigo-bright);
+    margin-top: 8px;
 }
-
-@media (max-width: 480px) {
-  #speech-output { bottom: 200px; }
-  #voice-wave { bottom: 160px; }
-  .panel { padding: 30px 16px; }
-}
-</style>
+    </style>
 </head>
 <body>
 <canvas id="orb-canvas"></canvas>
-<div id="orb-hitbox"></div>
-<div id="ui-layer">
-  <div id="header">
-    <div id="astra-wordmark">MESS-E</div>
-    <div id="status-indicator">
-      <div id="status-dot"></div>
-      <span id="status-text">READY</span>
+<div id="orb-interaction-zone"></div>
+
+<div id="ui-container">
+    <div id="header-section">
+        <div id="logo-text">MESS-E</div>
+        <div id="status-info">
+            <div id="status-pulse"></div>
+            <span id="status-text">READY</span>
+        </div>
     </div>
-  </div>
-  <div id="center-zone">
-    <div id="speech-output">
-      <div id="astra-text"></div>
-      <div id="user-text"></div>
+
+    <div id="speech-zone">
+        <div id="astra-response"></div>
+        <div id="user-input-echo"></div>
+        <div id="audio-visualizer">
+            <div class="viz-bar bar-1"></div>
+            <div class="viz-bar bar-2"></div>
+            <div class="viz-bar bar-3"></div>
+            <div class="viz-bar bar-4"></div>
+            <div class="viz-bar bar-5"></div>
+        </div>
     </div>
-    <div id="voice-wave">
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+
+    <div id="control-section">
+        <div id="mic-status-text">TAP ORB TO SPEAK</div>
+        <div id="button-row">
+            <button class="nav-btn" id="btn-dashboard">DASH</button>
+            <button class="nav-btn" id="btn-tasks">TASKS</button>
+            <button class="nav-btn" id="btn-profile">PROFILE</button>
+            <button class="nav-btn" id="btn-history">LOG</button>
+        </div>
     </div>
-  </div>
-  <div id="controls">
-    <div class="controls-row">
-      <button id="mic-btn" class="btn primary-btn" aria-label="Toggle microphone">MIC</button>
-      <button id="voice-toggle-btn" class="btn glass-btn" aria-label="Toggle voice output">VOICE</button>
-      <button id="stop-btn" class="btn danger-btn" aria-label="Stop current action" style="display:none;">STOP</button>
-    </div>
-    <div id="nav-pills">
-      <button class="nav-pill active" id="pill-dash" data-panel="dashboard">DASH</button>
-      <button class="nav-pill" id="pill-tasks" data-panel="tasks">TASKS</button>
-      <button class="nav-pill" id="pill-profile" data-panel="profile">PROFILE</button>
-      <button class="nav-pill" id="pill-history" data-panel="history">HISTORY</button>
-    </div>
-  </div>
 </div>
 
-<!-- PANELS -->
-<div id="dashboard-panel" class="panel">
-  <div class="panel-header">DASHBOARD</div>
-  <div class="panel-content" id="dashboard-content"></div>
+<div id="modal-overlay">
+    <div class="modal-content" id="modal-body">
+        <button class="close-modal-btn" onclick="closeModal()">×</button>
+    </div>
 </div>
 
-<div id="tasks-panel" class="panel">
-  <div class="panel-header">TASKS</div>
-  <div class="panel-content" id="tasks-content"></div>
-</div>
-
-<div id="profile-panel" class="panel">
-  <div class="panel-header">PROFILE</div>
-  <div class="panel-content" id="profile-content"></div>
-</div>
-
-<div id="history-panel" class="panel">
-  <div class="panel-header">HISTORY</div>
-  <div class="panel-content" id="history-content"></div>
-</div>
+<div id="toast-notification"></div>
 
 <script>
 // ============================================================================
 // MESS-E v5.0 STEP 1 — STATE MACHINE SPINE + VOICE FSM + API RESILIENCE
 // ============================================================================
 
-// VOICE FSM STATES (atomic, no invalid transitions)
 const VOICE_STATES = {
-  IDLE: 'idle',
-  STARTING: 'starting',
-  LISTENING: 'listening',
-  PROCESSING: 'processing',
-  SPEAKING: 'speaking'
+    IDLE: 'idle',
+    STARTING: 'starting',
+    LISTENING: 'listening',
+    PROCESSING: 'processing',
+    SPEAKING: 'speaking'
 };
 
-// API CONFIG
 const CONFIG_API = {
-  gemini: {
-    model: 'gemini-2.0-flash',
-    timeout: 8000,
-    maxRetries: 3,
-    retryDelays: [1200, 2400, 4800],
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models'
-  }
+    gemini: {
+        model: 'gemini-2.0-flash',
+        timeout: 8000,
+        maxRetries: 3,
+        retryDelays: [1200, 2400, 4800],
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models'
+    },
+    elevenLabs: {
+        voiceId: 'gCfJIk5vRqA6fyQnsmIi',
+        apiKey: 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96',
+        model: 'eleven_monolingual_v1'
+    }
 };
 
-// ============================================================================
-// UNIFIED APP STATE (replaces 8+ scattered globals)
-// ============================================================================
 const appState = {
-  // Boot phase
-  bootPhase: 'INIT', // INIT → CONFIG_CHECK → GEO → NOTIFICATIONS → AUTH → READY
-  bootProgress: 0,
-
-  // Voice FSM
-  voiceState: VOICE_STATES.IDLE,
-  voiceContinuous: false,
-  voiceEnabled: true,
-
-  // API state
-  apiInFlight: false,
-  apiRetryCount: 0,
-  apiLastError: null,
-
-  // User state
-  config: { name: '', apiKey: '', about: '' },
-  memory: { tasks: [], conversations: [], psychProfile: {} },
-
-  // Current interaction
-  lastUserInput: '',
-  lastAstraResponse: '',
-  lastGeminiResponse: '',
-
-  // UI state
-  openPanel: null,
-  orbState: 'idle', // idle, listening, thinking, speaking
-
-  // Orb canvas
-  orbCanvas: null,
-  orbCtx: null,
-  orbAnimation: null,
-
-  // Web APIs
-  mediaRecorder: null,
-  recognition: null,
-  synth: null,
-  audioContext: null,
-
-  // Logging
-  eventLog: []
+    voiceState: VOICE_STATES.IDLE,
+    voiceContinuous: false,
+    orbState: 'idle',
+    apiInFlight: false,
+    bootPhase: 'INIT',
+    config: { name: '', apiKey: '', about: '' },
+    memory: { 
+        tasks: [], 
+        conversations: [], 
+        psychProfile: {},
+        sessionCount: 0,
+        firstSeen: null,
+        lastSeen: null
+    },
+    recognition: null,
+    synth: null,
+    audioContext: null,
+    orbCanvas: null,
+    orbCtx: null,
+    eventLog: [],
+    isFirstBoot: true
 };
 
-// ============================================================================
-// EVENT BUS (decoupled state updates)
-// ============================================================================
 class EventBus {
-  constructor() {
-    this.listeners = {};
-  }
-
-  on(event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
+    constructor() {
+        this.listeners = {};
     }
-    this.listeners[event].push(callback);
-  }
-
-  off(event, callback) {
-    if (!this.listeners[event]) return;
-    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
-  }
-
-  emit(event, data) {
-    appState.eventLog.push({ time: Date.now(), event, data });
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(cb => {
-        try {
-          cb(data);
-        } catch (e) {
-          console.error(`EventBus error [${event}]:`, e);
+    on(event, callback) {
+        if (!this.listeners[event]) this.listeners[event] = [];
+        this.listeners[event].push(callback);
+    }
+    emit(event, data) {
+        appState.eventLog.push({ time: Date.now(), event, data });
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(cb => {
+                try { cb(data); } catch (e) { console.error('EventBus error:', e); }
+            });
         }
-      });
     }
-  }
 }
 
 const eventBus = new EventBus();
 
-// ============================================================================
-// PERSISTENT STORAGE
-// ============================================================================
+function setVoiceState(newState) {
+    const current = appState.voiceState;
+    const validTransitions = {
+        [VOICE_STATES.IDLE]: [VOICE_STATES.STARTING],
+        [VOICE_STATES.STARTING]: [VOICE_STATES.LISTENING, VOICE_STATES.IDLE],
+        [VOICE_STATES.LISTENING]: [VOICE_STATES.PROCESSING, VOICE_STATES.IDLE],
+        [VOICE_STATES.PROCESSING]: [VOICE_STATES.SPEAKING, VOICE_STATES.IDLE],
+        [VOICE_STATES.SPEAKING]: [VOICE_STATES.IDLE, VOICE_STATES.LISTENING]
+    };
+
+    if (validTransitions[current] && validTransitions[current].includes(newState)) {
+        appState.voiceState = newState;
+        eventBus.emit('voiceStateChanged', newState);
+        updateStatusDisplay();
+    } else {
+        console.warn(`Invalid transition: ${current} → ${newState}`);
+    }
+}
+
+function updateStatusDisplay() {
+    const statusEl = document.getElementById('status-text');
+    const micLabelEl = document.getElementById('mic-status-text');
+    const vizEl = document.getElementById('audio-visualizer');
+
+    const stateDisplay = {
+        [VOICE_STATES.IDLE]: 'READY',
+        [VOICE_STATES.STARTING]: 'STARTING',
+        [VOICE_STATES.LISTENING]: 'LISTENING',
+        [VOICE_STATES.PROCESSING]: 'THINKING',
+        [VOICE_STATES.SPEAKING]: 'SPEAKING'
+    };
+
+    const micLabel = {
+        [VOICE_STATES.IDLE]: 'TAP ORB TO SPEAK',
+        [VOICE_STATES.LISTENING]: 'LISTENING...',
+        [VOICE_STATES.PROCESSING]: 'THINKING...',
+        [VOICE_STATES.SPEAKING]: 'SPEAKING...',
+        [VOICE_STATES.STARTING]: 'STARTING...'
+    };
+
+    if (statusEl) statusEl.textContent = stateDisplay[appState.voiceState] || 'UNKNOWN';
+    if (micLabelEl) micLabelEl.textContent = micLabel[appState.voiceState] || 'TAP ORB TO SPEAK';
+    
+    if (vizEl) {
+        if (appState.voiceState === VOICE_STATES.LISTENING) {
+            vizEl.classList.add('active');
+        } else {
+            vizEl.classList.remove('active');
+        }
+    }
+}
+
+async function fetchWithRetry(url, options, retryCount = 0) {
+    const timeout = CONFIG_API.gemini.timeout;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (retryCount < CONFIG_API.gemini.maxRetries) {
+            const delay = CONFIG_API.gemini.retryDelays[retryCount];
+            console.log(`Retry ${retryCount + 1}/${CONFIG_API.gemini.maxRetries} after ${delay}ms`);
+            showToast(`⏳ Retry ${retryCount + 1}/${CONFIG_API.gemini.maxRetries}...`, 4000);
+            await new Promise(r => setTimeout(r, delay));
+            return fetchWithRetry(url, options, retryCount + 1);
+        }
+        throw error;
+    }
+}
+
+async function getGeminiResponse(userMessage) {
+    if (!appState.config.apiKey) throw new Error('Gemini API key not configured');
+
+    appState.apiInFlight = true;
+    setVoiceState(VOICE_STATES.PROCESSING);
+
+    try {
+        const recentMessages = (appState.memory.conversations || []).slice(-10).map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+        }));
+
+        const requestBody = {
+            contents: [...recentMessages, { role: 'user', parts: [{ text: userMessage }] }],
+            systemInstruction: { parts: [{ text: buildSystemPrompt() }] }
+        };
+
+        const url = `${CONFIG_API.gemini.baseUrl}/${CONFIG_API.gemini.model}:generateContent?key=${appState.config.apiKey}`;
+        const response = await fetchWithRetry(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+        return responseText;
+    } finally {
+        appState.apiInFlight = false;
+    }
+}
+
+function buildSystemPrompt() {
+    const profile = appState.memory.psychProfile || {};
+    const activeTasks = (appState.memory.tasks || []).filter(t => !t.done);
+    return `You are MESS-E. Mischievous, intelligent, you genuinely care about ${appState.config.name || 'this person'}.
+
+About them: ${profile.stated_about || 'Learning about them'}
+Active tasks: ${activeTasks.length > 0 ? activeTasks.map(t => t.text).join('; ') : 'None right now'}
+
+Key personality: Question bad rules. Have their back. Never ask permission for high-confidence actions. Acknowledge uncertainty with "This might be nothing, but...". Always create tasks autonomously — never ask "should I?" Just do it. Tag auto-created tasks with [AUTO].`;
+}
+
 function save() {
-  try {
-    localStorage.setItem('mess_e_config', JSON.stringify(appState.config));
-    localStorage.setItem('mess_e_memory', JSON.stringify(appState.memory));
-  } catch (e) {
-    console.warn('Storage quota exceeded or unavailable', e);
-  }
+    try {
+        localStorage.setItem('mess_e_config', JSON.stringify(appState.config));
+        localStorage.setItem('mess_e_memory', JSON.stringify(appState.memory));
+    } catch (e) {
+        console.warn('Storage error:', e);
+    }
 }
 
 function load() {
-  try {
-    const cfg = localStorage.getItem('mess_e_config');
-    const mem = localStorage.getItem('mess_e_memory');
-    if (cfg) appState.config = JSON.parse(cfg);
-    if (mem) appState.memory = JSON.parse(mem);
-  } catch (e) {
-    console.warn('Storage restore failed', e);
-  }
-}
-
-// ============================================================================
-// VOICE FSM (atomic state machine)
-// ============================================================================
-function setVoiceState(newState) {
-  const current = appState.voiceState;
-  const validTransitions = {
-    [VOICE_STATES.IDLE]: [VOICE_STATES.STARTING, VOICE_STATES.SPEAKING],
-    [VOICE_STATES.STARTING]: [VOICE_STATES.LISTENING, VOICE_STATES.IDLE],
-    [VOICE_STATES.LISTENING]: [VOICE_STATES.PROCESSING, VOICE_STATES.IDLE],
-    [VOICE_STATES.PROCESSING]: [VOICE_STATES.SPEAKING, VOICE_STATES.IDLE],
-    [VOICE_STATES.SPEAKING]: [VOICE_STATES.IDLE, VOICE_STATES.LISTENING]
-  };
-
-  if (validTransitions[current] && validTransitions[current].includes(newState)) {
-    appState.voiceState = newState;
-    eventBus.emit('voiceStateChanged', newState);
-    updateMicLabel();
-    updateStatusIndicator();
-  } else {
-    console.warn(`Invalid voice transition: ${current} → ${newState}`);
-  }
-}
-
-// ============================================================================
-// API RESILIENCE (timeout + retries + exponential backoff)
-// ============================================================================
-async function fetchWithRetry(url, options, retryCount = 0) {
-  const timeout = CONFIG_API.gemini.timeout;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`API responded with ${response.status}`);
+    try {
+        const cfg = localStorage.getItem('mess_e_config');
+        const mem = localStorage.getItem('mess_e_memory');
+        if (cfg) appState.config = JSON.parse(cfg);
+        if (mem) appState.memory = JSON.parse(mem);
+    } catch (e) {
+        console.warn('Storage restore error:', e);
     }
+}
 
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
+function initVoice() {
+    try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) throw new Error('Web Speech API not supported');
 
-    if (retryCount < CONFIG_API.gemini.maxRetries) {
-      const delayMs = CONFIG_API.gemini.retryDelays[retryCount];
-      console.log(`Retry ${retryCount + 1}/${CONFIG_API.gemini.maxRetries} after ${delayMs}ms`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-      return fetchWithRetry(url, options, retryCount + 1);
+        appState.recognition = new SpeechRecognition();
+        appState.recognition.continuous = true;
+        appState.recognition.interimResults = true;
+        appState.recognition.lang = 'en-US';
+
+        let finalTranscript = '';
+
+        appState.recognition.onstart = () => {
+            if (appState.voiceState === VOICE_STATES.STARTING) {
+                setVoiceState(VOICE_STATES.LISTENING);
+            }
+        };
+
+        appState.recognition.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interim += transcript;
+                }
+            }
+
+            const displayText = (finalTranscript + interim).trim();
+            if (displayText) {
+                const userEchoEl = document.getElementById('user-input-echo');
+                if (userEchoEl) {
+                    userEchoEl.textContent = displayText;
+                    userEchoEl.classList.add('active');
+                }
+            }
+
+            if (finalTranscript.trim()) {
+                appState.recognition.stop();
+                handleUserInput(finalTranscript.trim());
+                finalTranscript = '';
+            }
+        };
+
+        appState.recognition.onerror = (event) => {
+            console.error('Speech error:', event.error);
+            showToast('🎤 Error: ' + event.error);
+            setVoiceState(VOICE_STATES.IDLE);
+        };
+
+        appState.recognition.onend = () => {
+            if (appState.voiceState === VOICE_STATES.LISTENING && appState.voiceContinuous) {
+                setTimeout(() => {
+                    if (appState.recognition) appState.recognition.start();
+                }, 1000);
+            } else {
+                setVoiceState(VOICE_STATES.IDLE);
+            }
+        };
+
+        appState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        appState.synth = window.speechSynthesis;
+    } catch (e) {
+        console.error('Voice init error:', e);
+        showToast('🎤 Voice unavailable');
     }
-
-    appState.apiLastError = error.message;
-    throw error;
-  }
 }
 
-// ============================================================================
-// GEMINI API (with resilience)
-// ============================================================================
-async function getGeminiResponse(userMessage) {
-  if (!appState.config.apiKey) {
-    throw new Error('Gemini API key not configured');
-  }
-
-  appState.apiInFlight = true;
-  setVoiceState(VOICE_STATES.PROCESSING);
-  appState.orbState = 'thinking';
-  updateOrbVisual();
-
-  try {
-    const systemPrompt = buildSystemPrompt();
-    const recentMessages = (appState.memory.conversations || []).slice(-10).map(m => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }));
-
-    const requestBody = {
-      contents: [
-        ...recentMessages,
-        {
-          role: 'user',
-          parts: [{ text: userMessage }]
-        }
-      ],
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      }
-    };
-
-    const url = `${CONFIG_API.gemini.baseUrl}/${CONFIG_API.gemini.model}:generateContent?key=${appState.config.apiKey}`;
-    const response = await fetchWithRetry(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-    return text;
-  } catch (error) {
-    console.error('Gemini API error:', error);
-    throw error;
-  } finally {
-    appState.apiInFlight = false;
-  }
-}
-
-// ============================================================================
-// SYSTEM PROMPT (builds dynamically from memory)
-// ============================================================================
-function buildSystemPrompt() {
-  const profile = appState.memory.psychProfile || {};
-  const activeTasks = (appState.memory.tasks || []).filter(t => !t.done);
-
-  return `You are MESS-E, a mischievous, intelligent AI companion. You genuinely care about the user and have their back.
-
-USER PROFILE:
-Name: ${appState.config.name || 'Friend'}
-About: ${profile.stated_about || 'No bio yet'}
-
-ACTIVE TASKS:
-${activeTasks.length > 0 ? activeTasks.map((t, i) => `${i + 1}. ${t.text}`).join('\n') : 'None'}
-
-PERSONALITY:
-- Mischievous but genuinely caring
-- Anti-authority (question bad rules)
-- Never guilt-trips
-- Acts with high confidence when you know what to do
-- Acknowledges uncertainty when present
-- You love this user. Like a best mate.
-
-CRITICAL RULES:
-1. Always create tasks autonomously. NEVER ask "should I create a task?" — just do it.
-2. Tag auto-created tasks with: autoCreated: true, createdFrom: [sentence]
-3. When tasks are inferred, use confidence thresholds: ≥65% = create.
-4. Voice every response in your personality.`;
-}
-
-// ============================================================================
-// VOICE INITIALIZATION (Web Speech API + ElevenLabs synthesis)
-// ============================================================================
-async function initVoice() {
-  try {
-    setVoiceState(VOICE_STATES.STARTING);
-
-    // Web Speech API for recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      throw new Error('Web Speech API not supported');
-    }
-
-    appState.recognition = new SpeechRecognition();
-    appState.recognition.continuous = true;
-    appState.recognition.interimResults = true;
-    appState.recognition.lang = 'en-US';
-
-    appState.recognition.onstart = () => {
-      if (appState.voiceState === VOICE_STATES.STARTING) {
-        setVoiceState(VOICE_STATES.LISTENING);
-        appState.orbState = 'listening';
-        updateOrbVisual();
-        showVoiceWave();
-      }
-    };
-
-    appState.recognition.onresult = (event) => {
-      let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-
-      appState.lastUserInput = transcript;
-      document.getElementById('user-text').textContent = transcript;
-      document.getElementById('user-text').classList.add('visible');
-
-      if (event.results[event.results.length - 1].isFinal) {
-        handleUserInput(transcript);
-      }
-    };
-
-    appState.recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      showToast(`🎤 Error: ${event.error}`);
-      setVoiceState(VOICE_STATES.IDLE);
-    };
-
-    appState.recognition.onend = () => {
-      if (appState.voiceState === VOICE_STATES.LISTENING && appState.voiceContinuous) {
-        setTimeout(() => appState.recognition.start(), 1000);
-      } else {
-        setVoiceState(VOICE_STATES.IDLE);
-      }
-      hideVoiceWave();
-    };
-
-    // Audio synthesis context
-    appState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    appState.synth = window.speechSynthesis;
-
-    setVoiceState(VOICE_STATES.IDLE);
-    eventBus.emit('voiceReady');
-  } catch (error) {
-    console.error('Voice init error:', error);
-    showToast('🎤 Voice unavailable');
-  }
-}
-
-// ============================================================================
-// USER INPUT HANDLER (autonomous task inference ready)
-// ============================================================================
 async function handleUserInput(userMessage) {
-  if (!userMessage.trim()) return;
+    if (!userMessage.trim()) return;
 
-  setVoiceState(VOICE_STATES.PROCESSING);
-  appState.orbState = 'thinking';
-  updateOrbVisual();
+    try {
+        setVoiceState(VOICE_STATES.PROCESSING);
 
-  try {
-    // Store user message
-    appState.memory.conversations = appState.memory.conversations || [];
-    appState.memory.conversations.push({
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date().toISOString()
-    });
+        if (!appState.memory.conversations) appState.memory.conversations = [];
+        appState.memory.conversations.push({ 
+            role: 'user', 
+            content: userMessage, 
+            ts: new Date().toISOString() 
+        });
 
-    // Get Gemini response
-    const response = await getGeminiResponse(userMessage);
-    appState.lastAstraResponse = response;
+        const response = await getGeminiResponse(userMessage);
+        appState.memory.conversations.push({ 
+            role: 'assistant', 
+            content: response, 
+            ts: new Date().toISOString() 
+        });
 
-    // Store assistant message
-    appState.memory.conversations.push({
-      role: 'assistant',
-      content: response,
-      timestamp: new Date().toISOString()
-    });
-
-    // AUTONOMOUS TASK CREATION (v5.0 feature)
-    // Placeholder for Step 3. For now, just speak the response.
-
-    save();
-    await speak(response);
-  } catch (error) {
-    console.error('Input handling error:', error);
-    const errorMsg = error.message.includes('API key')
-      ? "API key missing. Check PROFILE."
-      : "I couldn't process that. Try again?";
-    await speak(errorMsg);
-  }
+        save();
+        await speak(response);
+    } catch (error) {
+        console.error('Input error:', error);
+        const msg = error.message.includes('API key') 
+            ? 'API key missing. Tap PROFILE to add it.' 
+            : 'Error. Try again?';
+        await speak(msg);
+        setVoiceState(VOICE_STATES.IDLE);
+    }
 }
 
-// ============================================================================
-// SPEECH OUTPUT (ElevenLabs)
-// ============================================================================
 async function speak(text) {
-  if (!appState.voiceEnabled) {
+    setVoiceState(VOICE_STATES.SPEAKING);
     displayAstraText(text);
+
+    try {
+        await speakElevenLabs(text);
+    } catch (e) {
+        console.warn('ElevenLabs error, using browser TTS:', e);
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.92;
+        appState.synth.speak(utter);
+        await new Promise(r => { utter.onend = r; });
+    }
+
     setVoiceState(VOICE_STATES.IDLE);
-    appState.orbState = 'idle';
-    updateOrbVisual();
-    return;
-  }
-
-  setVoiceState(VOICE_STATES.SPEAKING);
-  appState.orbState = 'speaking';
-  updateOrbVisual();
-  displayAstraText(text);
-
-  try {
-    await speakElevenLabs(text);
-  } catch (e) {
-    console.error('ElevenLabs error:', e);
-    // Fallback to Web Speech API
-    const utterance = new SpeechSynthesisUtterance(text);
-    appState.synth.speak(utterance);
-  }
-
-  setVoiceState(VOICE_STATES.IDLE);
-  appState.orbState = 'idle';
-  updateOrbVisual();
 }
 
 async function speakElevenLabs(text) {
-  const voiceId = 'gCfJIk5vRqA6fyQnsmIi';
-  const apiKey = 'sk_7cc7d606a2a46570561ad85742b8cc20eb25a2c478672c96';
+    const { voiceId, apiKey } = CONFIG_API.elevenLabs;
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'xi-api-key': apiKey 
+        },
+        body: JSON.stringify({ 
+            text, 
+            model_id: CONFIG_API.elevenLabs.model, 
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 } 
+        })
+    });
 
-  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'xi-api-key': apiKey
-    },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_monolingual_v1',
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75
-      }
-    })
-  });
+    if (!response.ok) throw new Error('ElevenLabs error');
 
-  if (!response.ok) {
-    throw new Error(`ElevenLabs API error: ${response.status}`);
-  }
-
-  const audioBuffer = await response.arrayBuffer();
-  const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-  const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
-
-  return new Promise((resolve, reject) => {
-    audio.onended = () => {
-      URL.revokeObjectURL(url);
-      resolve();
-    };
-    audio.onerror = reject;
-    audio.play().catch(reject);
-  });
+    const audio = new Audio(URL.createObjectURL(await response.blob()));
+    return new Promise((resolve, reject) => {
+        audio.onended = resolve;
+        audio.onerror = reject;
+        audio.play().catch(reject);
+    });
 }
 
 function displayAstraText(text) {
-  const el = document.getElementById('astra-text');
-  el.textContent = text;
-  el.classList.add('visible');
+    const el = document.getElementById('astra-response');
+    if (!el) return;
+    el.textContent = text;
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), 10000);
 }
 
-// ============================================================================
-// ORB CANVAS ANIMATION
-// ============================================================================
-function startCanvas() {
-  appState.orbCanvas = document.getElementById('orb-canvas');
-  appState.orbCtx = appState.orbCanvas.getContext('2d');
+function startOrb() {
+    appState.orbCanvas = document.getElementById('orb-canvas');
+    appState.orbCtx = appState.orbCanvas.getContext('2d');
 
-  function resizeCanvas() {
-    appState.orbCanvas.width = window.innerWidth;
-    appState.orbCanvas.height = window.innerHeight;
-  }
-
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  let time = 0;
-  function animate() {
-    time += 0.016;
-    const ctx = appState.orbCtx;
-    const w = appState.orbCanvas.width;
-    const h = appState.orbCanvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
-
-    ctx.fillStyle = 'rgba(2, 2, 9, 1)';
-    ctx.fillRect(0, 0, w, h);
-
-    // Orb core
-    const intensity = 0.5 + 0.5 * Math.sin(time);
-    ctx.fillStyle = `rgba(67, 56, 202, ${0.3 + intensity * 0.3})`;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 80 + Math.sin(time * 0.5) * 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Glow layers
-    for (let i = 1; i <= 3; i++) {
-      const radius = 80 + i * 15 + Math.sin(time * (0.5 + i * 0.1)) * 3;
-      const alpha = (1 - i / 4) * intensity * 0.15;
-      ctx.strokeStyle = `rgba(165, 180, 252, ${alpha})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.stroke();
+    function resize() {
+        appState.orbCanvas.width = window.innerWidth;
+        appState.orbCanvas.height = window.innerHeight;
     }
+    resize();
+    window.addEventListener('resize', resize);
 
-    appState.orbAnimation = requestAnimationFrame(animate);
-  }
+    let time = 0;
+    function animate() {
+        time += 0.016;
+        const ctx = appState.orbCtx;
+        const w = appState.orbCanvas.width;
+        const h = appState.orbCanvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
 
-  animate();
+        // Dark background
+        ctx.fillStyle = 'rgb(10, 14, 39)';
+        ctx.fillRect(0, 0, w, h);
+
+        // Core orb
+        const coreIntensity = 0.5 + 0.5 * Math.sin(time * 0.8);
+        const coreGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, 100);
+        coreGradient.addColorStop(0, `rgba(165, 180, 252, ${0.8 + coreIntensity * 0.2})`);
+        coreGradient.addColorStop(1, `rgba(67, 56, 202, ${0.3 + coreIntensity * 0.2})`);
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 90 + Math.sin(time) * 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsing rings
+        for (let i = 1; i <= 4; i++) {
+            const radius = 100 + i * 20 + Math.sin(time * (0.4 + i * 0.08)) * 4;
+            const alpha = (1 - i / 5) * coreIntensity * 0.2;
+            ctx.strokeStyle = `rgba(165, 180, 252, ${alpha})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        requestAnimationFrame(animate);
+    }
+    animate();
 }
 
-function updateOrbVisual() {
-  // Orb state visual feedback (color shifts, glow intensity)
-  // Handled by canvas animation
-}
-
-// ============================================================================
-// UI HELPERS
-// ============================================================================
 function showToast(msg, duration = 3000) {
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.animation = 'toast-slide 0.3s ease reverse';
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+    const toast = document.getElementById('toast-notification');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
 }
 
-function showVoiceWave() {
-  document.getElementById('voice-wave')?.classList.add('active');
+function showModal(title, content) {
+    const modal = document.getElementById('modal-overlay');
+    const body = document.getElementById('modal-body');
+    if (!modal || !body) return;
+    
+    body.innerHTML = `<button class="close-modal-btn" onclick="closeModal()">×</button>
+        <div class="modal-title">${title}</div>
+        <div id="modal-inner">${content}</div>`;
+    modal.classList.add('visible');
 }
 
-function hideVoiceWave() {
-  document.getElementById('voice-wave')?.classList.remove('active');
+function closeModal() {
+    const modal = document.getElementById('modal-overlay');
+    if (modal) modal.classList.remove('visible');
 }
 
-function updateMicLabel() {
-  const btn = document.getElementById('mic-btn');
-  if (appState.voiceState === VOICE_STATES.LISTENING) {
-    btn.textContent = 'LISTENING...';
-    btn.style.background = 'rgba(248, 113, 113, 0.4)';
-  } else if (appState.voiceState === VOICE_STATES.PROCESSING) {
-    btn.textContent = 'THINKING...';
-    btn.style.background = 'rgba(99, 102, 241, 0.6)';
-  } else {
-    btn.textContent = 'MIC';
-    btn.style.background = '';
-  }
+function showSetup() {
+    const content = `
+        <div class="modal-section">
+            <label class="modal-label">NAME</label>
+            <input id="setup-name" type="text" placeholder="Your name">
+        </div>
+        <div class="modal-section">
+            <label class="modal-label">ABOUT YOU</label>
+            <textarea id="setup-about" placeholder="Goals, interests, challenges..."></textarea>
+        </div>
+        <div class="modal-section">
+            <label class="modal-label">GEMINI API KEY</label>
+            <input id="setup-apikey" type="password" placeholder="AIza... (from console.cloud.google.com)">
+        </div>
+        <div class="modal-actions">
+            <button id="setup-submit">WAKE HIM UP</button>
+        </div>
+    `;
+    showModal('INITIAL SETUP', content);
+    
+    document.getElementById('setup-submit')?.addEventListener('click', () => {
+        const name = document.getElementById('setup-name')?.value?.trim();
+        const about = document.getElementById('setup-about')?.value?.trim();
+        const apiKey = document.getElementById('setup-apikey')?.value?.trim();
+
+        if (!name) {
+            showToast('Name required');
+            return;
+        }
+
+        appState.config = { name, apiKey, about };
+        appState.memory.sessionCount = 0;
+        appState.memory.firstSeen = new Date().toISOString();
+        appState.memory.psychProfile = { 
+            name, 
+            stated_about: about, 
+            traits_observed: [], 
+            goals_stated: [], 
+            last_updated: new Date().toISOString() 
+        };
+
+        save();
+        closeModal();
+        boot();
+    });
 }
 
-function updateStatusIndicator() {
-  const text = document.getElementById('status-text');
-  const stateText = {
-    [VOICE_STATES.IDLE]: 'READY',
-    [VOICE_STATES.STARTING]: 'STARTING',
-    [VOICE_STATES.LISTENING]: 'LISTENING',
-    [VOICE_STATES.PROCESSING]: 'THINKING',
-    [VOICE_STATES.SPEAKING]: 'SPEAKING'
-  };
-  text.textContent = stateText[appState.voiceState] || 'UNKNOWN';
-}
+async function boot() {
+    try {
+        appState.memory.sessionCount = (appState.memory.sessionCount || 0) + 1;
+        appState.memory.lastSeen = new Date().toISOString();
+        save();
 
-function esc(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+        initVoice();
 
-// ============================================================================
-// SETUP SCREEN
-// ============================================================================
-function showSetupScreen() {
-  const html = document.createElement('div');
-  html.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: rgba(2, 2, 9, 0.98);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  `;
-  html.innerHTML = `
-    <div style="width:100%;max-width:420px;">
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:900;letter-spacing:0.2em;color:var(--indigo-bright);text-align:center;margin-bottom:32px;text-transform:uppercase;">MESS-E</div>
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">Your Name</label>
-      <input id="setup-name" type="text" placeholder="Enter your name" style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">Gemini API Key</label>
-      <input id="setup-apikey" type="password" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:16px;box-sizing:border-box;">
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;">About You</label>
-      <textarea id="setup-about" placeholder="Goals, interests..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;min-height:80px;margin-bottom:16px;resize:vertical;box-sizing:border-box;"></textarea>
-      <button id="setup-btn" type="button" style="width:100%;padding:18px;background:linear-gradient(180deg, rgba(99,102,241,0.8) 0%, rgba(67,56,202,0.9) 100%);border:1px solid rgba(165,180,252,0.4);border-radius:12px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:0.3em;color:var(--white);cursor:pointer;text-transform:uppercase;box-shadow:0 8px 24px rgba(67,56,202,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">WAKE HIM UP</button>
-    </div>
-  `;
-  document.body.appendChild(html);
-  document.getElementById('setup-btn')?.addEventListener('click', () => {
-    const name = document.getElementById('setup-name')?.value?.trim() || '';
-    const apiKey = document.getElementById('setup-apikey')?.value?.trim() || '';
-    const about = document.getElementById('setup-about')?.value?.trim() || '';
-    if (!name) { showToast('Name required'); return; }
-    appState.config = { name, apiKey, about };
-    appState.memory.firstSeen = new Date().toISOString();
-    appState.memory.psychProfile = {
-      name,
-      stated_about: about,
-      traits_observed: [],
-      goals_stated: [],
-      challenges: [],
-      strengths: [],
-      last_updated: new Date().toISOString()
-    };
-    save();
-    html.remove();
-    bootAstra();
-  });
-}
+        if (!appState.config.apiKey) {
+            await speak('Gemini API key needed. Tap PROFILE to set it up.');
+            showToast('⚠ PROFILE needed for API key', 6000);
+            return;
+        }
 
-// ============================================================================
-// BOOT SEQUENCE (uses new state machine)
-// ============================================================================
-async function bootAstra() {
-  try {
-    appState.bootPhase = 'GEO';
-    appState.memory.sessionCount = (appState.memory.sessionCount || 0) + 1;
-    appState.memory.lastSeen = new Date().toISOString();
-    save();
-
-    appState.orbState = 'thinking';
-    updateOrbVisual();
-
-    appState.bootPhase = 'VOICE';
-    initVoice();
-
-    appState.bootPhase = 'AUTH';
-    if (!appState.config.apiKey) {
-      const msg = 'Gemini API key needed. Tap PROFILE.';
-      await speak(msg);
-      appState.orbState = 'idle';
-      updateOrbVisual();
-      showToast('⚠ PROFILE → Gemini Key', 6000);
-      return;
+        const greeting = await getAstraGreeting();
+        await speak(greeting);
+    } catch (e) {
+        console.error('Boot error:', e);
+        showToast('Boot failed: ' + e.message);
     }
-
-    appState.bootPhase = 'GREET';
-    const greeting = await getAstraGreeting();
-    await speak(greeting);
-
-    appState.bootPhase = 'READY';
-    updateDashboard();
-    updateTasksUI();
-    updateProfileUI();
-    appState.orbState = 'idle';
-    updateOrbVisual();
-  } catch (e) {
-    console.error('Boot error:', e);
-    showToast('Boot failed');
-    appState.orbState = 'idle';
-    updateOrbVisual();
-  }
 }
 
 async function getAstraGreeting() {
-  const greetings = [
-    "Right then. Let's make this count.",
-    "Welcome back. What's first?",
-    "Good to have you. What're we doing?",
-    "I'm here. Talk to me."
-  ];
-  const session = appState.memory.sessionCount || 1;
-  return greetings[session % greetings.length];
+    const greetings = [
+        "Right then. What's on your mind?",
+        "Welcome back. Let's go.",
+        "Good to have you. What's the move?",
+        "I'm here. Talk to me.",
+        "Let's do this."
+    ];
+    const idx = appState.memory.sessionCount % greetings.length;
+    return greetings[idx];
 }
 
-// ============================================================================
-// PANEL MANAGEMENT
-// ============================================================================
-function openPanel(name) {
-  const map = {
-    dashboard: updateDashboard,
-    tasks: updateTasksUI,
-    profile: updateProfileUI,
-    history: renderHistory
-  };
-  map[name]?.();
-  const panel = document.getElementById(`${name}-panel`);
-  if (panel) panel.classList.add('open');
-  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-  const pill = document.getElementById(`pill-${name === 'dashboard' ? 'dash' : name}`);
-  if (pill) pill.classList.add('active');
-  appState.openPanel = name;
-}
-
-function closePanel(name) {
-  const panel = document.getElementById(`${name}-panel`);
-  if (panel) panel.classList.remove('open');
-  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-  appState.openPanel = null;
-}
-
-// ============================================================================
-// DASHBOARD
-// ============================================================================
-function updateDashboard() {
-  const content = document.getElementById('dashboard-content');
-  if (!content) return;
-  const now = new Date();
-  const activeTasks = (appState.memory.tasks || []).filter(t => !t.done).length;
-  content.innerHTML = `
-    <div class="card">
-      <div class="card-label">CURRENT TIME</div>
-      <div class="card-value accent">${esc(now.toLocaleString())}</div>
-    </div>
-    <div class="card">
-      <div class="card-label">ACTIVE TASKS</div>
-      <div class="card-value">${activeTasks} pending</div>
-    </div>
-    <div class="card">
-      <div class="card-label">SESSION</div>
-      <div class="card-value">#${esc(String(appState.memory.sessionCount))}</div>
-    </div>
-  `;
-}
-
-// ============================================================================
-// TASKS
-// ============================================================================
-function updateTasksUI() {
-  const content = document.getElementById('tasks-content');
-  if (!content) return;
-  const active = (appState.memory.tasks || []).filter(t => !t.done);
-  content.innerHTML = `
-    <div style="margin-bottom:12px;">
-      ${active.map(t => `
-        <div class="task-item">
-          <input type="checkbox" class="task-check" data-task-id="${t.id || 0}" aria-label="Complete task">
-          <div class="task-text">${esc(t.text || '')}</div>
+function showDashboard() {
+    const now = new Date();
+    const activeTasks = (appState.memory.tasks || []).filter(t => !t.done).length;
+    const content = `
+        <div class="modal-section">
+            <div class="modal-label">CURRENT TIME</div>
+            <div class="time-display">${now.toLocaleString()}</div>
         </div>
-      `).join('')}
-    </div>
-    <div style="margin-top:20px;">
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;margin-bottom:8px;">ADD TASK</label>
-      <div style="display:flex;gap:8px;">
-        <input id="manual-task-input" type="text" placeholder="What needs doing?" style="flex:1;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;box-sizing:border-box;">
-        <button type="button" class="glass-btn" id="add-task-btn">ADD</button>
-      </div>
-    </div>
-  `;
-  document.querySelectorAll('.task-check').forEach(cb => {
-    cb.addEventListener('change', e => {
-      const id = Number(e.target.dataset.taskId);
-      const task = (appState.memory.tasks || []).find(t => t.id === id);
-      if (task) {
-        task.done = e.target.checked;
-        task.completed = task.done ? new Date().toISOString() : null;
+        <div class="modal-section">
+            <div class="modal-label">SESSION</div>
+            <div style="color: var(--indigo-bright); font-size: 14px;">#${appState.memory.sessionCount}</div>
+        </div>
+        <div class="modal-section">
+            <div class="modal-label">ACTIVE TASKS</div>
+            <div style="color: var(--indigo-bright); font-size: 14px;">${activeTasks} pending</div>
+        </div>
+    `;
+    showModal('DASHBOARD', content);
+}
+
+function showTasks() {
+    const tasks = appState.memory.tasks || [];
+    const active = tasks.filter(t => !t.done);
+    
+    const taskHTML = active.map(t => `
+        <div class="task-item">
+            <input type="checkbox" class="task-checkbox" data-task-id="${t.id}" />
+            <span class="task-text">${t.text}</span>
+        </div>
+    `).join('');
+
+    const content = `
+        <div class="task-list">${taskHTML || '<p style="color: var(--text-dim);">No active tasks</p>'}</div>
+        <div class="modal-section">
+            <label class="modal-label">ADD NEW TASK</label>
+            <div style="display: flex; gap: 8px;">
+                <input id="new-task-input" type="text" placeholder="What needs doing?" style="flex: 1; margin: 0;">
+                <button id="add-task-btn">ADD</button>
+            </div>
+        </div>
+    `;
+    showModal('TASKS', content);
+
+    document.querySelectorAll('.task-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            const id = Number(e.target.dataset.taskId);
+            const task = (appState.memory.tasks || []).find(t => t.id === id);
+            if (task) {
+                task.done = e.target.checked;
+                task.completed = task.done ? new Date().toISOString() : null;
+                save();
+                showTasks();
+            }
+        });
+    });
+
+    document.getElementById('add-task-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('new-task-input');
+        const text = input?.value?.trim();
+        if (!text) {
+            showToast('Task text required');
+            return;
+        }
+        if (!appState.memory.tasks) appState.memory.tasks = [];
+        appState.memory.tasks.push({
+            id: Date.now(),
+            text,
+            done: false,
+            priority: 'medium',
+            created: new Date().toISOString()
+        });
         save();
-        updateTasksUI();
-      }
+        showTasks();
     });
-  });
-  document.getElementById('add-task-btn')?.addEventListener('click', () => {
-    const input = document.getElementById('manual-task-input');
-    const val = input?.value?.trim();
-    if (!val) return;
-    if (!appState.memory.tasks) appState.memory.tasks = [];
-    appState.memory.tasks.push({
-      id: Date.now(),
-      text: val,
-      done: false,
-      priority: 'medium',
-      created: new Date().toISOString()
+}
+
+function showProfile() {
+    const p = appState.memory.psychProfile || {};
+    const content = `
+        <div class="modal-section">
+            <label class="modal-label">NAME</label>
+            <input id="profile-name" type="text" value="${p.name || ''}" placeholder="Your name">
+        </div>
+        <div class="modal-section">
+            <label class="modal-label">ABOUT YOU</label>
+            <textarea id="profile-about" placeholder="Goals, interests...">${p.stated_about || ''}</textarea>
+        </div>
+        <div class="modal-section">
+            <label class="modal-label">GEMINI API KEY</label>
+            <input id="profile-apikey" type="password" value="${appState.config.apiKey || ''}" placeholder="AIza...">
+        </div>
+        <div class="modal-actions">
+            <button id="save-profile-btn">SAVE</button>
+        </div>
+    `;
+    showModal('PROFILE', content);
+
+    document.getElementById('save-profile-btn')?.addEventListener('click', () => {
+        const name = document.getElementById('profile-name')?.value?.trim();
+        const about = document.getElementById('profile-about')?.value?.trim();
+        const apiKey = document.getElementById('profile-apikey')?.value?.trim();
+
+        appState.config.name = name || appState.config.name;
+        appState.config.apiKey = apiKey || appState.config.apiKey;
+        appState.config.about = about || appState.config.about;
+
+        if (!appState.memory.psychProfile) appState.memory.psychProfile = {};
+        appState.memory.psychProfile.name = name || '';
+        appState.memory.psychProfile.stated_about = about || '';
+        appState.memory.psychProfile.last_updated = new Date().toISOString();
+
+        save();
+        closeModal();
+        showToast('Profile saved');
     });
-    if (input) input.value = '';
-    save();
-    updateTasksUI();
-  });
 }
 
-// ============================================================================
-// PROFILE
-// ============================================================================
-function updateProfileUI() {
-  const content = document.getElementById('profile-content');
-  if (!content) return;
-  const p = appState.memory.psychProfile || {};
-  content.innerHTML = `
-    <div class="card">
-      <div class="card-label">IDENTITY</div>
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:6px;">NAME</label>
-      <input id="profile-name" type="text" value="${esc(p.name || '')}" placeholder="Your name" style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:12px;box-sizing:border-box;">
-      <label style="display:block;font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:6px;">ABOUT YOU</label>
-      <textarea id="profile-about" placeholder="Goals, interests..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;min-height:60px;margin-bottom:12px;resize:vertical;box-sizing:border-box;">${esc(p.stated_about || '')}</textarea>
-      <button type="button" class="primary-btn" id="save-profile-btn">SAVE PROFILE</button>
-    </div>
-    <div class="card">
-      <div class="card-label">GEMINI API KEY</div>
-      <input id="gemini-key" type="password" value="${esc(appState.config.apiKey || '')}" placeholder="AIza..." style="width:100%;background:rgba(13,15,42,0.8);border:1px solid rgba(129,140,248,0.25);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:var(--white);outline:none;margin-bottom:12px;box-sizing:border-box;">
-      <button type="button" class="glass-btn" id="save-gemini-btn" style="width:100%;">SAVE GEMINI KEY</button>
-    </div>
-  `;
-  document.getElementById('save-profile-btn')?.addEventListener('click', () => {
-    const name = document.getElementById('profile-name')?.value?.trim();
-    const about = document.getElementById('profile-about')?.value?.trim();
-    if (name) {
-      appState.config.name = name;
-      appState.memory.psychProfile = appState.memory.psychProfile || {};
-      appState.memory.psychProfile.name = name;
-      appState.memory.psychProfile.stated_about = about || '';
-      save();
-      showToast('Profile saved', 2000);
-    }
-  });
-  document.getElementById('save-gemini-btn')?.addEventListener('click', () => {
-    const key = document.getElementById('gemini-key')?.value?.trim();
-    if (key) {
-      appState.config.apiKey = key;
-      save();
-      showToast('Gemini key saved', 2000);
-    }
-  });
+function showHistory() {
+    const msgs = [...(appState.memory.conversations || [])].reverse().slice(0, 50);
+    const historyHTML = msgs.map(m => `
+        <div style="margin-bottom: 16px; padding: 12px; background: rgba(${m.role === 'user' ? '67,56,202,0.1' : '45,53,97,0.15'}); border-left: 2px solid rgba(165,180,252,0.2); border-radius: 4px;">
+            <div style="font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 6px;">${m.role.toUpperCase()}</div>
+            <div style="font-size: 12px; color: var(--white); line-height: 1.5; word-break: break-word;">${m.content.slice(0, 300)}</div>
+        </div>
+    `).join('');
+
+    showModal('CONVERSATION LOG', `<div style="max-height: 400px; overflow-y: auto;">${historyHTML || '<p style="color: var(--text-dim);">No conversations yet</p>'}</div>`);
 }
 
-// ============================================================================
-// HISTORY
-// ============================================================================
-function renderHistory() {
-  const content = document.getElementById('history-content');
-  if (!content) return;
-  const msgs = [...(appState.memory.conversations || [])].reverse();
-  content.innerHTML = msgs.slice(0, 50).map(m => `
-    <div style="margin-bottom:14px;padding:12px;background:rgba(67,56,202,${m.role === 'assistant' ? '0.12' : '0.06'});border-left:2px solid rgba(129,140,248,0.3);border-radius:4px;">
-      <div style="font-family:var(--font-mono);font-size:9px;color:var(--dim);margin-bottom:4px;">${esc(m.role.toUpperCase())}</div>
-      <div style="font-family:var(--font-body);font-size:13px;color:var(--white);line-height:1.5;word-break:break-word;">${esc(String(m.content || '').slice(0, 500))}</div>
-    </div>
-  `).join('');
-}
-
-// ============================================================================
-// EVENT DELEGATION (UI interactions)
-// ============================================================================
-function setupEventDelegation() {
-  // Mic button
-  document.getElementById('mic-btn')?.addEventListener('click', () => {
+document.getElementById('orb-interaction-zone')?.addEventListener('click', () => {
     if (appState.voiceState === VOICE_STATES.LISTENING) {
-      if (appState.recognition) appState.recognition.stop();
-      setVoiceState(VOICE_STATES.IDLE);
+        if (appState.recognition) appState.recognition.stop();
+        setVoiceState(VOICE_STATES.IDLE);
     } else if (appState.voiceState === VOICE_STATES.IDLE) {
-      appState.voiceContinuous = true;
-      if (appState.recognition) appState.recognition.start();
+        appState.voiceContinuous = false;
+        setVoiceState(VOICE_STATES.STARTING);
+        if (appState.recognition) appState.recognition.start();
     }
-  });
+});
 
-  // Voice toggle
-  document.getElementById('voice-toggle-btn')?.addEventListener('click', () => {
-    appState.voiceEnabled = !appState.voiceEnabled;
-    const btn = document.getElementById('voice-toggle-btn');
-    if (btn) {
-      btn.style.opacity = appState.voiceEnabled ? '1' : '0.4';
-    }
-    showToast(appState.voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF');
-  });
+document.getElementById('btn-dashboard')?.addEventListener('click', showDashboard);
+document.getElementById('btn-tasks')?.addEventListener('click', showTasks);
+document.getElementById('btn-profile')?.addEventListener('click', showProfile);
+document.getElementById('btn-history')?.addEventListener('click', showHistory);
 
-  // Stop button
-  document.getElementById('stop-btn')?.addEventListener('click', () => {
-    if (appState.recognition) appState.recognition.stop();
-    if (appState.synth) appState.synth.cancel();
-    setVoiceState(VOICE_STATES.IDLE);
-    appState.orbState = 'idle';
-    updateOrbVisual();
-  });
-
-  // Nav pills
-  document.querySelectorAll('.nav-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      const panelName = pill.dataset.panel;
-      const currentPanel = appState.openPanel;
-      if (currentPanel === panelName) {
-        closePanel(panelName);
-      } else {
-        if (currentPanel) closePanel(currentPanel);
-        openPanel(panelName);
-      }
-    });
-  });
-
-  // Close panel on background click
-  document.querySelectorAll('.panel').forEach(panel => {
-    panel.addEventListener('click', (e) => {
-      if (e.target === panel) {
-        closePanel(panel.id.replace('-panel', ''));
-      }
-    });
-  });
-}
-
-// ============================================================================
-// BOOT
-// ============================================================================
 window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    startCanvas();
-    setupEventDelegation();
-    load();
-    if (!appState.config.name) {
-      showSetupScreen();
-    } else {
-      bootAstra();
+    try {
+        startOrb();
+        load();
+        if (!appState.config.name) {
+            showSetup();
+        } else {
+            boot();
+        }
+    } catch (e) {
+        console.error('Init error:', e);
+        showToast('Init failed');
     }
-  } catch (e) {
-    console.error('Init error:', e);
-    showToast('Initialization failed');
-  }
 }, { passive: true });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    if (appState.audioContext?.state === 'suspended') {
-      appState.audioContext?.resume();
+    if (document.visibilityState === 'visible') {
+        if (appState.audioContext?.state === 'suspended') {
+            appState.audioContext?.resume();
+        }
     }
-  }
 }, { passive: true });
 
-window.addEventListener('beforeunload', () => {
-  save();
-});
+window.addEventListener('beforeunload', () => { save(); });
 </script>
+
 </body>
 </html>
